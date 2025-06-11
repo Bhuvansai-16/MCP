@@ -7,6 +7,7 @@ dotenv.config();
 // Initialize Pinecone
 export const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY || '',
+  environment: process.env.PINECONE_ENV || '',
 });
 
 // Initialize OpenAI for embeddings
