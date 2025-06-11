@@ -1,262 +1,306 @@
-import React, { useState, useEffect } from 'react';
-import { Activity, TrendingUp, Clock, Zap, Target, BarChart3, PieChart, LineChart } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Bar, Radar } from 'react-chartjs-2';
+import { BarChart3, Filter, TrendingUp } from 'lucide-react';
+import { ProtocolResult } from '../App';
 
-// Mock metrics data for demonstration
-const generateMockMetrics = () => ({
-  total_runs: 47,
-  avg_latency: 1247,
-  avg_tokens: 823,
-  avg_quality: 0.847,
-  protocol_breakdown: {
-    raw: {
-      runs: 12,
-      avg_latency: 892,
-      avg_tokens: 1205,
-      avg_quality: 0.823
-    },
-    chain: {
-      runs: 15,
-      avg_latency: 1456,
-      avg_tokens: 734,
-      avg_quality: 0.867
-    },
-    tree: {
-      runs: 11,
-      avg_latency: 1678,
-      avg_tokens: 945,
-      avg_quality: 0.891
-    },
-    rag: {
-      runs: 9,
-      avg_latency: 1034,
-      avg_tokens: 567,
-      avg_quality: 0.798
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+interface MetricsDashboardProps {
+  results: ProtocolResult[];
+  isDark: boolean;
+}
+
+export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ results, isDark }) => {
+  const [visibleProtocols, setVisibleProtocols] = useState<string[]>(
+    results.map(r => r.protocol)
+  );
+  const [sortBy, setSortBy] = useState<'latency' | 'tokens' | 'quality'>('latency');
+
+  const filteredResults = results.filter(r => visibleProtocols.includes(r.protocol));
+
+  const toggleProtocol = (protocol: string) => {
+    if (visibleProtocols.includes(protocol)) {
+      setVisibleProtocols(visibleProtocols.filter(p => p !== protocol));
+    } else {
+      setVisibleProtocols([...visibleProtocols, protocol]);
     }
-  }
-});
+  };
 
-export const MetricsDashboard: React.FC = () => {
-  const [metrics, setMetrics] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const getProtocolColor = (protocol: string) => {
+    const colors = {
+      raw: { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgb(59, 130, 246)' },
+      chain: { bg: 'rgba(34, 197, 94, 0.8)', border: 'rgb(34, 197, 94)' },
+      tree: { bg: 'rgba(147, 51, 234, 0.8)', border: 'rgb(147, 51, 234)' },
+      rag: { bg: 'rgba(249, 115, 22, 0.8)', border: 'rgb(249, 115, 22)' }
+    };
+    return colors[protocol as keyof typeof colors] || colors.raw;
+  };
 
-  useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setMetrics(generateMockMetrics());
-      setLoading(false);
-    }, 1000);
-  }, []);
+  const latencyData = {
+    labels: filteredResults.map(r => r.protocol.toUpperCase()),
+    datasets: [
+      {
+        label: 'Latency (ms)',
+        data: filteredResults.map(r => r.metrics.latency),
+        backgroundColor: filteredResults.map(r => getProtocolColor(r.protocol).bg),
+        borderColor: filteredResults.map(r => getProtocolColor(r.protocol).border),
+        borderWidth: 2,
+      },
+    ],
+  };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading analytics...</p>
-        </div>
-      </div>
-    );
-  }
+  const tokenData = {
+    labels: filteredResults.map(r => r.protocol.toUpperCase()),
+    datasets: [
+      {
+        label: 'Tokens Used',
+        data: filteredResults.map(r => r.metrics.tokens),
+        backgroundColor: filteredResults.map(r => getProtocolColor(r.protocol).bg),
+        borderColor: filteredResults.map(r => getProtocolColor(r.protocol).border),
+        borderWidth: 2,
+      },
+    ],
+  };
 
-  if (!metrics || metrics.total_runs === 0) {
-    return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-12 text-center">
-        <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">No Analytics Available</h3>
-        <p className="text-gray-600">Run some protocols to see detailed metrics and analytics here.</p>
-      </div>
-    );
-  }
+  const radarData = {
+    labels: ['Latency (normalized)', 'Tokens (normalized)', 'Quality'],
+    datasets: filteredResults.map(result => {
+      const color = getProtocolColor(result.protocol);
+      const maxLatency = Math.max(...results.map(r => r.metrics.latency));
+      const maxTokens = Math.max(...results.map(r => r.metrics.tokens));
+      
+      return {
+        label: result.protocol.toUpperCase(),
+        data: [
+          10 - (result.metrics.latency / maxLatency) * 10, // Inverted for better visualization
+          10 - (result.metrics.tokens / maxTokens) * 10, // Inverted for better visualization
+          result.metrics.quality
+        ],
+        backgroundColor: color.bg,
+        borderColor: color.border,
+        borderWidth: 2,
+      };
+    })
+  };
 
-  const protocolColors = {
-    raw: { bg: 'bg-blue-500', light: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' },
-    chain: { bg: 'bg-green-500', light: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' },
-    tree: { bg: 'bg-purple-500', light: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
-    rag: { bg: 'bg-orange-500', light: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200' }
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+        labels: {
+          color: isDark ? '#e5e7eb' : '#374151'
+        }
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: isDark ? '#e5e7eb' : '#374151'
+        },
+        grid: {
+          color: isDark ? '#374151' : '#e5e7eb'
+        }
+      },
+      y: {
+        ticks: {
+          color: isDark ? '#e5e7eb' : '#374151'
+        },
+        grid: {
+          color: isDark ? '#374151' : '#e5e7eb'
+        }
+      }
+    }
+  };
+
+  const radarOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+        labels: {
+          color: isDark ? '#e5e7eb' : '#374151'
+        }
+      },
+    },
+    scales: {
+      r: {
+        angleLines: {
+          color: isDark ? '#374151' : '#e5e7eb'
+        },
+        grid: {
+          color: isDark ? '#374151' : '#e5e7eb'
+        },
+        pointLabels: {
+          color: isDark ? '#e5e7eb' : '#374151'
+        },
+        ticks: {
+          color: isDark ? '#e5e7eb' : '#374151',
+          backdropColor: 'transparent'
+        },
+        min: 0,
+        max: 10
+      }
+    }
   };
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl shadow-2xl overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative px-8 py-12">
-          <div className="flex items-center space-x-4 mb-2">
-            <BarChart3 className="w-8 h-8 text-white" />
-            <h2 className="text-3xl font-bold text-white">Analytics Dashboard</h2>
+    <div className={`rounded-2xl shadow-xl border transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gray-800 border-gray-700' 
+        : 'bg-white/80 backdrop-blur-sm border-white/20'
+    }`}>
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <BarChart3 className={`w-6 h-6 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Metrics Dashboard
+            </h2>
           </div>
-          <p className="text-indigo-100 text-lg">Performance insights and metrics from protocol executions</p>
-        </div>
-      </div>
-
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-200">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-              <TrendingUp className="w-6 h-6 text-white" />
+          
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Filter className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className={`px-3 py-1 rounded-lg border transition-colors ${
+                  isDark 
+                    ? 'bg-gray-700 border-gray-600 text-white' 
+                    : 'bg-white border-gray-200 text-gray-900'
+                }`}
+              >
+                <option value="latency">Sort by Latency</option>
+                <option value="tokens">Sort by Tokens</option>
+                <option value="quality">Sort by Quality</option>
+              </select>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Executions</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics.total_runs}</p>
-            </div>
-          </div>
-          <div className="w-full bg-blue-100 rounded-full h-2">
-            <div className="bg-blue-500 h-2 rounded-full" style={{ width: '75%' }}></div>
-          </div>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-200">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Avg Latency</p>
-              <p className="text-3xl font-bold text-gray-900">{Math.round(metrics.avg_latency)}ms</p>
-            </div>
-          </div>
-          <div className="w-full bg-green-100 rounded-full h-2">
-            <div className="bg-green-500 h-2 rounded-full" style={{ width: '60%' }}></div>
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-200">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Avg Tokens</p>
-              <p className="text-3xl font-bold text-gray-900">{Math.round(metrics.avg_tokens)}</p>
-            </div>
-          </div>
-          <div className="w-full bg-purple-100 rounded-full h-2">
-            <div className="bg-purple-500 h-2 rounded-full" style={{ width: '80%' }}></div>
-          </div>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-200">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Target className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Avg Quality</p>
-              <p className="text-3xl font-bold text-gray-900">
-                {(metrics.avg_quality * 100).toFixed(1)}%
-              </p>
-            </div>
-          </div>
-          <div className="w-full bg-orange-100 rounded-full h-2">
-            <div className="bg-orange-500 h-2 rounded-full" style={{ width: `${metrics.avg_quality * 100}%` }}></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Protocol Performance */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
-        <div className="flex items-center space-x-3 mb-8">
-          <PieChart className="w-6 h-6 text-gray-700" />
-          <h3 className="text-2xl font-bold text-gray-900">Protocol Performance Breakdown</h3>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {Object.entries(metrics.protocol_breakdown).map(([protocol, data]) => {
-            const colors = protocolColors[protocol as keyof typeof protocolColors];
-            const percentage = (data.runs / metrics.total_runs) * 100;
+        {/* Protocol Filters */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {results.map(result => {
+            const isVisible = visibleProtocols.includes(result.protocol);
+            const color = getProtocolColor(result.protocol);
             
             return (
-              <div key={protocol} className={`border-2 ${colors.border} rounded-2xl p-6 hover:shadow-lg transition-all duration-200`}>
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className={`w-4 h-4 ${colors.bg} rounded-full shadow-sm`}></div>
-                  <h4 className="text-xl font-bold text-gray-900 capitalize">{protocol} Protocol</h4>
-                  <span className={`px-3 py-1 text-sm font-semibold ${colors.light} ${colors.text} rounded-full`}>
-                    {data.runs} runs ({percentage.toFixed(1)}%)
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-2 mb-2">
-                      <Clock className="w-4 h-4 text-gray-500" />
-                      <p className="text-sm font-semibold text-gray-600">Latency</p>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">{Math.round(data.avg_latency)}ms</p>
-                    <div className={`w-full ${colors.light} rounded-full h-1 mt-2`}>
-                      <div className={`${colors.bg} h-1 rounded-full`} style={{ width: `${(data.avg_latency / 2000) * 100}%` }}></div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-2 mb-2">
-                      <Zap className="w-4 h-4 text-gray-500" />
-                      <p className="text-sm font-semibold text-gray-600">Tokens</p>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">{Math.round(data.avg_tokens)}</p>
-                    <div className={`w-full ${colors.light} rounded-full h-1 mt-2`}>
-                      <div className={`${colors.bg} h-1 rounded-full`} style={{ width: `${(data.avg_tokens / 1500) * 100}%` }}></div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-2 mb-2">
-                      <Target className="w-4 h-4 text-gray-500" />
-                      <p className="text-sm font-semibold text-gray-600">Quality</p>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {(data.avg_quality * 100).toFixed(1)}%
-                    </p>
-                    <div className={`w-full ${colors.light} rounded-full h-1 mt-2`}>
-                      <div className={`${colors.bg} h-1 rounded-full`} style={{ width: `${data.avg_quality * 100}%` }}></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <button
+                key={result.protocol}
+                onClick={() => toggleProtocol(result.protocol)}
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isVisible
+                    ? `text-white shadow-lg`
+                    : isDark
+                      ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                }`}
+                style={isVisible ? { backgroundColor: color.border } : {}}
+              >
+                {result.protocol.toUpperCase()}
+              </button>
             );
           })}
         </div>
-      </div>
 
-      {/* Performance Insights */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <LineChart className="w-5 h-5 text-blue-600" />
-            <h4 className="text-lg font-semibold text-gray-900">Speed Leader</h4>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Latency Chart */}
+          <div className={`p-4 rounded-xl ${
+            isDark ? 'bg-gray-700/50' : 'bg-gray-50'
+          }`}>
+            <h3 className={`text-lg font-semibold mb-4 flex items-center space-x-2 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              <TrendingUp className="w-5 h-5" />
+              <span>Latency Comparison</span>
+            </h3>
+            <Bar data={latencyData} options={chartOptions} />
           </div>
-          <div className="text-center">
-            <p className="text-3xl font-bold text-blue-600 mb-2">RAG</p>
-            <p className="text-sm text-gray-600">Fastest average response time</p>
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm font-medium text-blue-700">1,034ms average</p>
+
+          {/* Token Usage Chart */}
+          <div className={`p-4 rounded-xl ${
+            isDark ? 'bg-gray-700/50' : 'bg-gray-50'
+          }`}>
+            <h3 className={`text-lg font-semibold mb-4 flex items-center space-x-2 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              <BarChart3 className="w-5 h-5" />
+              <span>Token Usage</span>
+            </h3>
+            <Bar data={tokenData} options={chartOptions} />
+          </div>
+
+          {/* Radar Chart */}
+          <div className={`lg:col-span-2 p-4 rounded-xl ${
+            isDark ? 'bg-gray-700/50' : 'bg-gray-50'
+          }`}>
+            <h3 className={`text-lg font-semibold mb-4 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              Overall Performance Radar
+            </h3>
+            <div className="max-w-md mx-auto">
+              <Radar data={radarData} options={radarOptions} />
             </div>
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <Target className="w-5 h-5 text-purple-600" />
-            <h4 className="text-lg font-semibold text-gray-900">Quality Leader</h4>
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+          <div className={`p-4 rounded-xl text-center ${
+            isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-200'
+          }`}>
+            <h4 className={`font-semibold mb-2 ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
+              Fastest Protocol
+            </h4>
+            <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {[...results].sort((a, b) => a.metrics.latency - b.metrics.latency)[0]?.protocol.toUpperCase()}
+            </p>
           </div>
-          <div className="text-center">
-            <p className="text-3xl font-bold text-purple-600 mb-2">Tree</p>
-            <p className="text-sm text-gray-600">Highest quality scores</p>
-            <div className="mt-4 p-3 bg-purple-50 rounded-lg">
-              <p className="text-sm font-medium text-purple-700">89.1% average quality</p>
-            </div>
+          
+          <div className={`p-4 rounded-xl text-center ${
+            isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50 border border-green-200'
+          }`}>
+            <h4 className={`font-semibold mb-2 ${isDark ? 'text-green-400' : 'text-green-700'}`}>
+              Most Efficient
+            </h4>
+            <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {[...results].sort((a, b) => a.metrics.tokens - b.metrics.tokens)[0]?.protocol.toUpperCase()}
+            </p>
           </div>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <TrendingUp className="w-5 h-5 text-green-600" />
-            <h4 className="text-lg font-semibold text-gray-900">Most Popular</h4>
-          </div>
-          <div className="text-center">
-            <p className="text-3xl font-bold text-green-600 mb-2">Chain</p>
-            <p className="text-sm text-gray-600">Most frequently used</p>
-            <div className="mt-4 p-3 bg-green-50 rounded-lg">
-              <p className="text-sm font-medium text-green-700">15 executions (31.9%)</p>
-            </div>
+          
+          <div className={`p-4 rounded-xl text-center ${
+            isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50 border border-purple-200'
+          }`}>
+            <h4 className={`font-semibold mb-2 ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
+              Highest Quality
+            </h4>
+            <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {[...results].sort((a, b) => b.metrics.quality - a.metrics.quality)[0]?.protocol.toUpperCase()}
+            </p>
           </div>
         </div>
       </div>
