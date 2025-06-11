@@ -4,28 +4,23 @@ import { ProtocolPlayground } from './components/ProtocolPlayground';
 import { MetricsDashboard } from './components/MetricsDashboard';
 import { Toaster } from './components/Toaster';
 
-// Mock user data for standalone demo
-const mockUser = {
-  id: '1',
-  email: 'demo@mcpplayground.com'
-};
-
 function App() {
   const [activeTab, setActiveTab] = useState<'playground' | 'metrics'>('playground');
-  const [user] = useState(mockUser);
+
+  // Mock user for demo
+  const mockUser = {
+    id: '1',
+    email: 'demo@example.com'
+  };
 
   const handleLogout = () => {
-    // In standalone mode, just show a toast
-    (window as any).showToast?.({ 
-      type: 'info', 
-      message: 'This is a demo - logout functionality disabled' 
-    });
+    console.log('Demo logout');
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
       <Header 
-        user={user}
+        user={mockUser}
         onLogout={handleLogout}
         activeTab={activeTab}
         onTabChange={setActiveTab}

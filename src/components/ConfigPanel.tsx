@@ -53,7 +53,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+    <div className="bg-white bg-opacity-80 backdrop-blur-sm rounded-2xl shadow-xl border border-white border-opacity-20 p-8">
       <div className="flex items-center space-x-3 mb-8">
         <Settings className="w-6 h-6 text-gray-700" />
         <h3 className="text-2xl font-bold text-gray-900">Advanced Configuration</h3>
@@ -76,7 +76,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           const color = protocolColors[protocol as keyof typeof protocolColors];
 
           return (
-            <div key={protocol} className={`border-2 border-${color}-200 rounded-xl p-6 bg-${color}-50/50 hover:shadow-lg transition-all duration-200`}>
+            <div key={protocol} className={`border-2 border-${color}-200 rounded-xl p-6 bg-${color}-50 bg-opacity-50 hover:shadow-lg transition-all duration-200`}>
               <div className="flex items-center space-x-3 mb-6">
                 <div className={`w-10 h-10 bg-${color}-500 rounded-lg flex items-center justify-center shadow-lg`}>
                   <ProtocolIcon className="w-5 h-5 text-white" />
