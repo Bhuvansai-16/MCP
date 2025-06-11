@@ -6,9 +6,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MCP Playground - Model Context Protocol Testing</title>
     <meta name="description" content="Test and compare different Model Context Protocol implementations with real-time metrics and analytics." />
+    <style>
+      /* Prevent flash of unstyled content */
+      #root {
+        min-height: 100vh;
+        background-color: #f9fafb;
+      }
+      
+      /* Loading spinner for initial load */
+      .initial-loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+      
+      .spinner {
+        border: 3px solid #f3f4f6;
+        border-top: 3px solid #2563eb;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="initial-loading">
+        <div class="spinner"></div>
+        <p style="color: #6b7280; font-family: system-ui, sans-serif;">Loading MCP Playground...</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

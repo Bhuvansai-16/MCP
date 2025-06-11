@@ -9,17 +9,23 @@ interface User {
 const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
+    console.log('Current hostname:', hostname);
+    
     if (hostname.includes('webcontainer-api.io')) {
       // Extract the WebContainer URL pattern and construct API URL
       const parts = hostname.split('.');
       if (parts.length >= 3) {
         const prefix = parts[0];
         const suffix = parts.slice(1).join('.');
-        return `https://${prefix}--3001--${suffix}`;
+        const apiUrl = `https://${prefix}--3001--${suffix}`;
+        console.log('WebContainer API URL:', apiUrl);
+        return apiUrl;
       }
     }
   }
-  return 'http://localhost:3001';
+  const fallbackUrl = 'http://localhost:3001';
+  console.log('Using fallback API URL:', fallbackUrl);
+  return fallbackUrl;
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -29,31 +35,46 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('API Base URL:', API_BASE_URL);
+    console.log('useAuth: API Base URL:', API_BASE_URL);
     
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp * 1000 > Date.now()) {
-          setUser({ id: payload.id, email: payload.email });
-        } else {
+    try {
+      const token = localStorage.getItem('token');
+      console.log('useAuth: Found token:', !!token);
+      
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          console.log('useAuth: Token payload:', payload);
+          
+          if (payload.exp * 1000 > Date.now()) {
+            console.log('useAuth: Token is valid, setting user');
+            setUser({ id: payload.id, email: payload.email });
+          } else {
+            console.log('useAuth: Token expired, removing');
+            localStorage.removeItem('token');
+          }
+        } catch (error) {
+          console.error('useAuth: Invalid token format:', error);
           localStorage.removeItem('token');
         }
-      } catch (error) {
-        console.error('Invalid token:', error);
-        localStorage.removeItem('token');
+      } else {
+        console.log('useAuth: No token found');
       }
+    } catch (error) {
+      console.error('useAuth: Error during initialization:', error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   const login = (token: string, userData: User) => {
+    console.log('useAuth: Login called with:', userData);
     localStorage.setItem('token', token);
     setUser(userData);
   };
 
   const logout = () => {
+    console.log('useAuth: Logout called');
     localStorage.removeItem('token');
     setUser(null);
   };

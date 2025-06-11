@@ -26,8 +26,8 @@ const API_BASE_URL = getApiBaseUrl();
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('test@example.com'); // Default for testing
+  const [password, setPassword] = useState('password123'); // Default for testing
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -40,7 +40,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess }) 
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       const url = `${API_BASE_URL}${endpoint}`;
       
-      console.log('Auth request to:', url);
+      console.log('AuthModal: Making request to:', url);
+      console.log('AuthModal: Request data:', { email, password: '***' });
       
       const response = await fetch(url, {
         method: 'POST',
@@ -50,9 +51,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess }) 
         body: JSON.stringify({ email, password }),
       });
 
-      console.log('Auth response status:', response.status);
+      console.log('AuthModal: Response status:', response.status);
 
       const data = await response.json();
+      console.log('AuthModal: Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error?.message || `Authentication failed: ${response.status}`);
@@ -60,12 +62,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess }) 
 
       localStorage.setItem('token', data.token);
       onAuthSuccess(data.token, data.user);
-      (window as any).showToast?.({ 
-        type: 'success', 
-        message: isLogin ? 'Successfully logged in!' : 'Account created successfully!' 
-      });
+      
+      // Show success toast
+      if ((window as any).showToast) {
+        (window as any).showToast({ 
+          type: 'success', 
+          message: isLogin ? 'Successfully logged in!' : 'Account created successfully!' 
+        });
+      }
     } catch (err) {
-      console.error('Auth error:', err);
+      console.error('AuthModal: Auth error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
       setError(errorMessage);
     } finally {
@@ -94,6 +100,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess }) 
               <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-blue-700 text-sm">
+              <strong>Demo credentials:</strong><br />
+              Email: test@example.com<br />
+              Password: password123
+            </p>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

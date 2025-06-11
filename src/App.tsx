@@ -11,21 +11,32 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, login, logout, isLoading } = useAuth();
 
+  // Debug logging
+  useEffect(() => {
+    console.log('App mounted, user:', user, 'isLoading:', isLoading);
+  }, [user, isLoading]);
+
   useEffect(() => {
     if (!user && !isLoading) {
+      console.log('No user found, showing auth modal');
       setShowAuthModal(true);
     }
   }, [user, isLoading]);
 
   const handleAuthSuccess = (token: string, userData: any) => {
+    console.log('Auth success, user data:', userData);
     login(token, userData);
     setShowAuthModal(false);
   };
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading MCP Playground...</p>
+        </div>
       </div>
     );
   }
