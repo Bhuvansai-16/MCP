@@ -1,51 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { ProtocolPlayground } from './components/ProtocolPlayground';
 import { MetricsDashboard } from './components/MetricsDashboard';
-import { AuthModal } from './components/AuthModal';
-import { useAuth } from './hooks/useAuth';
 import { Toaster } from './components/Toaster';
+
+// Mock user data for standalone demo
+const mockUser = {
+  id: '1',
+  email: 'demo@mcpplayground.com'
+};
 
 function App() {
   const [activeTab, setActiveTab] = useState<'playground' | 'metrics'>('playground');
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const { user, login, logout, isLoading } = useAuth();
+  const [user] = useState(mockUser);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('App mounted, user:', user, 'isLoading:', isLoading);
-  }, [user, isLoading]);
-
-  useEffect(() => {
-    if (!user && !isLoading) {
-      console.log('No user found, showing auth modal');
-      setShowAuthModal(true);
-    }
-  }, [user, isLoading]);
-
-  const handleAuthSuccess = (token: string, userData: any) => {
-    console.log('Auth success, user data:', userData);
-    login(token, userData);
-    setShowAuthModal(false);
+  const handleLogout = () => {
+    // In standalone mode, just show a toast
+    (window as any).showToast?.({ 
+      type: 'info', 
+      message: 'This is a demo - logout functionality disabled' 
+    });
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading MCP Playground...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
       <Header 
         user={user}
-        onLogout={logout}
+        onLogout={handleLogout}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
@@ -57,13 +38,6 @@ function App() {
           <MetricsDashboard />
         )}
       </main>
-
-      {showAuthModal && (
-        <AuthModal
-          onClose={() => setShowAuthModal(false)}
-          onAuthSuccess={handleAuthSuccess}
-        />
-      )}
 
       <Toaster />
     </div>
