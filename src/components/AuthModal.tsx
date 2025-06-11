@@ -6,6 +6,8 @@ interface AuthModalProps {
   onAuthSuccess: (token: string, user: any) => void;
 }
 
+const API_BASE_URL = 'http://localhost:3001';
+
 export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -20,7 +22,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess }) 
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const response = await fetch(`http://localhost:3001${endpoint}`, {
+      const url = `${API_BASE_URL}${endpoint}`;
+      
+      console.log('Auth request to:', url);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -28,16 +34,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess }) 
         body: JSON.stringify({ email, password }),
       });
 
+      console.log('Auth response status:', response.status);
+
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error?.message || 'Authentication failed');
+        throw new Error(data.error?.message || `Authentication failed: ${response.status}`);
       }
 
       localStorage.setItem('token', data.token);
       onAuthSuccess(data.token, data.user);
+      (window as any).showToast?.({ 
+        type: 'success', 
+        message: isLogin ? 'Successfully logged in!' : 'Account created successfully!' 
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+      console.error('Auth error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
