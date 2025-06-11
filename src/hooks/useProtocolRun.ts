@@ -7,7 +7,23 @@ interface ProtocolRunRequest {
   config: Record<string, any>;
 }
 
-const API_BASE_URL = 'http://localhost:3001';
+// Dynamic API base URL detection
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname.includes('webcontainer-api.io')) {
+      const parts = hostname.split('.');
+      if (parts.length >= 3) {
+        const prefix = parts[0];
+        const suffix = parts.slice(1).join('.');
+        return `https://${prefix}--3001--${suffix}`;
+      }
+    }
+  }
+  return 'http://localhost:3001';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const useProtocolRun = () => {
   const [results, setResults] = useState<any>(null);
@@ -21,10 +37,11 @@ export const useProtocolRun = () => {
 
     try {
       const token = localStorage.getItem('token');
+      const url = `${API_BASE_URL}/api/protocols/run`;
       
-      console.log('Making request to:', `${API_BASE_URL}/api/protocols/run`);
+      console.log('Making request to:', url);
       
-      const response = await fetch(`${API_BASE_URL}/api/protocols/run`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

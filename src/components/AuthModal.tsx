@@ -6,7 +6,23 @@ interface AuthModalProps {
   onAuthSuccess: (token: string, user: any) => void;
 }
 
-const API_BASE_URL = 'http://localhost:3001';
+// Dynamic API base URL detection
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname.includes('webcontainer-api.io')) {
+      const parts = hostname.split('.');
+      if (parts.length >= 3) {
+        const prefix = parts[0];
+        const suffix = parts.slice(1).join('.');
+        return `https://${prefix}--3001--${suffix}`;
+      }
+    }
+  }
+  return 'http://localhost:3001';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);

@@ -13,23 +13,58 @@ import protocolRoutes from './routes/protocols.js';
 import authRoutes from './routes/auth.js';
 import metricsRoutes from './routes/metrics.js';
 
+// Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || '0.0.0.0';
 
-// Security middleware
-app.use(helmet({
-  crossOriginEmbedderPolicy: false,
-  contentSecurityPolicy: false
-}));
-
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+// Enhanced CORS configuration for WebContainer
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost and WebContainer URLs
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      /^https?:\/\/.*\.webcontainer-api\.io$/,
+      /^https?:\/\/.*\.local-credentialless\.webcontainer-api\.io$/
+    ];
+    
+    const isAllowed = allowedOrigins.some(pattern => {
+      if (typeof pattern === 'string') {
+        return origin === pattern;
+      }
+      return pattern.test(origin);
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      logger.warn(`CORS blocked origin: ${origin}`);
+      callback(null, true); // Allow all origins in development
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
+};
+
+// Security middleware with WebContainer compatibility
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Compression and logging
 app.use(compression());
@@ -44,23 +79,41 @@ app.use(morgan('combined', {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting
+// Rate limiting (more lenient for development)
 app.use(rateLimiter);
 
-// Health check
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
     port: PORT,
-    env: process.env.NODE_ENV 
+    host: HOST,
+    env: process.env.NODE_ENV || 'development',
+    cors: 'enabled'
   });
 });
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/protocols', authMiddleware, protocolRoutes);
 app.use('/api/metrics', authMiddleware, metricsRoutes);
+
+// Root endpoint for testing
+app.get('/', (req, res) => {
+  res.json({
+    message: 'MCP Playground API Server',
+    version: '1.0.0',
+    endpoints: [
+      '/health',
+      '/api/auth/login',
+      '/api/auth/register',
+      '/api/protocols/run',
+      '/api/protocols/info',
+      '/api/metrics/summary'
+    ]
+  });
+});
 
 // Catch all route for debugging
 app.use('*', (req, res) => {
@@ -68,7 +121,16 @@ app.use('*', (req, res) => {
   res.status(404).json({ 
     error: 'Route not found',
     method: req.method,
-    url: req.originalUrl
+    url: req.originalUrl,
+    availableRoutes: [
+      'GET /health',
+      'GET /',
+      'POST /api/auth/login',
+      'POST /api/auth/register',
+      'POST /api/protocols/run',
+      'GET /api/protocols/info',
+      'GET /api/metrics/summary'
+    ]
   });
 });
 
@@ -77,18 +139,47 @@ app.use(errorHandler);
 
 const server = createServer(app);
 
-server.listen(PORT, '0.0.0.0', () => {
-  logger.info(`🚀 MCP Playground Server running on port ${PORT}`);
-  logger.info(`📊 Health check available at http://localhost:${PORT}/health`);
-  logger.info(`🔗 CORS enabled for: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
+// Start server
+server.listen(PORT, HOST, () => {
+  logger.info(`🚀 MCP Playground Server running on http://${HOST}:${PORT}`);
+  logger.info(`📊 Health check: http://${HOST}:${PORT}/health`);
+  logger.info(`🔗 API Root: http://${HOST}:${PORT}/`);
+  logger.info(`🌐 CORS enabled for WebContainer and localhost`);
+  logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+// Enhanced error handling
+server.on('error', (error: any) => {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  const bind = typeof PORT === 'string' ? 'Pipe ' + PORT : 'Port ' + PORT;
+
+  switch (error.code) {
+    case 'EACCES':
+      logger.error(`${bind} requires elevated privileges`);
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      logger.error(`${bind} is already in use`);
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
+const gracefulShutdown = (signal: string) => {
+  logger.info(`${signal} received, shutting down gracefully`);
   server.close(() => {
-    logger.info('Process terminated');
+    logger.info('Server closed');
+    process.exit(0);
   });
-});
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 export default app;
