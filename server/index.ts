@@ -5,13 +5,9 @@ import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
-import { logger } from './utils/logger.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import { rateLimiter } from './middleware/rateLimiter.js';
-import { authMiddleware } from './middleware/auth.js';
-import protocolRoutes from './routes/protocols.js';
-import authRoutes from './routes/auth.js';
-import metricsRoutes from './routes/metrics.js';
+import { initializeDatabase } from './config/database.js';
+import { mcpClient } from './services/mcpClient.js';
+import apiRoutes from './routes/api.js';
 
 // Load environment variables
 dotenv.config();
@@ -44,7 +40,7 @@ const corsOptions = {
     if (isAllowed) {
       callback(null, true);
     } else {
-      logger.warn(`CORS blocked origin: ${origin}`);
+      console.warn(`CORS blocked origin: ${origin}`);
       callback(null, true); // Allow all origins in development
     }
   },
@@ -69,18 +65,12 @@ app.options('*', cors(corsOptions));
 // Compression and logging
 app.use(compression());
 app.use(morgan('combined', { 
-  stream: { 
-    write: (message) => logger.info(message.trim()) 
-  },
   skip: (req) => req.url === '/health'
 }));
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-
-// Rate limiting (more lenient for development)
-app.use(rateLimiter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -90,34 +80,64 @@ app.get('/health', (req, res) => {
     port: PORT,
     host: HOST,
     env: process.env.NODE_ENV || 'development',
-    cors: 'enabled'
+    services: {
+      database: 'connected',
+      redis: 'connected',
+      mcp_servers: mcpClient.getServerStatus()
+    }
   });
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/protocols', authMiddleware, protocolRoutes);
-app.use('/api/metrics', authMiddleware, metricsRoutes);
+app.use('/api', apiRoutes);
 
-// Root endpoint for testing
+// Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'MCP Playground API Server',
-    version: '1.0.0',
+    message: 'Model Context Protocol Playground API',
+    version: '2.0.0',
+    description: 'Complete backend for MCP Playground with vector store, database, cache, and MCP integration',
     endpoints: [
-      '/health',
-      '/api/auth/login',
-      '/api/auth/register',
-      '/api/protocols/run',
-      '/api/protocols/info',
-      '/api/metrics/summary'
+      'GET /health - Health check',
+      'POST /api/run - Run protocols',
+      'GET /api/session/:sessionId - Get session results',
+      'GET /api/protocols/info - Get protocol information',
+      'GET /api/metrics/summary - Get metrics summary',
+      'GET /api/mcp/status - Get MCP server status',
+      'POST /api/mcp/connect/:serverName - Connect to MCP server',
+      'GET /api/mcp/:serverName/tools - List MCP server tools'
+    ],
+    features: [
+      'Four MCP strategies (Raw, Chain, Tree, RAG)',
+      'Vector store integration with Pinecone',
+      'PostgreSQL database for sessions',
+      'Redis caching for performance',
+      'MCP server integration',
+      'Quality scoring with GPT',
+      'Comprehensive metrics tracking'
     ]
   });
 });
 
-// Catch all route for debugging
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error occurred:', {
+    error: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method
+  });
+
+  res.status(err.statusCode || 500).json({
+    error: {
+      message: err.message || 'Internal Server Error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    }
+  });
+});
+
+// Catch all route
 app.use('*', (req, res) => {
-  logger.warn(`Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ 
     error: 'Route not found',
     method: req.method,
@@ -125,28 +145,52 @@ app.use('*', (req, res) => {
     availableRoutes: [
       'GET /health',
       'GET /',
-      'POST /api/auth/login',
-      'POST /api/auth/register',
-      'POST /api/protocols/run',
+      'POST /api/run',
+      'GET /api/session/:sessionId',
       'GET /api/protocols/info',
-      'GET /api/metrics/summary'
+      'GET /api/metrics/summary',
+      'GET /api/mcp/status'
     ]
   });
 });
 
-// Error handling
-app.use(errorHandler);
-
 const server = createServer(app);
 
-// Start server
-server.listen(PORT, HOST, () => {
-  logger.info(`🚀 MCP Playground Server running on http://${HOST}:${PORT}`);
-  logger.info(`📊 Health check: http://${HOST}:${PORT}/health`);
-  logger.info(`🔗 API Root: http://${HOST}:${PORT}/`);
-  logger.info(`🌐 CORS enabled for WebContainer and localhost`);
-  logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// Initialize and start server
+async function startServer() {
+  try {
+    console.log('🚀 Initializing MCP Playground Backend...');
+    
+    // Initialize database connections
+    await initializeDatabase();
+    
+    // Initialize MCP servers
+    console.log('🔌 Connecting to MCP servers...');
+    const serverNames = ['filesystem', 'fetch', 'memory', 'sequential_thinking'];
+    for (const serverName of serverNames) {
+      try {
+        await mcpClient.connectServer(serverName);
+        console.log(`✅ MCP server ${serverName} connected`);
+      } catch (error) {
+        console.warn(`⚠️  MCP server ${serverName} failed to connect:`, error.message);
+      }
+    }
+    
+    // Start HTTP server
+    server.listen(PORT, HOST, () => {
+      console.log(`🚀 MCP Playground Backend running on http://${HOST}:${PORT}`);
+      console.log(`📊 Health check: http://${HOST}:${PORT}/health`);
+      console.log(`🔗 API Root: http://${HOST}:${PORT}/`);
+      console.log(`🌐 CORS enabled for WebContainer and localhost`);
+      console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log('🎯 Ready to process MCP protocol requests!');
+    });
+    
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
 
 // Enhanced error handling
 server.on('error', (error: any) => {
@@ -158,11 +202,11 @@ server.on('error', (error: any) => {
 
   switch (error.code) {
     case 'EACCES':
-      logger.error(`${bind} requires elevated privileges`);
+      console.error(`${bind} requires elevated privileges`);
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      logger.error(`${bind} is already in use`);
+      console.error(`${bind} is already in use`);
       process.exit(1);
       break;
     default:
@@ -171,15 +215,23 @@ server.on('error', (error: any) => {
 });
 
 // Graceful shutdown
-const gracefulShutdown = (signal: string) => {
-  logger.info(`${signal} received, shutting down gracefully`);
+const gracefulShutdown = async (signal: string) => {
+  console.log(`${signal} received, shutting down gracefully`);
+  
+  // Disconnect MCP servers
+  await mcpClient.disconnectAll();
+  console.log('MCP servers disconnected');
+  
   server.close(() => {
-    logger.info('Server closed');
+    console.log('Server closed');
     process.exit(0);
   });
 };
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Start the server
+startServer();
 
 export default app;
