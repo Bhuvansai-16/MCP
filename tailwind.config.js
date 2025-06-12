@@ -39,8 +39,7 @@ export default {
         'gradient-xy': {
           '0%, 100%': {
             'background-size': '400% 400%',
-            '
--position': \'left center'
+            'background-position': 'left center'
           },
           '50%': {
             'background-size': '200% 200%',
