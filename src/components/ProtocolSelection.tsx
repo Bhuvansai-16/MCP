@@ -85,11 +85,11 @@ export const ProtocolSelection: React.FC<ProtocolSelectionProps> = ({
         isDark 
           ? 'bg-gray-800/30 border-gray-700/50' 
           : 'bg-white/30 border-white/50'
-      } shadow-2xl hover:shadow-3xl`}
+      } shadow-2xl hover:shadow-3xl h-full`}
       whileHover={{ scale: 1.01 }}
       transition={{ type: "spring", stiffness: 300 }}
     >
-      <div className="p-8">
+      <div className="p-8 h-full flex flex-col">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
             <motion.div
@@ -127,8 +127,9 @@ export const ProtocolSelection: React.FC<ProtocolSelectionProps> = ({
           </motion.button>
         </div>
 
+        {/* 2x2 Grid Layout for Protocols */}
         <motion.div 
-          className="space-y-4"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -142,7 +143,7 @@ export const ProtocolSelection: React.FC<ProtocolSelectionProps> = ({
                 key={protocol.id}
                 variants={itemVariants}
                 onClick={() => toggleProtocol(protocol.id)}
-                className={`group relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                className={`group relative p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
                   isSelected
                     ? isDark
                       ? `border-${protocol.color}-500/50 bg-${protocol.color}-500/10 shadow-lg shadow-${protocol.color}-500/20`
@@ -154,7 +155,7 @@ export const ProtocolSelection: React.FC<ProtocolSelectionProps> = ({
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="flex items-start space-x-4">
+                <div className="flex flex-col items-center text-center space-y-3">
                   <motion.div 
                     className={`p-3 rounded-xl transition-all duration-300 ${
                       isSelected
@@ -168,9 +169,10 @@ export const ProtocolSelection: React.FC<ProtocolSelectionProps> = ({
                   >
                     <Icon className="w-6 h-6" />
                   </motion.div>
+                  
                   <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h3 className={`font-bold text-lg ${
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <h3 className={`font-bold text-sm ${
                         isDark ? 'text-white' : 'text-gray-900'
                       }`}>
                         {protocol.name}
@@ -181,19 +183,19 @@ export const ProtocolSelection: React.FC<ProtocolSelectionProps> = ({
                           animate={{ scale: 1 }}
                           className={`text-${protocol.color}-500`}
                         >
-                          <CheckCircle className="w-5 h-5" />
+                          <CheckCircle className="w-4 h-4" />
                         </motion.div>
                       )}
                       <div className="group/tooltip relative">
-                        <Info className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'} cursor-help`} />
-                        <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-sm rounded-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 pointer-events-none z-10 ${
+                        <Info className={`w-3 h-3 ${isDark ? 'text-gray-400' : 'text-gray-500'} cursor-help`} />
+                        <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-48 ${
                           isDark ? 'bg-gray-800 text-white border border-gray-600' : 'bg-white text-gray-900 border border-gray-200'
                         } shadow-lg backdrop-blur-sm`}>
                           {protocol.tooltip}
                         </div>
                       </div>
                     </div>
-                    <p className={`text-sm ${
+                    <p className={`text-xs ${
                       isDark ? 'text-gray-400' : 'text-gray-600'
                     }`}>
                       {protocol.description}

@@ -123,23 +123,15 @@ The MCP Playground provides a powerful environment for testing and comparing the
       initial="hidden"
       animate="visible"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <motion.div className="lg:col-span-2 space-y-8" variants={itemVariants}>
+      {/* Updated grid layout for 50/50 ratio */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <motion.div variants={itemVariants}>
           <InputSection
             prompt={prompt}
             document={document}
             onPromptChange={setPrompt}
             onDocumentChange={setDocument}
             onClear={clearInputs}
-            isDark={isDark}
-          />
-          
-          <RunSection
-            isRunning={isRunning}
-            progress={progress}
-            logs={logs}
-            onRun={runProtocols}
-            canRun={!isRunning && prompt.trim() && document.trim() && selectedProtocols.length > 0}
             isDark={isDark}
           />
         </motion.div>
@@ -152,6 +144,18 @@ The MCP Playground provides a powerful environment for testing and comparing the
           />
         </motion.div>
       </div>
+
+      {/* Run section spans full width */}
+      <motion.div variants={itemVariants}>
+        <RunSection
+          isRunning={isRunning}
+          progress={progress}
+          logs={logs}
+          onRun={runProtocols}
+          canRun={!isRunning && prompt.trim() && document.trim() && selectedProtocols.length > 0}
+          isDark={isDark}
+        />
+      </motion.div>
 
       {results.length > 0 && (
         <motion.div 
