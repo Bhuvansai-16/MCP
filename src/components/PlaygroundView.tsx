@@ -261,16 +261,16 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark }) => {
   };
 
   return (
-    <motion.div 
-      className="container mx-auto px-6 py-8 h-[calc(100vh-120px)]"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+    <div className="container mx-auto px-6 py-8 h-[calc(100vh-120px)] overflow-hidden">
+      <motion.div 
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* MCP Editor Panel (Left) */}
         <motion.div 
-          className="flex flex-col h-full"
+          className="flex flex-col h-full overflow-hidden"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
@@ -285,7 +285,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark }) => {
 
         {/* Chat Panel (Right) */}
         <motion.div 
-          className="flex flex-col h-full"
+          className="flex flex-col h-full overflow-hidden"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
@@ -303,12 +303,12 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark }) => {
             showExecutionPanel={showExecutionPanel}
           />
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Execution Visualization Panel */}
       {showExecutionPanel && (
         <motion.div
-          className="mt-6"
+          className="mt-6 h-96 overflow-hidden"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -320,6 +320,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark }) => {
           />
         </motion.div>
       )}
-    </motion.div>
+    </div>
   );
 };

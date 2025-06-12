@@ -43,11 +43,24 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  // Only scroll when new messages are added, not on every render
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (messages.length > 0 && messagesEndRef.current) {
+      const scrollContainer = messagesContainerRef.current;
+      if (scrollContainer) {
+        const isScrolledToBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
+        
+        // Only auto-scroll if user is already at the bottom
+        if (isScrolledToBottom) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      }
+    }
+  }, [messages.length]); // Only depend on message count, not the messages array itself
 
+  // Focus input when agent starts, but don't scroll
   useEffect(() => {
     if (isAgentRunning && inputRef.current) {
       inputRef.current.focus();
@@ -122,9 +135,9 @@ export const AgentChat: React.FC<AgentChatProps> = ({
       isDark 
         ? 'bg-gray-800/30 border-gray-700/50' 
         : 'bg-white/30 border-white/50'
-    } shadow-2xl flex flex-col`}>
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200/20">
+    } shadow-2xl flex flex-col overflow-hidden`}>
+      {/* Header - Fixed */}
+      <div className="flex-shrink-0 p-6 border-b border-gray-200/20">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <motion.div
@@ -213,8 +226,12 @@ export const AgentChat: React.FC<AgentChatProps> = ({
         )}
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 p-6 overflow-y-auto">
+      {/* Messages - Scrollable */}
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 p-6 overflow-y-auto"
+        style={{ scrollBehavior: 'smooth' }}
+      >
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center">
             <motion.div
@@ -380,8 +397,8 @@ export const AgentChat: React.FC<AgentChatProps> = ({
         )}
       </div>
 
-      {/* Input */}
-      <div className="p-6 border-t border-gray-200/20">
+      {/* Input - Fixed */}
+      <div className="flex-shrink-0 p-6 border-t border-gray-200/20">
         <div className="flex space-x-3">
           <input
             ref={inputRef}
