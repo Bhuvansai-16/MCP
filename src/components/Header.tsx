@@ -1,12 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Github, Moon, Sun, Activity, Zap } from 'lucide-react';
+import { Github, Moon, Sun, Activity, Zap, Search, BarChart3 } from 'lucide-react';
+
+type TabType = 'compare' | 'playground' | 'explore';
 
 interface HeaderProps {
   isDark: boolean;
   onToggleTheme: () => void;
-  activeTab: 'playground' | 'explore';
-  onTabChange: (tab: 'playground' | 'explore') => void;
+  activeTab: TabType;
+  onTabChange: (tab: TabType) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -15,6 +17,27 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab, 
   onTabChange 
 }) => {
+  const tabs = [
+    { 
+      id: 'compare' as TabType, 
+      label: '🔍 Compare MCPs', 
+      icon: BarChart3,
+      description: 'Benchmark multiple protocols side-by-side'
+    },
+    { 
+      id: 'playground' as TabType, 
+      label: '🧪 Playground', 
+      icon: Zap,
+      description: 'Full-screen editor for testing MCPs'
+    },
+    { 
+      id: 'explore' as TabType, 
+      label: '🌎 Explore MCPs', 
+      icon: Search,
+      description: 'Discover open-source MCPs'
+    }
+  ];
+
   return (
     <motion.header 
       className={`sticky top-0 z-50 backdrop-blur-xl border-b transition-all duration-500 ${
@@ -60,22 +83,19 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </motion.div>
           
-          {/* Navigation Tabs */}
-          <div className={`flex items-center space-x-2 p-1 rounded-2xl ${
+          {/* Navigation Tabs - Center */}
+          <div className={`flex items-center space-x-2 p-2 rounded-2xl ${
             isDark ? 'bg-gray-800/50' : 'bg-gray-100/50'
-          } backdrop-blur-sm`}>
-            {[
-              { id: 'playground', label: 'Playground', icon: Zap },
-              { id: 'explore', label: 'Explore MCPs', icon: Activity }
-            ].map(({ id, label, icon: Icon }) => (
+          } backdrop-blur-sm border ${
+            isDark ? 'border-gray-700/50' : 'border-gray-200/50'
+          }`}>
+            {tabs.map(({ id, label, icon: Icon, description }) => (
               <motion.button
                 key={id}
-                onClick={() => onTabChange(id as 'playground' | 'explore')}
-                className={`relative flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                onClick={() => onTabChange(id)}
+                className={`relative flex items-center space-x-2 px-4 py-3 rounded-xl font-medium transition-all duration-300 group ${
                   activeTab === id
-                    ? isDark
-                      ? 'text-white shadow-lg'
-                      : 'text-white shadow-lg'
+                    ? 'text-white shadow-lg'
                     : isDark
                       ? 'text-gray-400 hover:text-white'
                       : 'text-gray-600 hover:text-gray-900'
@@ -83,6 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
+                {/* Active tab background */}
                 {activeTab === id && (
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl"
@@ -90,8 +111,23 @@ export const Header: React.FC<HeaderProps> = ({
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
-                <Icon className="w-4 h-4 relative z-10" />
-                <span className="relative z-10">{label}</span>
+                
+                {/* Tab content */}
+                <div className="relative z-10 flex items-center space-x-2">
+                  <Icon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{label}</span>
+                  <span className="sm:hidden">{label.split(' ')[0]}</span>
+                </div>
+
+                {/* Tooltip */}
+                <div className={`absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20 whitespace-nowrap ${
+                  isDark ? 'bg-gray-800 text-white border border-gray-600' : 'bg-white text-gray-900 border border-gray-200'
+                } shadow-lg backdrop-blur-sm`}>
+                  {description}
+                  <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 w-2 h-2 ${
+                    isDark ? 'bg-gray-800 border-l border-t border-gray-600' : 'bg-white border-l border-t border-gray-200'
+                  } rotate-45`} />
+                </div>
               </motion.button>
             ))}
           </div>
@@ -124,7 +160,7 @@ export const Header: React.FC<HeaderProps> = ({
               whileTap={{ scale: 0.95 }}
             >
               <Github className="w-5 h-5" />
-              <span className="font-medium">GitHub</span>
+              <span className="hidden sm:inline font-medium">GitHub</span>
             </motion.a>
           </div>
         </div>

@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Header } from './components/Header';
 import { PlaygroundView } from './components/PlaygroundView';
 import { ExploreView } from './components/ExploreView';
+import { CompareView } from './components/CompareView';
 import { useTheme } from './hooks/useTheme';
 
 export interface ProtocolResult {
@@ -17,9 +18,24 @@ export interface ProtocolResult {
   };
 }
 
+type TabType = 'compare' | 'playground' | 'explore';
+
 function App() {
   const { isDark, toggleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<'playground' | 'explore'>('playground');
+  const [activeTab, setActiveTab] = useState<TabType>('playground');
+
+  const renderActiveView = () => {
+    switch (activeTab) {
+      case 'compare':
+        return <CompareView isDark={isDark} />;
+      case 'playground':
+        return <PlaygroundView isDark={isDark} />;
+      case 'explore':
+        return <ExploreView isDark={isDark} />;
+      default:
+        return <PlaygroundView isDark={isDark} />;
+    }
+  };
 
   return (
     <div className={`min-h-screen transition-all duration-500 ${
@@ -64,27 +80,15 @@ function App() {
       
       <main className="relative z-10">
         <AnimatePresence mode="wait">
-          {activeTab === 'playground' ? (
-            <motion.div
-              key="playground"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <PlaygroundView isDark={isDark} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="explore"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ExploreView isDark={isDark} />
-            </motion.div>
-          )}
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            {renderActiveView()}
+          </motion.div>
         </AnimatePresence>
       </main>
 
