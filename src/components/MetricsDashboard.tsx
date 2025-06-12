@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,7 +13,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar, Radar } from 'react-chartjs-2';
-import { BarChart3, Filter, TrendingUp } from 'lucide-react';
+import { BarChart3, Filter, TrendingUp, Award, Zap, Clock } from 'lucide-react';
 import { ProtocolResult } from '../App';
 
 ChartJS.register(
@@ -67,6 +68,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ results, isD
         backgroundColor: filteredResults.map(r => getProtocolColor(r.protocol).bg),
         borderColor: filteredResults.map(r => getProtocolColor(r.protocol).border),
         borderWidth: 2,
+        borderRadius: 8,
       },
     ],
   };
@@ -80,6 +82,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ results, isD
         backgroundColor: filteredResults.map(r => getProtocolColor(r.protocol).bg),
         borderColor: filteredResults.map(r => getProtocolColor(r.protocol).border),
         borderWidth: 2,
+        borderRadius: 8,
       },
     ],
   };
@@ -94,13 +97,17 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ results, isD
       return {
         label: result.protocol.toUpperCase(),
         data: [
-          10 - (result.metrics.latency / maxLatency) * 10, // Inverted for better visualization
-          10 - (result.metrics.tokens / maxTokens) * 10, // Inverted for better visualization
+          10 - (result.metrics.latency / maxLatency) * 10,
+          10 - (result.metrics.tokens / maxTokens) * 10,
           result.metrics.quality
         ],
-        backgroundColor: color.bg,
+        backgroundColor: color.bg.replace('0.8', '0.2'),
         borderColor: color.border,
-        borderWidth: 2,
+        borderWidth: 3,
+        pointBackgroundColor: color.border,
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: color.border,
       };
     })
   };
@@ -111,25 +118,37 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ results, isD
       legend: {
         position: 'top' as const,
         labels: {
-          color: isDark ? '#e5e7eb' : '#374151'
+          color: isDark ? '#e5e7eb' : '#374151',
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
         }
       },
     },
     scales: {
       x: {
         ticks: {
-          color: isDark ? '#e5e7eb' : '#374151'
+          color: isDark ? '#e5e7eb' : '#374151',
+          font: {
+            weight: 'bold'
+          }
         },
         grid: {
-          color: isDark ? '#374151' : '#e5e7eb'
+          color: isDark ? '#374151' : '#e5e7eb',
+          lineWidth: 1
         }
       },
       y: {
         ticks: {
-          color: isDark ? '#e5e7eb' : '#374151'
+          color: isDark ? '#e5e7eb' : '#374151',
+          font: {
+            weight: 'bold'
+          }
         },
         grid: {
-          color: isDark ? '#374151' : '#e5e7eb'
+          color: isDark ? '#374151' : '#e5e7eb',
+          lineWidth: 1
         }
       }
     }
@@ -141,7 +160,11 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ results, isD
       legend: {
         position: 'top' as const,
         labels: {
-          color: isDark ? '#e5e7eb' : '#374151'
+          color: isDark ? '#e5e7eb' : '#374151',
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
         }
       },
     },
@@ -154,11 +177,18 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ results, isD
           color: isDark ? '#374151' : '#e5e7eb'
         },
         pointLabels: {
-          color: isDark ? '#e5e7eb' : '#374151'
+          color: isDark ? '#e5e7eb' : '#374151',
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
         },
         ticks: {
           color: isDark ? '#e5e7eb' : '#374151',
-          backdropColor: 'transparent'
+          backdropColor: 'transparent',
+          font: {
+            weight: 'bold'
+          }
         },
         min: 0,
         max: 10
@@ -167,18 +197,34 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ results, isD
   };
 
   return (
-    <div className={`rounded-2xl shadow-xl border transition-colors duration-300 ${
-      isDark 
-        ? 'bg-gray-800 border-gray-700' 
-        : 'bg-white/80 backdrop-blur-sm border-white/20'
-    }`}>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
+    <motion.div 
+      className={`rounded-3xl backdrop-blur-xl border transition-all duration-500 ${
+        isDark 
+          ? 'bg-gray-800/30 border-gray-700/50' 
+          : 'bg-white/30 border-white/50'
+      } shadow-2xl`}
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
+      <div className="p-8">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
-            <BarChart3 className={`w-6 h-6 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
-            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Metrics Dashboard
-            </h2>
+            <motion.div
+              className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500"
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
+            >
+              <BarChart3 className="w-6 h-6 text-white" />
+            </motion.div>
+            <div>
+              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Metrics Dashboard
+              </h2>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Interactive performance analytics
+              </p>
+            </div>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -187,10 +233,10 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ results, isD
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className={`px-3 py-1 rounded-lg border transition-colors ${
+                className={`px-3 py-1 rounded-xl border transition-all duration-300 ${
                   isDark 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
-                    : 'bg-white border-gray-200 text-gray-900'
+                    ? 'bg-gray-700/50 border-gray-600 text-white backdrop-blur-sm' 
+                    : 'bg-white/50 border-gray-200 text-gray-900 backdrop-blur-sm'
                 }`}
               >
                 <option value="latency">Sort by Latency</option>
@@ -202,108 +248,152 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ results, isD
         </div>
 
         {/* Protocol Filters */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-3 mb-8">
           {results.map(result => {
             const isVisible = visibleProtocols.includes(result.protocol);
             const color = getProtocolColor(result.protocol);
             
             return (
-              <button
+              <motion.button
                 key={result.protocol}
                 onClick={() => toggleProtocol(result.protocol)}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
                   isVisible
-                    ? `text-white shadow-lg`
+                    ? 'text-white shadow-lg transform scale-105'
                     : isDark
-                      ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                }`}
+                      ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50 border border-gray-600/50'
+                      : 'bg-gray-200/50 text-gray-600 hover:bg-gray-300/50 border border-gray-300/50'
+                } backdrop-blur-sm`}
                 style={isVisible ? { backgroundColor: color.border } : {}}
+                whileHover={{ scale: isVisible ? 1.1 : 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 {result.protocol.toUpperCase()}
-              </button>
+              </motion.button>
             );
           })}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Latency Chart */}
-          <div className={`p-4 rounded-xl ${
-            isDark ? 'bg-gray-700/50' : 'bg-gray-50'
-          }`}>
-            <h3 className={`text-lg font-semibold mb-4 flex items-center space-x-2 ${
+          <motion.div 
+            className={`p-6 rounded-2xl ${
+              isDark ? 'bg-gray-700/30' : 'bg-gray-50/30'
+            } backdrop-blur-sm border ${
+              isDark ? 'border-gray-600/30' : 'border-gray-200/30'
+            }`}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <h3 className={`text-lg font-bold mb-4 flex items-center space-x-2 ${
               isDark ? 'text-white' : 'text-gray-900'
             }`}>
-              <TrendingUp className="w-5 h-5" />
+              <Clock className="w-5 h-5 text-blue-500" />
               <span>Latency Comparison</span>
             </h3>
             <Bar data={latencyData} options={chartOptions} />
-          </div>
+          </motion.div>
 
           {/* Token Usage Chart */}
-          <div className={`p-4 rounded-xl ${
-            isDark ? 'bg-gray-700/50' : 'bg-gray-50'
-          }`}>
-            <h3 className={`text-lg font-semibold mb-4 flex items-center space-x-2 ${
+          <motion.div 
+            className={`p-6 rounded-2xl ${
+              isDark ? 'bg-gray-700/30' : 'bg-gray-50/30'
+            } backdrop-blur-sm border ${
+              isDark ? 'border-gray-600/30' : 'border-gray-200/30'
+            }`}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <h3 className={`text-lg font-bold mb-4 flex items-center space-x-2 ${
               isDark ? 'text-white' : 'text-gray-900'
             }`}>
-              <BarChart3 className="w-5 h-5" />
+              <Zap className="w-5 h-5 text-yellow-500" />
               <span>Token Usage</span>
             </h3>
             <Bar data={tokenData} options={chartOptions} />
-          </div>
+          </motion.div>
 
           {/* Radar Chart */}
-          <div className={`lg:col-span-2 p-4 rounded-xl ${
-            isDark ? 'bg-gray-700/50' : 'bg-gray-50'
-          }`}>
-            <h3 className={`text-lg font-semibold mb-4 ${
+          <motion.div 
+            className={`lg:col-span-2 p-6 rounded-2xl ${
+              isDark ? 'bg-gray-700/30' : 'bg-gray-50/30'
+            } backdrop-blur-sm border ${
+              isDark ? 'border-gray-600/30' : 'border-gray-200/30'
+            }`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            whileHover={{ scale: 1.01 }}
+          >
+            <h3 className={`text-lg font-bold mb-4 flex items-center space-x-2 ${
               isDark ? 'text-white' : 'text-gray-900'
             }`}>
-              Overall Performance Radar
+              <TrendingUp className="w-5 h-5 text-purple-500" />
+              <span>Overall Performance Radar</span>
             </h3>
             <div className="max-w-md mx-auto">
               <Radar data={radarData} options={radarOptions} />
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-          <div className={`p-4 rounded-xl text-center ${
-            isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-200'
-          }`}>
-            <h4 className={`font-semibold mb-2 ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <motion.div 
+            className={`p-6 rounded-2xl text-center ${
+              isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50/50 border border-blue-200/50'
+            } backdrop-blur-sm`}
+            whileHover={{ scale: 1.05, y: -5 }}
+          >
+            <Clock className={`w-8 h-8 mx-auto mb-3 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+            <h4 className={`font-bold mb-2 ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
               Fastest Protocol
             </h4>
-            <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               {[...results].sort((a, b) => a.metrics.latency - b.metrics.latency)[0]?.protocol.toUpperCase()}
             </p>
-          </div>
+          </motion.div>
           
-          <div className={`p-4 rounded-xl text-center ${
-            isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50 border border-green-200'
-          }`}>
-            <h4 className={`font-semibold mb-2 ${isDark ? 'text-green-400' : 'text-green-700'}`}>
+          <motion.div 
+            className={`p-6 rounded-2xl text-center ${
+              isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50/50 border border-green-200/50'
+            } backdrop-blur-sm`}
+            whileHover={{ scale: 1.05, y: -5 }}
+          >
+            <Zap className={`w-8 h-8 mx-auto mb-3 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+            <h4 className={`font-bold mb-2 ${isDark ? 'text-green-400' : 'text-green-700'}`}>
               Most Efficient
             </h4>
-            <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               {[...results].sort((a, b) => a.metrics.tokens - b.metrics.tokens)[0]?.protocol.toUpperCase()}
             </p>
-          </div>
+          </motion.div>
           
-          <div className={`p-4 rounded-xl text-center ${
-            isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50 border border-purple-200'
-          }`}>
-            <h4 className={`font-semibold mb-2 ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
+          <motion.div 
+            className={`p-6 rounded-2xl text-center ${
+              isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50/50 border border-purple-200/50'
+            } backdrop-blur-sm`}
+            whileHover={{ scale: 1.05, y: -5 }}
+          >
+            <Award className={`w-8 h-8 mx-auto mb-3 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+            <h4 className={`font-bold mb-2 ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
               Highest Quality
             </h4>
-            <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               {[...results].sort((a, b) => b.metrics.quality - a.metrics.quality)[0]?.protocol.toUpperCase()}
             </p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };

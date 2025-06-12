@@ -1,5 +1,6 @@
 import React from 'react';
-import { Download, Share2, FileText } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Download, Share2, FileText, Database, Link } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import { toast } from 'react-toastify';
 import { ProtocolResult } from '../App';
@@ -60,75 +61,153 @@ export const ExportSection: React.FC<ExportSectionProps> = ({ results, isDark })
     toast.success('Results exported to JSON!');
   };
 
+  const exportActions = [
+    {
+      id: 'csv',
+      label: 'Export CSV',
+      description: 'Download spreadsheet',
+      icon: FileText,
+      action: exportToCSV,
+      gradient: 'from-green-500 to-emerald-500',
+      hoverGradient: 'from-green-600 to-emerald-600'
+    },
+    {
+      id: 'json',
+      label: 'Export JSON',
+      description: 'Raw data format',
+      icon: Database,
+      action: exportToJSON,
+      gradient: 'from-blue-500 to-cyan-500',
+      hoverGradient: 'from-blue-600 to-cyan-600'
+    },
+    {
+      id: 'share',
+      label: 'Share Results',
+      description: 'Generate link',
+      icon: Link,
+      action: generateShareableLink,
+      gradient: 'from-purple-500 to-pink-500',
+      hoverGradient: 'from-purple-600 to-pink-600'
+    }
+  ];
+
   return (
-    <div className={`rounded-2xl shadow-xl border transition-colors duration-300 ${
-      isDark 
-        ? 'bg-gray-800 border-gray-700' 
-        : 'bg-white/80 backdrop-blur-sm border-white/20'
-    }`}>
-      <div className="p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <Download className={`w-6 h-6 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-          <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Export & Share
-          </h2>
+    <motion.div 
+      className={`rounded-3xl backdrop-blur-xl border transition-all duration-500 ${
+        isDark 
+          ? 'bg-gray-800/30 border-gray-700/50' 
+          : 'bg-white/30 border-white/50'
+      } shadow-2xl`}
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.4 }}
+    >
+      <div className="p-8">
+        <div className="flex items-center space-x-3 mb-8">
+          <motion.div
+            className="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-red-500"
+            whileHover={{ rotate: 360 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Download className="w-6 h-6 text-white" />
+          </motion.div>
+          <div>
+            <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Export & Share
+            </h2>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Save and share your analysis results
+            </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button
-            onClick={exportToCSV}
-            className={`flex items-center justify-center space-x-3 p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-lg ${
-              isDark 
-                ? 'border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-400' 
-                : 'border-green-200 bg-green-50 hover:bg-green-100 text-green-700'
-            }`}
-          >
-            <FileText className="w-5 h-5" />
-            <div className="text-left">
-              <div className="font-semibold">Export CSV</div>
-              <div className="text-sm opacity-75">Download spreadsheet</div>
-            </div>
-          </button>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {exportActions.map((action, index) => {
+            const Icon = action.icon;
+            return (
+              <motion.button
+                key={action.id}
+                onClick={action.action}
+                className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
+                  isDark 
+                    ? 'border-gray-600/30 bg-gray-700/20 hover:bg-gray-700/30' 
+                    : 'border-gray-200/30 bg-white/20 hover:bg-white/30'
+                } backdrop-blur-sm hover:shadow-2xl`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {/* Gradient background on hover */}
+                <motion.div
+                  className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+                />
+                
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <motion.div
+                    className={`p-4 rounded-2xl bg-gradient-to-r ${action.gradient} text-white mb-4 shadow-lg`}
+                    whileHover={{ scale: 1.1, rotate: 360 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Icon className="w-8 h-8" />
+                  </motion.div>
+                  
+                  <h3 className={`font-bold text-lg mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {action.label}
+                  </h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {action.description}
+                  </p>
+                </div>
 
-          <button
-            onClick={exportToJSON}
-            className={`flex items-center justify-center space-x-3 p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-lg ${
-              isDark 
-                ? 'border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400' 
-                : 'border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700'
-            }`}
-          >
-            <Download className="w-5 h-5" />
-            <div className="text-left">
-              <div className="font-semibold">Export JSON</div>
-              <div className="text-sm opacity-75">Raw data format</div>
-            </div>
-          </button>
-
-          <button
-            onClick={generateShareableLink}
-            className={`flex items-center justify-center space-x-3 p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-lg ${
-              isDark 
-                ? 'border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400' 
-                : 'border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700'
-            }`}
-          >
-            <Share2 className="w-5 h-5" />
-            <div className="text-left">
-              <div className="font-semibold">Share Results</div>
-              <div className="text-sm opacity-75">Generate link</div>
-            </div>
-          </button>
+                {/* Glow effect */}
+                <motion.div
+                  className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300`}
+                />
+              </motion.button>
+            );
+          })}
         </div>
 
-        <div className={`mt-4 p-4 rounded-lg ${
-          isDark ? 'bg-gray-700/50' : 'bg-gray-50'
-        }`}>
-          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            <strong>Export Summary:</strong> {results.length} protocol result{results.length !== 1 ? 's' : ''} ready for export
-          </p>
-        </div>
+        <motion.div 
+          className={`mt-8 p-6 rounded-2xl ${
+            isDark ? 'bg-gray-700/30' : 'bg-gray-50/30'
+          } backdrop-blur-sm border ${
+            isDark ? 'border-gray-600/30' : 'border-gray-200/30'
+          }`}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Export Summary
+              </p>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                {results.length} protocol result{results.length !== 1 ? 's' : ''} ready for export
+              </p>
+            </div>
+            <motion.div
+              className="flex items-center space-x-2"
+              animate={{
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <Share2 className={`w-5 h-5 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+              <span className={`text-sm font-medium ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                Ready to share
+              </span>
+            </motion.div>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
