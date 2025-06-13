@@ -80,7 +80,21 @@ export interface MCPListItem {
   domain: string;
   validated: boolean;
   popularity: number;
+  source_url?: string;
   created_at: string;
+}
+
+export interface WebMCPResult {
+  name: string;
+  description: string;
+  source_url: string;
+  tags: string[];
+  domain: string;
+  validated: boolean;
+  schema?: Record<string, any>;
+  file_type: string;
+  repository?: string;
+  stars?: number;
 }
 
 export const useBackend = () => {
@@ -154,6 +168,40 @@ export const useBackend = () => {
     return makeRequest<MCPListItem[]>(`/mcps${query ? `?${query}` : ''}`);
   };
 
+  const searchWebMCPs = async (query: string, limit: number = 10): Promise<WebMCPResult[]> => {
+    const searchParams = new URLSearchParams();
+    searchParams.append('query', query);
+    searchParams.append('limit', limit.toString());
+
+    return makeRequest<WebMCPResult[]>(`/mcps/search?${searchParams.toString()}`);
+  };
+
+  const importMCPFromWeb = async (sourceUrl: string, autoValidate: boolean = true): Promise<{
+    id: string;
+    message: string;
+    name: string;
+    source_url: string;
+    validated: boolean;
+    domain: string;
+    tags: string[];
+  }> => {
+    const searchParams = new URLSearchParams();
+    searchParams.append('source_url', sourceUrl);
+    searchParams.append('auto_validate', autoValidate.toString());
+
+    return makeRequest<{
+      id: string;
+      message: string;
+      name: string;
+      source_url: string;
+      validated: boolean;
+      domain: string;
+      tags: string[];
+    }>(`/mcps/import-from-web?${searchParams.toString()}`, {
+      method: 'POST',
+    });
+  };
+
   const getMCP = async (id: string): Promise<any> => {
     return makeRequest<any>(`/mcp/${id}`);
   };
@@ -164,6 +212,7 @@ export const useBackend = () => {
     schema_content: string | object;
     tags?: string[];
     domain?: string;
+    source_url?: string;
   }): Promise<{ id: string; message: string; validated: boolean }> => {
     return makeRequest<{ id: string; message: string; validated: boolean }>('/mcp/import', {
       method: 'POST',
@@ -192,8 +241,18 @@ export const useBackend = () => {
     return response.blob();
   };
 
-  const healthCheck = async (): Promise<{ status: string; timestamp: string; database: string }> => {
-    return makeRequest<{ status: string; timestamp: string; database: string }>('/health');
+  const healthCheck = async (): Promise<{ 
+    status: string; 
+    timestamp: string; 
+    database: string;
+    features: string[];
+  }> => {
+    return makeRequest<{ 
+      status: string; 
+      timestamp: string; 
+      database: string;
+      features: string[];
+    }>('/health');
   };
 
   return {
@@ -202,6 +261,8 @@ export const useBackend = () => {
     runAgent,
     compareProtocols,
     getMCPs,
+    searchWebMCPs,
+    importMCPFromWeb,
     getMCP,
     importMCP,
     createShareLink,
