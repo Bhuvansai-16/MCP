@@ -4,16 +4,29 @@ import { useState } from 'react';
 const getBackendUrl = () => {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
+    console.log('Current hostname:', hostname);
+    
     if (hostname.includes('webcontainer-api.io')) {
+      // Extract the WebContainer URL pattern and construct backend URL
       const parts = hostname.split('.');
       if (parts.length >= 3) {
         const prefix = parts[0];
         const suffix = parts.slice(1).join('.');
-        return `https://${prefix}--8000--${suffix}`;
+        const backendUrl = `https://${prefix}--8000--${suffix}`;
+        console.log('WebContainer Backend URL:', backendUrl);
+        return backendUrl;
       }
     }
+    
+    // Check if we're in development mode
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:8000';
+    }
   }
-  return 'http://localhost:8000';
+  
+  const fallbackUrl = 'http://localhost:8000';
+  console.log('Using fallback Backend URL:', fallbackUrl);
+  return fallbackUrl;
 };
 
 const BACKEND_URL = getBackendUrl();
@@ -130,6 +143,7 @@ export const useBackend = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Request failed';
       setError(errorMessage);
+      console.error('Backend request failed:', errorMessage);
       throw err;
     } finally {
       setLoading(false);

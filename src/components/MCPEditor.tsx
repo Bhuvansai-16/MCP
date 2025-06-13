@@ -206,9 +206,9 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
       isDark 
         ? 'bg-gray-800/30 border-gray-700/50' 
         : 'bg-white/30 border-white/50'
-    } shadow-2xl flex flex-col`}>
+    } shadow-2xl flex flex-col overflow-hidden`}>
       {/* Header */}
-      <div className="p-6 border-b border-gray-200/20">
+      <div className="flex-shrink-0 p-6 border-b border-gray-200/20">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <motion.div
@@ -326,7 +326,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
       </div>
 
       {/* Editor */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 overflow-hidden">
         <div className="h-full rounded-xl overflow-hidden border border-gray-200/20">
           <Editor
             height="100%"
