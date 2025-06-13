@@ -1,4 +1,4 @@
-# Model Context Protocol Playground
+# MCP.playground
 
 A comprehensive platform for testing and comparing different Model Context Protocol (MCP) implementations with real-time metrics and analytics.
 
@@ -6,134 +6,127 @@ A comprehensive platform for testing and comparing different Model Context Proto
 
 ### Frontend
 - **Modern React UI** with TypeScript and Tailwind CSS
+- **Three-Tab Navigation System**:
+  - 🔍 **Compare MCPs** – Benchmark multiple LLM protocols side-by-side
+  - 🧪 **Playground** – Interactive agent chat with MCP editor
+  - 🌎 **Explore MCPs** – Searchable grid of open-source MCPs
 - **Dark/Light Mode** with system preference detection
 - **Interactive Protocol Selection** with detailed descriptions
 - **Real-time Progress Tracking** during protocol execution
-- **Tabbed Results View** with side-by-side comparison
 - **Interactive Charts** using Chart.js for metrics visualization
 - **Export Functionality** (CSV, JSON, shareable links)
 - **Responsive Design** for all device sizes
 
-### Backend
-- **Four MCP Strategies**:
-  - **Raw**: Single pass with full context
-  - **Chain**: Sequential chunk processing
-  - **Tree**: Parallel branching with aggregation
-  - **RAG**: Retrieval-augmented generation
-- **Vector Store Integration** with Pinecone
-- **PostgreSQL Database** for session storage
-- **Redis Caching** for performance optimization
-- **MCP Server Integration** with reference implementations
-- **Quality Scoring** using GPT evaluation
-- **Comprehensive Metrics** tracking and analytics
+### Backend (FastAPI)
+- **Agent Execution** with custom MCP schemas
+- **Protocol Comparison** with multiple strategies
+- **MCP Management** (import, validate, store)
+- **Tool Simulation** (weather, search, calculator)
+- **Data Export** and sharing capabilities
+- **SQLite Database** for persistence
+- **Comprehensive API** with automatic documentation
 
 ## 🛠️ Tech Stack
 
 ### Frontend
 - React 18 + TypeScript
 - Tailwind CSS for styling
+- Framer Motion for animations
 - Chart.js for data visualization
+- Monaco Editor for code editing
 - React Tabs for tabbed interface
-- React Toastify for notifications
-- File Saver for exports
 
 ### Backend
-- Node.js + Express + TypeScript
-- PostgreSQL for data persistence
-- Redis for caching
-- Pinecone for vector storage
-- OpenAI API for LLM calls and embeddings
-- MCP reference servers integration
+- Python + FastAPI
+- Pydantic for data validation
+- SQLite for data persistence
+- Uvicorn ASGI server
+- CORS enabled for frontend integration
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+
-- PostgreSQL 14+
-- Redis 6+
-- Pinecone account
-- OpenAI API key
+- Python 3.8+
+- npm or yarn
 
 ### Installation
 
-1. **Clone and install dependencies**:
+1. **Clone and install frontend dependencies**:
 ```bash
 git clone <repository-url>
 cd mcp-playground
 npm install
 ```
 
-2. **Set up environment variables**:
+2. **Install backend dependencies**:
 ```bash
-cp .env.example .env
-# Edit .env with your configuration
+npm run backend:install
+# or manually:
+cd backend
+pip install -r requirements.txt
 ```
 
-3. **Set up the database**:
+3. **Populate sample data**:
 ```bash
-npm run db:setup
+npm run backend:populate
 ```
 
-4. **Start the development servers**:
+4. **Start both frontend and backend**:
 ```bash
 npm run dev
 ```
 
-This will start both the frontend (port 5173) and backend (port 3001) concurrently.
+This will start:
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API Documentation: http://localhost:8000/docs
 
-## 🔧 Configuration
+### Alternative: Start Services Separately
 
-### Environment Variables
-
-```env
-# Database Configuration
-POSTGRES_URL=postgresql://username:password@localhost:5432/mcp_playground
-REDIS_URL=redis://localhost:6379
-
-# Vector Store Configuration
-PINECONE_API_KEY=your_pinecone_api_key_here
-PINECONE_ENV=your_pinecone_environment_here
-
-# OpenAI Configuration
-OPENAI_API_KEY=your_openai_api_key_here
-
-# Server Configuration
-PORT=3001
-HOST=0.0.0.0
-NODE_ENV=development
-```
-
-### Database Setup
-
-The application uses PostgreSQL for storing sessions and metrics. Run the setup script to create the necessary tables:
-
+**Frontend only**:
 ```bash
-npm run db:setup
+npm run dev:client
 ```
 
-### Pinecone Setup
-
-1. Create a Pinecone account at [pinecone.io](https://pinecone.io)
-2. Create a new index named `mcp-playground`
-3. Use dimension 1536 (for OpenAI text-embedding-3-small)
-4. Add your API key and environment to `.env`
+**Backend only**:
+```bash
+npm run dev:server
+# or
+cd backend && python run_server.py
+```
 
 ## 📡 API Endpoints
 
-### Core Endpoints
-- `POST /api/run` - Execute protocols with prompt and document
-- `GET /api/session/:sessionId` - Retrieve session results
-- `GET /api/protocols/info` - Get available protocols and parameters
-- `GET /api/metrics/summary` - Get aggregated metrics
+### Core Functionality
 
-### MCP Integration
-- `GET /api/mcp/status` - Check MCP server status
-- `POST /api/mcp/connect/:serverName` - Connect to MCP server
-- `GET /api/mcp/:serverName/tools` - List available tools
+#### `POST /run-agent`
+Execute a prompt using a user-defined MCP schema.
 
-### Health & Monitoring
-- `GET /health` - Health check endpoint
-- `GET /` - API information and available endpoints
+#### `POST /compare-protocols`
+Benchmark multiple LLM processing protocols.
+
+#### `GET /mcps`
+List available MCPs with filtering and sorting.
+
+#### `POST /mcp/import`
+Import and validate new MCP schemas.
+
+#### `GET /mcp/{id}`
+Get detailed MCP information.
+
+### Utility Endpoints
+
+#### `POST /share`
+Generate shareable links for results.
+
+#### `GET /export/csv`
+Export comparison results as CSV.
+
+#### Tool Simulation
+- `GET /tools/weather` - Mock weather API
+- `GET /tools/search` - Mock search API  
+- `GET /tools/calc` - Mock calculator API
 
 ## 🧪 Protocol Strategies
 
@@ -157,43 +150,93 @@ npm run db:setup
 - **Best for**: Large knowledge bases, specific queries
 - **Parameters**: `top_k`, `similarity_threshold`, `embedding_model`
 
+## 🎮 Usage Guide
+
+### Compare MCPs Tab
+1. Enter your analysis prompt
+2. Provide a test document
+3. Select protocols to compare (Raw, Chain, Tree, RAG)
+4. Click "Run Comparison"
+5. View side-by-side results with metrics
+
+### Playground Tab
+1. **Left Panel**: Write or import MCP schema (JSON/YAML)
+2. **Right Panel**: Chat with the agent using natural language
+3. Click "Start Agent" when MCP is valid
+4. Ask questions that utilize the MCP tools
+5. View execution logs and tool calls
+
+### Explore MCPs Tab
+1. Browse the searchable grid of MCPs
+2. Filter by domain, tags, or validation status
+3. Click "Try in Playground" to test an MCP
+4. Click "Compare" to add to comparison
+
 ## 📊 Metrics & Analytics
 
-The platform tracks comprehensive metrics for each protocol execution:
+The platform tracks comprehensive metrics:
 
-- **Performance Metrics**: Latency, token usage, throughput
-- **Quality Scores**: GPT-evaluated response quality (1-10 scale)
+- **Performance**: Latency, token usage, throughput
+- **Quality Scores**: AI-evaluated response quality (1-10 scale)
 - **Protocol Comparison**: Side-by-side performance analysis
-- **Historical Trends**: Time-series data for optimization
+- **Tool Execution**: Individual tool call metrics
 
-## 🔌 MCP Server Integration
+## 🔧 Configuration
 
-The backend integrates with official MCP reference servers:
+### Environment Variables
 
-- **Filesystem Server**: File operations and document handling
-- **Fetch Server**: URL content retrieval
-- **Memory Server**: Persistent information storage
-- **Sequential Thinking Server**: Chain-of-thought processing
+**Frontend** (optional):
+```env
+VITE_BACKEND_URL=http://localhost:8000
+```
+
+**Backend**:
+```env
+HOST=0.0.0.0
+PORT=8000
+DATABASE_PATH=mcp_playground.db
+RELOAD=true
+```
+
+### Database
+
+The backend uses SQLite with automatic schema creation. Sample data includes:
+- Weather forecasting MCP
+- Web search MCP
+- Math calculator MCP
+- E-commerce MCP
+- Calendar management MCP
+- Social media MCP
 
 ## 🚀 Deployment
 
-### Production Build
+### Frontend (Vite Build)
 ```bash
 npm run build
-npm run server
+# Deploy the 'dist' folder to your hosting service
+```
+
+### Backend (Production)
+```bash
+cd backend
+pip install -r requirements.txt
+python main.py
+# or with gunicorn:
+pip install gunicorn
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
 
 ### Docker Deployment
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
+```dockerfile
+# Backend Dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY backend/requirements.txt .
+RUN pip install -r requirements.txt
+COPY backend/ .
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
-
-### Environment Setup
-- Set `NODE_ENV=production`
-- Configure production database URLs
-- Set up SSL certificates for HTTPS
-- Configure proper CORS origins
 
 ## 🤝 Contributing
 
@@ -203,13 +246,49 @@ docker-compose up -d
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 License
+### Development Guidelines
+
+- **Frontend**: Follow React best practices, use TypeScript
+- **Backend**: Follow FastAPI conventions, add proper validation
+- **Testing**: Test both API endpoints and UI components
+- **Documentation**: Update README and API docs for new features
+
+## 📝 API Documentation
+
+When the backend is running, visit:
+- **Interactive Docs**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **OpenAPI JSON**: http://localhost:8000/openapi.json
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Backend not starting**: Check Python version and dependencies
+2. **Frontend can't connect**: Verify backend URL in browser console
+3. **Database errors**: Delete `mcp_playground.db` and restart
+4. **CORS issues**: Check backend CORS configuration
+
+### Debug Mode
+
+Enable debug logging:
+```bash
+cd backend
+python -c "import logging; logging.basicConfig(level=logging.DEBUG)"
+python main.py
+```
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
 - [Model Context Protocol](https://modelcontextprotocol.io/) for the specification
-- OpenAI for GPT and embedding models
-- Pinecone for vector database services
+- FastAPI for the excellent Python web framework
+- React and the frontend ecosystem for powerful UI tools
 - The open-source community for excellent tools and libraries
+
+---
+
+**Happy MCP Testing! 🚀**

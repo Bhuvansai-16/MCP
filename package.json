@@ -6,12 +6,14 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "vite",
-    "dev:server": "tsx watch server/index.ts",
+    "dev:server": "cd backend && python run_server.py",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "tsx server/index.ts",
-    "db:setup": "node scripts/setup-db.js"
+    "server": "cd backend && python main.py",
+    "db:setup": "node scripts/setup-db.js",
+    "backend:install": "cd backend && pip install -r requirements.txt",
+    "backend:populate": "cd backend && python sample_mcps.py"
   },
   "dependencies": {
     "@pinecone-database/pinecone": "^1.1.2",
