@@ -4,9 +4,12 @@ import { useState } from 'react';
 const getBackendUrl = () => {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    const protocol = window.location.protocol; // Get the current protocol (http: or https:)
+    const protocol = window.location.protocol;
+    const port = window.location.port;
+    
     console.log('Current hostname:', hostname);
     console.log('Current protocol:', protocol);
+    console.log('Current port:', port);
     
     if (hostname.includes('webcontainer-api.io')) {
       // Extract the WebContainer URL pattern and construct backend URL
@@ -22,6 +25,12 @@ const getBackendUrl = () => {
     
     // Check if we're in development mode
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `${protocol}//${hostname}:8000`;
+    }
+    
+    // For other environments, try to construct the backend URL
+    if (port && port !== '80' && port !== '443') {
+      // If we're on a custom port, assume backend is on port 8000
       return `${protocol}//${hostname}:8000`;
     }
   }
@@ -135,12 +144,20 @@ export const useBackend = () => {
         ...options,
       });
 
+      console.log('Response status:', response.status);
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { detail: `HTTP ${response.status}: ${response.statusText}` };
+        }
         throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('Response data:', data);
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Request failed';
