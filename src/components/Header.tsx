@@ -1,8 +1,10 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Github, Moon, Sun, Activity, Zap, Search, BarChart3 } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Github, Moon, Sun, Activity, Zap, Search, BarChart3, Users, User, LogOut, Settings } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { AuthModal } from './AuthModal';
 
-type TabType = 'compare' | 'playground' | 'explore';
+type TabType = 'compare' | 'playground' | 'explore' | 'community';
 
 interface HeaderProps {
   isDark: boolean;
@@ -17,6 +19,10 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab, 
   onTabChange 
 }) => {
+  const { user, login, logout, isAuthenticated } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
   const tabs = [
     { 
       id: 'compare' as TabType, 
@@ -35,8 +41,19 @@ export const Header: React.FC<HeaderProps> = ({
       label: '🌎 Explore MCPs', 
       icon: Search,
       description: 'Discover open-source MCPs'
+    },
+    { 
+      id: 'community' as TabType, 
+      label: '👥 Community', 
+      icon: Users,
+      description: 'Share MCPs and connect with developers'
     }
   ];
+
+  const handleAuthSuccess = (token: string, userData: any) => {
+    login(token, userData);
+    setShowAuthModal(false);
+  };
 
   return (
     <motion.header 
@@ -162,9 +179,106 @@ export const Header: React.FC<HeaderProps> = ({
               <Github className="w-5 h-5" />
               <span className="hidden sm:inline font-medium">GitHub</span>
             </motion.a>
+
+            {/* User Authentication */}
+            {isAuthenticated ? (
+              <div className="relative">
+                <motion.button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                    isDark 
+                      ? 'bg-gray-800/50 hover:bg-gray-700/50 text-white' 
+                      : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-700'
+                  } backdrop-blur-sm`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full border-2 border-white/20"
+                  />
+                  <span className="hidden sm:inline font-medium">{user.name}</span>
+                </motion.button>
+
+                <AnimatePresence>
+                  {showUserMenu && (
+                    <motion.div
+                      className={`absolute right-0 top-full mt-2 w-48 rounded-xl backdrop-blur-xl border shadow-2xl ${
+                        isDark 
+                          ? 'bg-gray-800/90 border-gray-700/50' 
+                          : 'bg-white/90 border-white/50'
+                      }`}
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="p-2">
+                        <div className="px-3 py-2 border-b border-gray-200/20">
+                          <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            {user.name}
+                          </p>
+                          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {user.email}
+                          </p>
+                        </div>
+                        
+                        <button
+                          className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                            isDark 
+                              ? 'text-gray-300 hover:bg-gray-700/50' 
+                              : 'text-gray-700 hover:bg-gray-100/50'
+                          }`}
+                        >
+                          <Settings className="w-4 h-4" />
+                          <span>Settings</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            logout();
+                            setShowUserMenu(false);
+                          }}
+                          className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                            isDark 
+                              ? 'text-red-400 hover:bg-red-500/10' 
+                              : 'text-red-600 hover:bg-red-50'
+                          }`}
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <motion.button
+                onClick={() => setShowAuthModal(true)}
+                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <User className="w-5 h-5" />
+                <span>Sign In</span>
+              </motion.button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <AuthModal
+            onClose={() => setShowAuthModal(false)}
+            onAuthSuccess={handleAuthSuccess}
+            isDark={isDark}
+          />
+        )}
+      </AnimatePresence>
     </motion.header>
   );
 };

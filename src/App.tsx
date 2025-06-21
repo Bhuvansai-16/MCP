@@ -6,7 +6,9 @@ import { Header } from './components/Header';
 import { PlaygroundView } from './components/PlaygroundView';
 import { ExploreView } from './components/ExploreView';
 import { CompareView } from './components/CompareView';
+import { CommunityView } from './components/CommunityView';
 import { useTheme } from './hooks/useTheme';
+import { useAuth } from './hooks/useAuth';
 
 export interface ProtocolResult {
   protocol: string;
@@ -18,10 +20,11 @@ export interface ProtocolResult {
   };
 }
 
-type TabType = 'compare' | 'playground' | 'explore';
+type TabType = 'compare' | 'playground' | 'explore' | 'community';
 
 function App() {
   const { isDark, toggleTheme } = useTheme();
+  const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('playground');
 
   const renderActiveView = () => {
@@ -32,10 +35,37 @@ function App() {
         return <PlaygroundView isDark={isDark} />;
       case 'explore':
         return <ExploreView isDark={isDark} />;
+      case 'community':
+        return <CommunityView isDark={isDark} user={user} />;
       default:
         return <PlaygroundView isDark={isDark} />;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-all duration-500 ${
+        isDark 
+          ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900' 
+          : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
+      }`}>
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
+          <motion.div
+            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          />
+          <p className={`text-lg font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Loading MCP.playground...
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen transition-all duration-500 ${
