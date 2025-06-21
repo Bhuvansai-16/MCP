@@ -4,7 +4,9 @@ import { useState } from 'react';
 const getBackendUrl = () => {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
+    const protocol = window.location.protocol; // Get the current protocol (http: or https:)
     console.log('Current hostname:', hostname);
+    console.log('Current protocol:', protocol);
     
     if (hostname.includes('webcontainer-api.io')) {
       // Extract the WebContainer URL pattern and construct backend URL
@@ -12,7 +14,7 @@ const getBackendUrl = () => {
       if (parts.length >= 3) {
         const prefix = parts[0];
         const suffix = parts.slice(1).join('.');
-        const backendUrl = `https://${prefix}--8000--${suffix}`;
+        const backendUrl = `${protocol}//${prefix}--8000--${suffix}`;
         console.log('WebContainer Backend URL:', backendUrl);
         return backendUrl;
       }
@@ -20,7 +22,7 @@ const getBackendUrl = () => {
     
     // Check if we're in development mode
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:8000';
+      return `${protocol}//${hostname}:8000`;
     }
   }
   
