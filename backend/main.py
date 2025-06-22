@@ -17,6 +17,14 @@ import re
 import aiohttp
 import urllib.parse
 from contextlib import asynccontextmanager
+import logging
+
+# Import the enhanced MCP explorer
+from enhanced_mcp_explorer import enhanced_mcp_explorer, MCPSearchResult
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Database setup
 DATABASE_PATH = "mcp_playground.db"
@@ -38,6 +46,8 @@ def init_db():
             validated BOOLEAN DEFAULT FALSE,
             popularity INTEGER DEFAULT 0,
             source_url TEXT,
+            source_platform TEXT DEFAULT 'local',
+            confidence_score REAL DEFAULT 0.0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -67,12 +77,27 @@ def init_db():
         )
     ''')
     
-    # Search cache table for web results
+    # Enhanced search cache table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS search_cache (
             id TEXT PRIMARY KEY,
             query TEXT NOT NULL,
+            source_platform TEXT DEFAULT 'all',
             results TEXT NOT NULL,
+            confidence_score REAL DEFAULT 0.0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP DEFAULT (datetime('now', '+1 hour'))
+        )
+    ''')
+    
+    # Search analytics table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS search_analytics (
+            id TEXT PRIMARY KEY,
+            query TEXT NOT NULL,
+            results_count INTEGER DEFAULT 0,
+            search_duration_ms INTEGER DEFAULT 0,
+            sources_used TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -84,15 +109,16 @@ def init_db():
 async def lifespan(app: FastAPI):
     # Startup
     init_db()
+    logger.info("MCP Playground API started with enhanced search capabilities")
     yield
     # Shutdown
-    pass
+    logger.info("MCP Playground API shutting down")
 
 # FastAPI app
 app = FastAPI(
     title="MCP.playground API",
-    description="Backend API for Model Context Protocol testing and comparison",
-    version="1.0.0",
+    description="Enhanced Backend API for Model Context Protocol testing and comparison with advanced web search",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -130,6 +156,15 @@ class WebMCPResult(BaseModel):
     file_type: str
     repository: Optional[str] = None
     stars: Optional[int] = None
+    source_platform: str = "unknown"
+    confidence_score: float = 0.0
+
+class EnhancedSearchRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=200)
+    limit: int = Field(20, ge=1, le=100)
+    sources: List[str] = Field(default=["github", "huggingface", "web"], description="Search sources to use")
+    min_confidence: float = Field(0.0, ge=0.0, le=1.0, description="Minimum confidence score")
+    domains: Optional[List[str]] = Field(None, description="Filter by specific domains")
 
 class AgentRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=10000)
@@ -193,345 +228,9 @@ class MCPListItem(BaseModel):
     validated: bool
     popularity: int
     source_url: Optional[str] = None
+    source_platform: str = "local"
+    confidence_score: float = 0.0
     created_at: str
-
-# Smart MCP Explorer Service
-class SmartMCPExplorer:
-    def __init__(self):
-        self.github_api_base = "https://api.github.com"
-        self.search_patterns = [
-            r'\.mcp\.json$',
-            r'\.mcp\.yaml$',
-            r'\.mcp\.yml$',
-            r'mcp.*\.json$',
-            r'mcp.*\.yaml$',
-            r'model.*context.*protocol',
-            r'context.*protocol'
-        ]
-        
-    async def search_web_mcps(self, query: str, limit: int = 10) -> List[WebMCPResult]:
-        """Search for MCPs across the web"""
-        results = []
-        
-        # Search GitHub
-        github_results = await self._search_github(query, limit // 2)
-        results.extend(github_results)
-        
-        # Search known MCP repositories
-        known_repo_results = await self._search_known_repositories(query, limit // 2)
-        results.extend(known_repo_results)
-        
-        # Remove duplicates and limit results
-        seen_urls = set()
-        unique_results = []
-        for result in results:
-            if result.source_url not in seen_urls:
-                seen_urls.add(result.source_url)
-                unique_results.append(result)
-                if len(unique_results) >= limit:
-                    break
-        
-        return unique_results
-    
-    async def _search_github(self, query: str, limit: int) -> List[WebMCPResult]:
-        """Search GitHub for MCP files"""
-        results = []
-        
-        try:
-            async with aiohttp.ClientSession() as session:
-                # Search for files with MCP-related names
-                search_queries = [
-                    f"{query} mcp.json",
-                    f"{query} mcp.yaml",
-                    f"{query} model context protocol",
-                    f"mcp {query} filename:*.json",
-                    f"mcp {query} filename:*.yaml"
-                ]
-                
-                for search_query in search_queries[:2]:  # Limit API calls
-                    encoded_query = urllib.parse.quote(search_query)
-                    url = f"{self.github_api_base}/search/code?q={encoded_query}&sort=stars&order=desc&per_page={limit}"
-                    
-                    try:
-                        async with session.get(url) as response:
-                            if response.status == 200:
-                                data = await response.json()
-                                
-                                for item in data.get('items', [])[:limit]:
-                                    mcp_result = await self._process_github_file(session, item)
-                                    if mcp_result:
-                                        results.append(mcp_result)
-                            
-                            # Rate limiting - GitHub allows 10 requests per minute for unauthenticated
-                            await asyncio.sleep(1)
-                    except Exception as e:
-                        print(f"GitHub search error for query '{search_query}': {e}")
-                        continue
-                        
-        except Exception as e:
-            print(f"GitHub search error: {e}")
-        
-        return results
-    
-    async def _process_github_file(self, session: aiohttp.ClientSession, item: Dict) -> Optional[WebMCPResult]:
-        """Process a GitHub file item and validate if it's a valid MCP"""
-        try:
-            # Get file content
-            download_url = item.get('download_url')
-            if not download_url:
-                return None
-            
-            async with session.get(download_url) as response:
-                if response.status != 200:
-                    return None
-                
-                content = await response.text()
-                
-                # Try to parse as JSON or YAML
-                schema = None
-                file_type = "unknown"
-                
-                if item['name'].endswith('.json'):
-                    try:
-                        schema = json.loads(content)
-                        file_type = "json"
-                    except json.JSONDecodeError:
-                        return None
-                elif item['name'].endswith(('.yaml', '.yml')):
-                    try:
-                        schema = yaml.safe_load(content)
-                        file_type = "yaml"
-                    except yaml.YAMLError:
-                        return None
-                
-                if not schema:
-                    return None
-                
-                # Validate if it's a valid MCP schema
-                if not self._is_valid_mcp_schema(schema):
-                    return None
-                
-                # Extract metadata
-                name = schema.get('name', item['name'].replace('.json', '').replace('.yaml', '').replace('.yml', ''))
-                description = schema.get('description', f"MCP from {item['repository']['full_name']}")
-                
-                # Determine domain and tags
-                domain = self._extract_domain(name, description)
-                tags = self._extract_tags(name, description, schema)
-                
-                return WebMCPResult(
-                    name=name,
-                    description=description,
-                    source_url=item['html_url'],
-                    tags=tags,
-                    domain=domain,
-                    validated=True,
-                    schema=schema,
-                    file_type=file_type,
-                    repository=item['repository']['full_name'],
-                    stars=item['repository'].get('stargazers_count', 0)
-                )
-                
-        except Exception as e:
-            print(f"Error processing GitHub file {item.get('name', 'unknown')}: {e}")
-            return None
-    
-    async def _search_known_repositories(self, query: str, limit: int) -> List[WebMCPResult]:
-        """Search known MCP repositories and collections"""
-        results = []
-        
-        # Known MCP repositories and collections
-        known_sources = [
-            {
-                "name": "OpenAI MCP Examples",
-                "url": "https://raw.githubusercontent.com/openai/mcp-examples/main/weather.mcp.json",
-                "description": "Weather MCP for getting current weather data",
-                "domain": "weather",
-                "tags": ["weather", "api", "openai"]
-            },
-            {
-                "name": "Anthropic MCP Collection", 
-                "url": "https://raw.githubusercontent.com/anthropics/mcp-collection/main/travel.mcp.yaml",
-                "description": "Travel booking and management MCP",
-                "domain": "travel",
-                "tags": ["travel", "booking", "anthropic"]
-            },
-            {
-                "name": "Community MCP Hub",
-                "url": "https://raw.githubusercontent.com/mcp-hub/community/main/finance.mcp.json", 
-                "description": "Financial data and trading MCP",
-                "domain": "finance",
-                "tags": ["finance", "trading", "community"]
-            }
-        ]
-        
-        # Filter based on query
-        query_lower = query.lower()
-        matching_sources = [
-            source for source in known_sources
-            if query_lower in source['name'].lower() or 
-               query_lower in source['description'].lower() or
-               any(query_lower in tag for tag in source['tags'])
-        ]
-        
-        # Generate mock results for matching sources
-        for source in matching_sources[:limit]:
-            # Create a mock but realistic MCP schema
-            mock_schema = self._generate_mock_schema(source['name'], source['description'], source['domain'])
-            
-            results.append(WebMCPResult(
-                name=source['name'],
-                description=source['description'],
-                source_url=source['url'],
-                tags=source['tags'],
-                domain=source['domain'],
-                validated=True,
-                schema=mock_schema,
-                file_type="json",
-                repository="community/mcp-hub",
-                stars=42
-            ))
-        
-        return results
-    
-    def _is_valid_mcp_schema(self, schema: Dict) -> bool:
-        """Validate if a schema is a valid MCP"""
-        required_fields = ['name', 'tools']
-        
-        # Check required fields
-        for field in required_fields:
-            if field not in schema:
-                return False
-        
-        # Check tools structure
-        tools = schema.get('tools', [])
-        if not isinstance(tools, list) or len(tools) == 0:
-            return False
-        
-        # Validate each tool
-        for tool in tools:
-            if not isinstance(tool, dict):
-                return False
-            if 'name' not in tool or 'description' not in tool:
-                return False
-        
-        return True
-    
-    def _extract_domain(self, name: str, description: str) -> str:
-        """Extract domain from MCP name and description"""
-        text = f"{name} {description}".lower()
-        
-        domain_keywords = {
-            'weather': ['weather', 'climate', 'forecast', 'temperature'],
-            'finance': ['finance', 'trading', 'stock', 'crypto', 'payment'],
-            'travel': ['travel', 'booking', 'hotel', 'flight', 'airbnb'],
-            'productivity': ['calendar', 'task', 'note', 'email', 'schedule'],
-            'development': ['code', 'git', 'github', 'deploy', 'api'],
-            'social': ['social', 'twitter', 'facebook', 'instagram', 'post'],
-            'ecommerce': ['shop', 'store', 'product', 'cart', 'order'],
-            'data': ['data', 'analytics', 'database', 'query', 'search']
-        }
-        
-        for domain, keywords in domain_keywords.items():
-            if any(keyword in text for keyword in keywords):
-                return domain
-        
-        return 'general'
-    
-    def _extract_tags(self, name: str, description: str, schema: Dict) -> List[str]:
-        """Extract relevant tags from MCP content"""
-        text = f"{name} {description}".lower()
-        tags = set()
-        
-        # Common tag patterns
-        tag_patterns = {
-            'api': ['api', 'rest', 'endpoint'],
-            'ai': ['ai', 'ml', 'llm', 'gpt'],
-            'web': ['web', 'http', 'url', 'browser'],
-            'database': ['db', 'database', 'sql', 'mongo'],
-            'cloud': ['aws', 'azure', 'gcp', 'cloud'],
-            'automation': ['auto', 'script', 'workflow'],
-            'integration': ['integrate', 'connect', 'sync']
-        }
-        
-        for tag, patterns in tag_patterns.items():
-            if any(pattern in text for pattern in patterns):
-                tags.add(tag)
-        
-        # Add tool-based tags
-        tools = schema.get('tools', [])
-        for tool in tools:
-            tool_name = tool.get('name', '').lower()
-            if 'search' in tool_name:
-                tags.add('search')
-            if 'fetch' in tool_name or 'get' in tool_name:
-                tags.add('retrieval')
-            if 'create' in tool_name or 'add' in tool_name:
-                tags.add('creation')
-        
-        return list(tags)
-    
-    def _generate_mock_schema(self, name: str, description: str, domain: str) -> Dict:
-        """Generate a realistic mock MCP schema"""
-        base_schema = {
-            "name": name.lower().replace(' ', '.'),
-            "version": "1.0.0",
-            "description": description,
-            "tools": []
-        }
-        
-        # Domain-specific tools
-        domain_tools = {
-            'weather': [
-                {
-                    "name": "get_current_weather",
-                    "description": "Get current weather for a location",
-                    "parameters": {"location": "string", "units": "string"}
-                },
-                {
-                    "name": "get_forecast",
-                    "description": "Get weather forecast",
-                    "parameters": {"location": "string", "days": "number"}
-                }
-            ],
-            'travel': [
-                {
-                    "name": "search_flights",
-                    "description": "Search for available flights",
-                    "parameters": {"origin": "string", "destination": "string", "date": "string"}
-                },
-                {
-                    "name": "book_accommodation",
-                    "description": "Book hotel or accommodation",
-                    "parameters": {"location": "string", "checkin": "string", "checkout": "string"}
-                }
-            ],
-            'finance': [
-                {
-                    "name": "get_stock_price",
-                    "description": "Get current stock price",
-                    "parameters": {"symbol": "string"}
-                },
-                {
-                    "name": "get_market_data",
-                    "description": "Get market analysis data",
-                    "parameters": {"market": "string", "timeframe": "string"}
-                }
-            ]
-        }
-        
-        base_schema['tools'] = domain_tools.get(domain, [
-            {
-                "name": "generic_action",
-                "description": f"Perform {domain} related action",
-                "parameters": {"input": "string"}
-            }
-        ])
-        
-        return base_schema
-
-# Initialize the explorer
-mcp_explorer = SmartMCPExplorer()
 
 # Mock tool implementations (existing code)
 async def mock_weather_tool(location: str, units: str = "metric") -> Dict[str, Any]:
@@ -702,67 +401,165 @@ async def simulate_agent_execution(prompt: str, mcp_schema: MCPSchema, document:
 @app.get("/")
 async def root():
     return {
-        "message": "MCP.playground API",
-        "version": "1.0.0",
+        "message": "Enhanced MCP.playground API",
+        "version": "2.0.0",
+        "features": [
+            "Enhanced web search across multiple platforms",
+            "Advanced MCP schema validation",
+            "Robust caching and rate limiting",
+            "Multi-source MCP discovery",
+            "Confidence scoring for search results"
+        ],
         "endpoints": [
             "/run-agent",
             "/compare-protocols", 
             "/mcps",
             "/mcps/search",
+            "/mcps/search/enhanced",
             "/mcp/import",
             "/mcp/{id}",
             "/share",
             "/export/csv",
             "/tools/weather",
             "/tools/search",
-            "/tools/calc"
+            "/tools/calc",
+            "/health"
         ]
     }
 
 @app.get("/mcps/search", response_model=List[WebMCPResult])
 async def search_web_mcps(
     query: str = Query(..., description="Search query for MCPs"),
-    limit: int = Query(10, ge=1, le=50, description="Maximum number of results")
+    limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
+    sources: str = Query("github,huggingface,web", description="Comma-separated list of sources"),
+    min_confidence: float = Query(0.0, ge=0.0, le=1.0, description="Minimum confidence score")
 ):
-    """Search for MCPs across the web using Smart MCP Explorer"""
+    """Enhanced web search for MCPs across multiple platforms"""
     try:
+        start_time = time.time()
+        
+        # Parse sources
+        source_list = [s.strip() for s in sources.split(',') if s.strip()]
+        
         # Check cache first
+        cache_key = f"search:{query}:{limit}:{sources}:{min_confidence}"
         conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT results FROM search_cache WHERE query = ? AND created_at > datetime('now', '-1 hour')",
-            (query,)
+            "SELECT results FROM search_cache WHERE query = ? AND expires_at > datetime('now')",
+            (cache_key,)
         )
         cached_result = cursor.fetchone()
         
         if cached_result:
             conn.close()
             cached_data = json.loads(cached_result[0])
+            logger.info(f"Returning cached results for query: {query}")
             return [WebMCPResult(**item) for item in cached_data[:limit]]
         
-        # Perform web search
-        results = await mcp_explorer.search_web_mcps(query, limit)
+        # Perform enhanced web search
+        results = await enhanced_mcp_explorer.search_web_mcps(query, limit)
+        
+        # Filter by confidence score
+        filtered_results = [r for r in results if r.confidence_score >= min_confidence]
+        
+        # Convert to WebMCPResult format
+        web_results = []
+        for result in filtered_results:
+            web_results.append(WebMCPResult(
+                name=result.name,
+                description=result.description,
+                source_url=result.source_url,
+                tags=result.tags,
+                domain=result.domain,
+                validated=result.validated,
+                schema=result.schema,
+                file_type=result.file_type,
+                repository=result.repository,
+                stars=result.stars,
+                source_platform=result.source_platform,
+                confidence_score=result.confidence_score
+            ))
         
         # Cache results
         cache_id = str(uuid.uuid4())
+        search_duration = int((time.time() - start_time) * 1000)
+        
         cursor.execute(
-            "INSERT INTO search_cache (id, query, results) VALUES (?, ?, ?)",
-            (cache_id, query, json.dumps([result.dict() for result in results]))
+            "INSERT INTO search_cache (id, query, results, confidence_score, created_at, expires_at) VALUES (?, ?, ?, ?, datetime('now'), datetime('now', '+1 hour'))",
+            (cache_id, cache_key, json.dumps([r.dict() for r in web_results]), min_confidence)
         )
+        
+        # Store analytics
+        analytics_id = str(uuid.uuid4())
+        cursor.execute(
+            "INSERT INTO search_analytics (id, query, results_count, search_duration_ms, sources_used) VALUES (?, ?, ?, ?, ?)",
+            (analytics_id, query, len(web_results), search_duration, sources)
+        )
+        
         conn.commit()
         conn.close()
         
-        return results
+        logger.info(f"Enhanced search completed for '{query}': {len(web_results)} results in {search_duration}ms")
+        return web_results
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+        logger.error(f"Enhanced search failed for query '{query}': {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Enhanced search failed: {str(e)}")
+
+@app.post("/mcps/search/enhanced", response_model=List[WebMCPResult])
+async def enhanced_search_mcps(request: EnhancedSearchRequest):
+    """Advanced MCP search with detailed filtering options"""
+    try:
+        start_time = time.time()
+        
+        # Perform enhanced search
+        results = await enhanced_mcp_explorer.search_web_mcps(request.query, request.limit)
+        
+        # Apply filters
+        filtered_results = []
+        for result in results:
+            # Confidence filter
+            if result.confidence_score < request.min_confidence:
+                continue
+                
+            # Domain filter
+            if request.domains and result.domain not in request.domains:
+                continue
+                
+            filtered_results.append(result)
+        
+        # Convert to response format
+        web_results = [WebMCPResult(
+            name=r.name,
+            description=r.description,
+            source_url=r.source_url,
+            tags=r.tags,
+            domain=r.domain,
+            validated=r.validated,
+            schema=r.schema,
+            file_type=r.file_type,
+            repository=r.repository,
+            stars=r.stars,
+            source_platform=r.source_platform,
+            confidence_score=r.confidence_score
+        ) for r in filtered_results]
+        
+        search_duration = int((time.time() - start_time) * 1000)
+        logger.info(f"Enhanced search completed: {len(web_results)} results in {search_duration}ms")
+        
+        return web_results
+        
+    except Exception as e:
+        logger.error(f"Enhanced search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Enhanced search failed: {str(e)}")
 
 @app.post("/mcps/import-from-web")
 async def import_mcp_from_web(
     source_url: str = Query(..., description="URL of the MCP schema to import"),
     auto_validate: bool = Query(True, description="Automatically validate the imported MCP")
 ):
-    """Import an MCP directly from a web URL"""
+    """Import an MCP directly from a web URL with enhanced validation"""
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(source_url) as response:
@@ -796,28 +593,30 @@ async def import_mcp_from_web(
                 if not schema:
                     raise HTTPException(status_code=400, detail="Empty or invalid schema")
                 
-                # Validate MCP schema if requested
+                # Enhanced validation using the new validator
                 if auto_validate:
-                    try:
-                        mcp_schema = MCPSchema(**schema)
-                    except Exception as e:
-                        raise HTTPException(status_code=400, detail=f"Invalid MCP schema: {str(e)}")
+                    is_valid, error_msg = enhanced_mcp_explorer.validator.validate_schema(schema)
+                    if not is_valid:
+                        raise HTTPException(status_code=400, detail=f"Invalid MCP schema: {error_msg}")
                 
                 # Extract metadata
                 name = schema.get('name', 'imported-mcp')
                 description = schema.get('description', f'MCP imported from {source_url}')
                 
-                # Determine domain and tags
-                domain = mcp_explorer._extract_domain(name, description)
-                tags = mcp_explorer._extract_tags(name, description, schema)
+                # Determine domain and tags using enhanced methods
+                domain = enhanced_mcp_explorer._extract_domain(name, description)
+                tags = enhanced_mcp_explorer._extract_tags(name, description, schema)
+                
+                # Calculate confidence score
+                confidence_score = 0.8 if auto_validate else 0.5
                 
                 # Store in database
                 mcp_id = str(uuid.uuid4())
                 conn = sqlite3.connect(DATABASE_PATH)
                 cursor = conn.cursor()
                 cursor.execute('''
-                    INSERT INTO mcps (id, name, description, schema_content, tags, domain, validated, popularity, source_url)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO mcps (id, name, description, schema_content, tags, domain, validated, popularity, source_url, source_platform, confidence_score)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     mcp_id,
                     name,
@@ -827,10 +626,14 @@ async def import_mcp_from_web(
                     domain,
                     auto_validate,
                     0,
-                    source_url
+                    source_url,
+                    "web_import",
+                    confidence_score
                 ))
                 conn.commit()
                 conn.close()
+                
+                logger.info(f"Successfully imported MCP '{name}' from {source_url}")
                 
                 return {
                     "id": mcp_id,
@@ -839,21 +642,25 @@ async def import_mcp_from_web(
                     "source_url": source_url,
                     "validated": auto_validate,
                     "domain": domain,
-                    "tags": tags
+                    "tags": tags,
+                    "confidence_score": confidence_score
                 }
                 
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Import failed for {source_url}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
 
+# Continue with existing endpoints...
 @app.post("/run-agent", response_model=AgentResponse)
 async def run_agent(request: AgentRequest):
     """Execute a prompt using a user-defined MCP schema"""
     try:
-        # Validate MCP schema
-        if not request.mcp_schema.tools:
-            raise HTTPException(status_code=400, detail="MCP schema must contain at least one tool")
+        # Validate MCP schema using enhanced validator
+        is_valid, error_msg = enhanced_mcp_explorer.validator.validate_schema(request.mcp_schema.dict())
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=f"Invalid MCP schema: {error_msg}")
         
         # Execute agent
         result = await simulate_agent_execution(
@@ -878,9 +685,13 @@ async def run_agent(request: AgentRequest):
         conn.commit()
         conn.close()
         
+        logger.info(f"Agent execution completed for session {result.session_id}")
         return result
         
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Agent execution failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Agent execution failed: {str(e)}")
 
 @app.post("/compare-protocols", response_model=CompareResponse)
@@ -943,6 +754,8 @@ async def compare_protocols(request: CompareRequest):
         conn.commit()
         conn.close()
         
+        logger.info(f"Protocol comparison completed: {comparison_id}")
+        
         return CompareResponse(
             results=results,
             total_latency_ms=total_latency,
@@ -950,6 +763,7 @@ async def compare_protocols(request: CompareRequest):
         )
         
     except Exception as e:
+        logger.error(f"Protocol comparison failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Protocol comparison failed: {str(e)}")
 
 @app.get("/mcps", response_model=List[MCPListItem])
@@ -957,14 +771,15 @@ async def get_mcps(
     domain: Optional[str] = Query(None, description="Filter by domain"),
     tags: Optional[str] = Query(None, description="Filter by tags (comma-separated)"),
     validated: Optional[bool] = Query(None, description="Filter by validation status"),
-    sort_by: str = Query("popularity", description="Sort by: popularity, name, created_at"),
-    limit: int = Query(50, ge=1, le=100, description="Number of results to return")
+    sort_by: str = Query("popularity", description="Sort by: popularity, name, created_at, confidence_score"),
+    limit: int = Query(50, ge=1, le=100, description="Number of results to return"),
+    min_confidence: float = Query(0.0, ge=0.0, le=1.0, description="Minimum confidence score")
 ):
-    """Return a searchable, filterable list of open-source MCPs"""
+    """Return a searchable, filterable list of MCPs with enhanced filtering"""
     
     # Build query
-    query = "SELECT * FROM mcps WHERE 1=1"
-    params = []
+    query = "SELECT * FROM mcps WHERE confidence_score >= ?"
+    params = [min_confidence]
     
     if domain:
         query += " AND domain = ?"
@@ -985,6 +800,8 @@ async def get_mcps(
         query += " ORDER BY name ASC"
     elif sort_by == "created_at":
         query += " ORDER BY created_at DESC"
+    elif sort_by == "confidence_score":
+        query += " ORDER BY confidence_score DESC"
     else:
         query += " ORDER BY popularity DESC"
     
@@ -1009,14 +826,16 @@ async def get_mcps(
             validated=bool(row[6]),
             popularity=row[7] or 0,
             source_url=row[8] if len(row) > 8 else None,
-            created_at=row[9] if len(row) > 9 else ""
+            source_platform=row[9] if len(row) > 9 else "local",
+            confidence_score=row[10] if len(row) > 10 else 0.0,
+            created_at=row[11] if len(row) > 11 else ""
         ))
     
     return mcps
 
 @app.post("/mcp/import")
 async def import_mcp(request: MCPImportRequest):
-    """Upload/import new MCP and validate it"""
+    """Upload/import new MCP with enhanced validation"""
     try:
         mcp_id = str(uuid.uuid4())
         
@@ -1034,41 +853,56 @@ async def import_mcp(request: MCPImportRequest):
         else:
             schema_dict = request.schema_content
         
-        # Validate MCP schema
-        try:
-            mcp_schema = MCPSchema(**schema_dict)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Invalid MCP schema: {str(e)}")
+        # Enhanced validation
+        is_valid, error_msg = enhanced_mcp_explorer.validator.validate_schema(schema_dict)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=f"Invalid MCP schema: {error_msg}")
+        
+        # Extract enhanced metadata
+        domain = enhanced_mcp_explorer._extract_domain(request.name, request.description or "")
+        tags = enhanced_mcp_explorer._extract_tags(request.name, request.description or "", schema_dict)
+        
+        # Merge with provided tags
+        if request.tags:
+            tags.extend(request.tags)
+            tags = list(set(tags))  # Remove duplicates
         
         # Store in database
         conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO mcps (id, name, description, schema_content, tags, domain, validated, popularity, source_url)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO mcps (id, name, description, schema_content, tags, domain, validated, popularity, source_url, source_platform, confidence_score)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             mcp_id,
             request.name,
             request.description,
             json.dumps(schema_dict),
-            json.dumps(request.tags),
-            request.domain,
-            True,  # Auto-validate for now
+            json.dumps(tags),
+            request.domain or domain,
+            True,  # Auto-validate for imports
             0,
-            request.source_url
+            request.source_url,
+            "manual_import",
+            0.9  # High confidence for manual imports
         ))
         conn.commit()
         conn.close()
         
+        logger.info(f"Successfully imported MCP '{request.name}'")
+        
         return {
             "id": mcp_id,
             "message": "MCP imported successfully",
-            "validated": True
+            "validated": True,
+            "domain": request.domain or domain,
+            "tags": tags
         }
         
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Import failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
 
 @app.get("/mcp/{mcp_id}")
@@ -1093,8 +927,10 @@ async def get_mcp(mcp_id: str):
         "validated": bool(row[6]),
         "popularity": row[7],
         "source_url": row[8] if len(row) > 8 else None,
-        "created_at": row[9] if len(row) > 9 else "",
-        "updated_at": row[10] if len(row) > 10 else ""
+        "source_platform": row[9] if len(row) > 9 else "local",
+        "confidence_score": row[10] if len(row) > 10 else 0.0,
+        "created_at": row[11] if len(row) > 11 else "",
+        "updated_at": row[12] if len(row) > 12 else ""
     }
 
 @app.post("/share")
@@ -1173,6 +1009,48 @@ async def calc_tool(expr: str = Query(..., alias="expression")):
     """Mock calculator API endpoint"""
     return await mock_calculator_tool(expr)
 
+# Analytics endpoints
+@app.get("/analytics/search")
+async def get_search_analytics():
+    """Get search analytics data"""
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    
+    # Get recent search statistics
+    cursor.execute("""
+        SELECT 
+            COUNT(*) as total_searches,
+            AVG(results_count) as avg_results,
+            AVG(search_duration_ms) as avg_duration,
+            COUNT(DISTINCT query) as unique_queries
+        FROM search_analytics 
+        WHERE created_at > datetime('now', '-24 hours')
+    """)
+    
+    stats = cursor.fetchone()
+    
+    # Get top queries
+    cursor.execute("""
+        SELECT query, COUNT(*) as count
+        FROM search_analytics 
+        WHERE created_at > datetime('now', '-7 days')
+        GROUP BY query 
+        ORDER BY count DESC 
+        LIMIT 10
+    """)
+    
+    top_queries = cursor.fetchall()
+    
+    conn.close()
+    
+    return {
+        "total_searches": stats[0] or 0,
+        "avg_results": round(stats[1] or 0, 2),
+        "avg_duration_ms": round(stats[2] or 0, 2),
+        "unique_queries": stats[3] or 0,
+        "top_queries": [{"query": q[0], "count": q[1]} for q in top_queries]
+    }
+
 # Health check
 @app.get("/health")
 async def health_check():
@@ -1180,7 +1058,15 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "database": "connected" if os.path.exists(DATABASE_PATH) else "disconnected",
-        "features": ["smart_mcp_explorer", "web_search", "auto_import"]
+        "features": [
+            "enhanced_web_search",
+            "multi_platform_discovery", 
+            "advanced_validation",
+            "confidence_scoring",
+            "robust_caching",
+            "search_analytics"
+        ],
+        "version": "2.0.0"
     }
 
 if __name__ == "__main__":
