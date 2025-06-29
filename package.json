@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "vite",
-    "dev:server": "cd backend && python run_server.py",
+    "dev:server": "python backend/run_server.py",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
