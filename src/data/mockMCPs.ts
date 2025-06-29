@@ -158,15 +158,47 @@ export const mockLocalMCPs: MCPListItem[] = [
     repository: "example/ai-mcp",
     stars: 123,
     created_at: new Date().toISOString()
+  },
+  {
+    id: "scraping-009",
+    name: "web-scraping-tools",
+    description: "Advanced web scraping tools with proxy support and rate limiting",
+    tags: ["scraping", "web", "data", "extraction"],
+    domain: "development",
+    validated: true,
+    popularity: 78,
+    source_url: "https://github.com/scraping-tools/web-mcp",
+    source_platform: "github",
+    confidence_score: 0.87,
+    file_type: "json",
+    repository: "scraping-tools/web-mcp",
+    stars: 342,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "database-010",
+    name: "database-connector",
+    description: "Universal database connector supporting multiple database types",
+    tags: ["database", "sql", "connector", "mysql", "postgres"],
+    domain: "development",
+    validated: true,
+    popularity: 84,
+    source_url: "https://github.com/db-tools/universal-mcp",
+    source_platform: "github",
+    confidence_score: 0.91,
+    file_type: "typescript",
+    repository: "db-tools/universal-mcp",
+    stars: 567,
+    created_at: new Date().toISOString()
   }
 ];
 
 export const mockWebMCPs: WebMCPResult[] = [
   {
     name: "advanced-weather-api",
-    description: "Advanced weather API with machine learning predictions",
+    description: "Advanced weather API with machine learning predictions and climate analysis",
     source_url: "https://github.com/weather-ml/advanced-mcp",
-    tags: ["weather", "ml", "predictions"],
+    tags: ["weather", "ml", "predictions", "climate"],
     domain: "weather",
     validated: true,
     schema: {
@@ -174,7 +206,8 @@ export const mockWebMCPs: WebMCPResult[] = [
       version: "2.0.0",
       tools: [
         { name: "get_weather_ml", description: "Get ML-enhanced weather data" },
-        { name: "predict_weather", description: "Predict weather patterns" }
+        { name: "predict_weather", description: "Predict weather patterns using AI" },
+        { name: "climate_analysis", description: "Analyze long-term climate trends" }
       ]
     },
     file_type: "json",
@@ -185,9 +218,9 @@ export const mockWebMCPs: WebMCPResult[] = [
   },
   {
     name: "crypto-trading-bot",
-    description: "Cryptocurrency trading automation with risk management",
+    description: "Cryptocurrency trading automation with risk management and portfolio optimization",
     source_url: "https://github.com/crypto-tools/trading-mcp",
-    tags: ["crypto", "trading", "automation"],
+    tags: ["crypto", "trading", "automation", "portfolio"],
     domain: "finance",
     validated: true,
     schema: {
@@ -195,7 +228,8 @@ export const mockWebMCPs: WebMCPResult[] = [
       version: "1.5.0",
       tools: [
         { name: "execute_trade", description: "Execute cryptocurrency trades" },
-        { name: "analyze_market", description: "Analyze market conditions" }
+        { name: "analyze_market", description: "Analyze market conditions" },
+        { name: "manage_portfolio", description: "Optimize portfolio allocation" }
       ]
     },
     file_type: "yaml",
@@ -206,17 +240,18 @@ export const mockWebMCPs: WebMCPResult[] = [
   },
   {
     name: "smart-home-controller",
-    description: "IoT device control and automation for smart homes",
+    description: "IoT device control and automation for smart homes with energy optimization",
     source_url: "https://github.com/iot-home/smart-mcp",
-    tags: ["iot", "smart-home", "automation"],
+    tags: ["iot", "smart-home", "automation", "energy"],
     domain: "productivity",
     validated: true,
     schema: {
       name: "smart-home-controller",
       version: "3.1.0",
       tools: [
-        { name: "control_lights", description: "Control smart lighting" },
-        { name: "manage_temperature", description: "Manage thermostat" }
+        { name: "control_lights", description: "Control smart lighting systems" },
+        { name: "manage_temperature", description: "Manage thermostat and HVAC" },
+        { name: "optimize_energy", description: "Optimize energy consumption" }
       ]
     },
     file_type: "json",
@@ -224,5 +259,71 @@ export const mockWebMCPs: WebMCPResult[] = [
     stars: 423,
     source_platform: "github",
     confidence_score: 0.87
+  },
+  {
+    name: "content-scraper-pro",
+    description: "Professional web scraping with JavaScript rendering and anti-detection",
+    source_url: "https://github.com/scraping-pro/content-mcp",
+    tags: ["scraping", "web", "javascript", "anti-detection"],
+    domain: "development",
+    validated: true,
+    schema: {
+      name: "content-scraper-pro",
+      version: "2.3.0",
+      tools: [
+        { name: "scrape_page", description: "Scrape web page content" },
+        { name: "render_js", description: "Render JavaScript-heavy pages" },
+        { name: "bypass_detection", description: "Bypass anti-scraping measures" }
+      ]
+    },
+    file_type: "typescript",
+    repository: "scraping-pro/content-mcp",
+    stars: 734,
+    source_platform: "github",
+    confidence_score: 0.91
+  },
+  {
+    name: "email-automation-suite",
+    description: "Comprehensive email automation with templates and analytics",
+    source_url: "https://github.com/email-tools/automation-mcp",
+    tags: ["email", "automation", "templates", "analytics"],
+    domain: "productivity",
+    validated: true,
+    schema: {
+      name: "email-automation-suite",
+      version: "1.8.0",
+      tools: [
+        { name: "send_email", description: "Send automated emails" },
+        { name: "create_template", description: "Create email templates" },
+        { name: "track_analytics", description: "Track email performance" }
+      ]
+    },
+    file_type: "json",
+    repository: "email-tools/automation-mcp",
+    stars: 445,
+    source_platform: "github",
+    confidence_score: 0.83
+  },
+  {
+    name: "awesome-api-collection",
+    description: "Curated collection of API integrations from awesome-apis list",
+    source_url: "https://github.com/awesome-apis/mcp-collection",
+    tags: ["awesome", "api", "collection", "integration"],
+    domain: "development",
+    validated: true,
+    schema: {
+      name: "awesome-api-collection",
+      version: "1.0.0",
+      tools: [
+        { name: "call_api", description: "Make API calls to various services" },
+        { name: "authenticate", description: "Handle API authentication" },
+        { name: "rate_limit", description: "Manage API rate limiting" }
+      ]
+    },
+    file_type: "json",
+    repository: "awesome-apis/mcp-collection",
+    stars: 1123,
+    source_platform: "github",
+    confidence_score: 0.96
   }
 ];

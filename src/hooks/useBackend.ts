@@ -137,25 +137,31 @@ export const useBackend = () => {
     setError(null);
 
     try {
+      console.log('📚 Loading local MCPs with params:', params);
+      
       // Filter mock data based on parameters
       let filteredMCPs = [...mockLocalMCPs];
 
       if (params.domain && params.domain !== 'all') {
         filteredMCPs = filteredMCPs.filter(mcp => mcp.domain === params.domain);
+        console.log(`🔍 Filtered by domain '${params.domain}': ${filteredMCPs.length} results`);
       }
 
       if (params.tags) {
         filteredMCPs = filteredMCPs.filter(mcp => 
           mcp.tags.some(tag => tag.toLowerCase().includes(params.tags!.toLowerCase()))
         );
+        console.log(`🏷️ Filtered by tags '${params.tags}': ${filteredMCPs.length} results`);
       }
 
       if (params.validated !== undefined) {
         filteredMCPs = filteredMCPs.filter(mcp => mcp.validated === params.validated);
+        console.log(`✅ Filtered by validated '${params.validated}': ${filteredMCPs.length} results`);
       }
 
       if (params.min_confidence !== undefined) {
         filteredMCPs = filteredMCPs.filter(mcp => mcp.confidence_score >= params.min_confidence!);
+        console.log(`📊 Filtered by confidence >= ${params.min_confidence}: ${filteredMCPs.length} results`);
       }
 
       // Sort results
@@ -172,9 +178,11 @@ export const useBackend = () => {
         filteredMCPs = filteredMCPs.slice(0, params.limit);
       }
 
+      console.log(`✅ Final results: ${filteredMCPs.length} MCPs`);
       return filteredMCPs;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch MCPs';
+      console.error('❌ Error loading local MCPs:', errorMessage);
       setError(errorMessage);
       throw err;
     } finally {
@@ -195,31 +203,59 @@ export const useBackend = () => {
     setError(null);
 
     try {
-      console.log(`Starting web search for: ${query} with client-side scraping`);
+      console.log('🌐 Starting web search with parameters:', {
+        query,
+        limit,
+        options
+      });
       
       if (!options.use_scraping) {
-        // Return empty results if scraping is disabled
+        console.log('⚠️ Web scraping disabled, returning empty results');
         return [];
       }
 
       // Initialize web scraper service
+      console.log('🔧 Initializing web scraper service...');
       await webScraperService.initialize();
 
-      // Use web scraper
+      // Perform the search
+      console.log('🔍 Performing comprehensive web search...');
+      const startTime = Date.now();
       const results = await webScraperService.searchAll(query, limit);
+      const searchDuration = Date.now() - startTime;
+      
+      console.log(`⏱️ Search completed in ${searchDuration}ms`);
+      console.log(`📊 Raw results: ${results.length} MCPs found`);
       
       // Filter by confidence if specified
       const filteredResults = options.min_confidence 
-        ? results.filter(r => r.confidence_score >= options.min_confidence!)
+        ? results.filter(r => {
+            const meetsConfidence = r.confidence_score >= options.min_confidence!;
+            if (!meetsConfidence) {
+              console.log(`🔽 Filtered out ${r.name} (confidence: ${r.confidence_score})`);
+            }
+            return meetsConfidence;
+          })
         : results;
 
-      console.log(`Web search completed: ${filteredResults.length} results found`);
+      console.log(`✅ Final filtered results: ${filteredResults.length} MCPs`);
+      
+      // Log detailed results for debugging
+      filteredResults.forEach((result, index) => {
+        console.log(`📋 Result ${index + 1}:`, {
+          name: result.name,
+          source: result.source_platform,
+          confidence: result.confidence_score,
+          url: result.source_url
+        });
+      });
+
       return filteredResults;
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Web search failed';
+      console.error('❌ Web search error:', err);
       setError(errorMessage);
-      console.error('Web search error:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -234,6 +270,8 @@ export const useBackend = () => {
     domains?: string[];
     use_web_scraping?: boolean;
   }): Promise<WebMCPResult[]> => {
+    console.log('🚀 Enhanced search request:', request);
+    
     return searchWebMCPs(request.query, request.limit, {
       sources: request.sources?.join(','),
       min_confidence: request.min_confidence,
@@ -254,6 +292,8 @@ export const useBackend = () => {
     setError(null);
 
     try {
+      console.log('📥 Importing MCP from:', sourceUrl);
+      
       // Fetch and validate the MCP from the URL
       const response = await fetch(sourceUrl);
       if (!response.ok) {
@@ -295,6 +335,8 @@ export const useBackend = () => {
       // Add to mock data (in a real app, this would be saved to a database)
       mockLocalMCPs.unshift(newMCP);
 
+      console.log('✅ Successfully imported MCP:', newMCP.name);
+
       return {
         id: newMCP.id,
         message: `Successfully imported ${data.name}`,
@@ -307,6 +349,7 @@ export const useBackend = () => {
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Import failed';
+      console.error('❌ Import failed:', err);
       setError(errorMessage);
       throw err;
     } finally {
@@ -323,7 +366,9 @@ export const useBackend = () => {
     scraping_enabled: boolean;
     supported_platforms: string[];
   }> => {
-    return {
+    console.log('🏥 Health check requested');
+    
+    const health = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       database: 'connected',
@@ -332,10 +377,14 @@ export const useBackend = () => {
       scraping_enabled: true,
       supported_platforms: ['GitHub', 'General Web', 'Awesome Lists']
     };
+    
+    console.log('✅ Health check result:', health);
+    return health;
   };
 
   // Cleanup function to close browser when component unmounts
   const cleanup = async () => {
+    console.log('🧹 Cleaning up web scraper service...');
     await webScraperService.cleanup();
   };
 
