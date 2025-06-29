@@ -32,7 +32,7 @@ export const Footer: React.FC<FooterProps> = ({ isDark }) => {
             </p>
             <div className="flex items-center space-x-2">
               <motion.a
-                href="https://github.com"
+                href="https://github.com/Bhuvansai-16/MCP.git"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`p-2 rounded-lg transition-colors ${
@@ -148,7 +148,7 @@ export const Footer: React.FC<FooterProps> = ({ isDark }) => {
               </li>
               <li>
                 <a 
-                  href="https://github.com" 
+                  href="https://github.com/Bhuvansai-16/MCP.git" 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm hover:underline flex items-center space-x-2"
@@ -194,10 +194,25 @@ export const Footer: React.FC<FooterProps> = ({ isDark }) => {
           <p className="text-sm mb-4 md:mb-0">
             &copy; {currentYear} MCP.playground. All rights reserved.
           </p>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm">Made with</span>
-            <Heart className="w-4 h-4 text-red-500" />
-            <span className="text-sm">for the AI community</span>
+          <div className="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">Made with</span>
+              <Heart className="w-4 h-4 text-red-500" />
+              <span className="text-sm">for the AI community</span>
+            </div>
+            
+            <a 
+              href="https://bolt.new" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`flex items-center space-x-2 px-3 py-1 rounded-lg text-sm transition-all duration-300 ${
+                isDark 
+                  ? 'bg-gray-800 hover:bg-gray-700 text-blue-400' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-blue-600'
+              }`}
+            >
+              <span className="font-medium">Built with Bolt.new</span>
+            </a>
           </div>
         </div>
       </div>
