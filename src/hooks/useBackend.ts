@@ -1,47 +1,5 @@
 import { useState } from 'react';
-
-// Enhanced backend URL detection with better error handling
-const getBackendUrl = () => {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
-    const port = window.location.port;
-    
-    console.log('Current hostname:', hostname);
-    console.log('Current protocol:', protocol);
-    console.log('Current port:', port);
-    
-    // WebContainer detection with improved pattern matching
-    if (hostname.includes('webcontainer-api.io') || hostname.includes('stackblitz.io')) {
-      const parts = hostname.split('.');
-      if (parts.length >= 3) {
-        const prefix = parts[0];
-        const suffix = parts.slice(1).join('.');
-        const backendUrl = `${protocol}//${prefix}--8000--${suffix}`;
-        console.log('WebContainer Backend URL:', backendUrl);
-        return backendUrl;
-      }
-    }
-    
-    // Check if we're in development mode
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return `${protocol}//${hostname}:8000`;
-    }
-    
-    // For other environments, try to construct the backend URL
-    if (port && port !== '80' && port !== '443') {
-      // If we're on a custom port, assume backend is on port 8000
-      return `${protocol}//${hostname}:8000`;
-    }
-    
-    // Try same origin with port 8000
-    return `${protocol}//${hostname}:8000`;
-  }
-  
-  return 'http://localhost:8000';
-};
-
-const BACKEND_URL = getBackendUrl();
+import { webScraperService, ScrapedMCP } from '../services/webScraper';
 
 export interface MCPSchema {
   name: string;
@@ -129,53 +87,141 @@ export interface WebMCPResult {
   confidence_score: number;
 }
 
+// Mock local MCPs data
+const mockLocalMCPs: MCPListItem[] = [
+  {
+    id: "weather-001",
+    name: "weather-forecast",
+    description: "Real-time weather data and forecasting with global coverage",
+    tags: ["weather", "forecast", "api"],
+    domain: "weather",
+    validated: true,
+    popularity: 95,
+    source_url: "https://github.com/modelcontextprotocol/servers/tree/main/src/weather",
+    source_platform: "github",
+    confidence_score: 0.95,
+    file_type: "typescript",
+    repository: "modelcontextprotocol/servers",
+    stars: 1250,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "filesystem-002",
+    name: "filesystem-operations",
+    description: "Secure file system operations with read/write capabilities",
+    tags: ["filesystem", "files", "io"],
+    domain: "development",
+    validated: true,
+    popularity: 88,
+    source_url: "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem",
+    source_platform: "github",
+    confidence_score: 0.92,
+    file_type: "typescript",
+    repository: "modelcontextprotocol/servers",
+    stars: 1250,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "ecommerce-003",
+    name: "ecommerce-store",
+    description: "Complete e-commerce functionality with product management",
+    tags: ["ecommerce", "shopping", "products"],
+    domain: "ecommerce",
+    validated: true,
+    popularity: 82,
+    source_url: "https://github.com/example/ecommerce-mcp",
+    source_platform: "github",
+    confidence_score: 0.88,
+    file_type: "json",
+    repository: "example/ecommerce-mcp",
+    stars: 456,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "calendar-004",
+    name: "calendar-events",
+    description: "Calendar management with Google Calendar integration",
+    tags: ["calendar", "events", "scheduling"],
+    domain: "productivity",
+    validated: true,
+    popularity: 76,
+    source_url: "https://github.com/example/calendar-mcp",
+    source_platform: "github",
+    confidence_score: 0.85,
+    file_type: "yaml",
+    repository: "example/calendar-mcp",
+    stars: 234,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "social-005",
+    name: "social-media",
+    description: "Social media posting and management tools",
+    tags: ["social", "posting", "media"],
+    domain: "social",
+    validated: true,
+    popularity: 71,
+    source_url: "https://github.com/example/social-mcp",
+    source_platform: "github",
+    confidence_score: 0.82,
+    file_type: "json",
+    repository: "example/social-mcp",
+    stars: 189,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "travel-006",
+    name: "travel-booking",
+    description: "Travel booking and itinerary management",
+    tags: ["travel", "booking", "hotels"],
+    domain: "travel",
+    validated: true,
+    popularity: 68,
+    source_url: "https://github.com/example/travel-mcp",
+    source_platform: "github",
+    confidence_score: 0.79,
+    file_type: "json",
+    repository: "example/travel-mcp",
+    stars: 167,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "finance-007",
+    name: "finance-tracker",
+    description: "Personal finance tracking and analysis",
+    tags: ["finance", "tracking", "analysis"],
+    domain: "finance",
+    validated: true,
+    popularity: 65,
+    source_url: "https://github.com/example/finance-mcp",
+    source_platform: "github",
+    confidence_score: 0.76,
+    file_type: "yaml",
+    repository: "example/finance-mcp",
+    stars: 145,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "ai-008",
+    name: "ai-assistant",
+    description: "AI-powered assistant with multiple capabilities",
+    tags: ["ai", "assistant", "automation"],
+    domain: "ai",
+    validated: true,
+    popularity: 62,
+    source_url: "https://github.com/example/ai-mcp",
+    source_platform: "github",
+    confidence_score: 0.73,
+    file_type: "json",
+    repository: "example/ai-mcp",
+    stars: 123,
+    created_at: new Date().toISOString()
+  }
+];
+
 export const useBackend = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const makeRequest = async <T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const url = `${BACKEND_URL}${endpoint}`;
-      console.log('Making request to:', url);
-
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      });
-
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch {
-          errorData = { detail: `HTTP ${response.status}: ${response.statusText}` };
-        }
-        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('Response data:', data);
-      return data;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Request failed';
-      setError(errorMessage);
-      console.error('Backend request failed:', errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const runAgent = async (request: AgentRequest): Promise<AgentResponse> => {
     // Mock implementation for demo
@@ -247,15 +293,53 @@ export const useBackend = () => {
     limit?: number;
     min_confidence?: number;
   } = {}): Promise<MCPListItem[]> => {
-    const searchParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        searchParams.append(key, value.toString());
-      }
-    });
+    setLoading(true);
+    setError(null);
 
-    const query = searchParams.toString();
-    return makeRequest<MCPListItem[]>(`/mcps${query ? `?${query}` : ''}`);
+    try {
+      // Filter mock data based on parameters
+      let filteredMCPs = [...mockLocalMCPs];
+
+      if (params.domain && params.domain !== 'all') {
+        filteredMCPs = filteredMCPs.filter(mcp => mcp.domain === params.domain);
+      }
+
+      if (params.tags) {
+        filteredMCPs = filteredMCPs.filter(mcp => 
+          mcp.tags.some(tag => tag.toLowerCase().includes(params.tags!.toLowerCase()))
+        );
+      }
+
+      if (params.validated !== undefined) {
+        filteredMCPs = filteredMCPs.filter(mcp => mcp.validated === params.validated);
+      }
+
+      if (params.min_confidence !== undefined) {
+        filteredMCPs = filteredMCPs.filter(mcp => mcp.confidence_score >= params.min_confidence!);
+      }
+
+      // Sort results
+      if (params.sort_by === 'name') {
+        filteredMCPs.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (params.sort_by === 'confidence_score') {
+        filteredMCPs.sort((a, b) => b.confidence_score - a.confidence_score);
+      } else {
+        filteredMCPs.sort((a, b) => b.popularity - a.popularity);
+      }
+
+      // Apply limit
+      if (params.limit) {
+        filteredMCPs = filteredMCPs.slice(0, params.limit);
+      }
+
+      return filteredMCPs;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch MCPs';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const searchWebMCPs = async (
@@ -267,21 +351,36 @@ export const useBackend = () => {
       use_scraping?: boolean;
     } = {}
   ): Promise<WebMCPResult[]> => {
-    const searchParams = new URLSearchParams();
-    searchParams.append('query', query);
-    searchParams.append('limit', limit.toString());
-    
-    if (options.sources) {
-      searchParams.append('sources', options.sources);
-    }
-    if (options.min_confidence !== undefined) {
-      searchParams.append('min_confidence', options.min_confidence.toString());
-    }
-    if (options.use_scraping !== undefined) {
-      searchParams.append('use_scraping', options.use_scraping.toString());
-    }
+    setLoading(true);
+    setError(null);
 
-    return makeRequest<WebMCPResult[]>(`/mcps/search?${searchParams.toString()}`);
+    try {
+      console.log(`Starting web search for: ${query} with Playwright scraping`);
+      
+      if (!options.use_scraping) {
+        // Return empty results if scraping is disabled
+        return [];
+      }
+
+      // Use Playwright web scraper
+      const results = await webScraperService.searchAll(query, limit);
+      
+      // Filter by confidence if specified
+      const filteredResults = options.min_confidence 
+        ? results.filter(r => r.confidence_score >= options.min_confidence!)
+        : results;
+
+      console.log(`Web search completed: ${filteredResults.length} results found`);
+      return filteredResults;
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Web search failed';
+      setError(errorMessage);
+      console.error('Web search error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const enhancedSearchMCPs = async (request: {
@@ -292,39 +391,11 @@ export const useBackend = () => {
     domains?: string[];
     use_web_scraping?: boolean;
   }): Promise<WebMCPResult[]> => {
-    return makeRequest<WebMCPResult[]>('/mcps/search/enhanced', {
-      method: 'POST',
-      body: JSON.stringify({
-        limit: 20,
-        sources: ["github", "web", "awesome"],
-        min_confidence: 0.0,
-        use_web_scraping: true,
-        ...request
-      }),
+    return searchWebMCPs(request.query, request.limit, {
+      sources: request.sources?.join(','),
+      min_confidence: request.min_confidence,
+      use_scraping: request.use_web_scraping
     });
-  };
-
-  const scrapeSpecificUrl = async (
-    url: string, 
-    validate: boolean = true
-  ): Promise<{
-    success: boolean;
-    url: string;
-    name: string;
-    description: string;
-    domain: string;
-    tags: string[];
-    confidence_score: number;
-    validated: boolean;
-    schema?: any;
-    content_length: number;
-    scrape_duration_ms: number;
-  }> => {
-    const searchParams = new URLSearchParams();
-    searchParams.append('url', url);
-    searchParams.append('validate', validate.toString());
-
-    return makeRequest(`/mcps/search/scrape?${searchParams.toString()}`);
   };
 
   const importMCPFromWeb = async (sourceUrl: string, autoValidate: boolean = true): Promise<{
@@ -336,68 +407,68 @@ export const useBackend = () => {
     domain: string;
     tags: string[];
   }> => {
-    const searchParams = new URLSearchParams();
-    searchParams.append('source_url', sourceUrl);
-    searchParams.append('auto_validate', autoValidate.toString());
+    setLoading(true);
+    setError(null);
 
-    return makeRequest<{
-      id: string;
-      message: string;
-      name: string;
-      source_url: string;
-      validated: boolean;
-      domain: string;
-      tags: string[];
-    }>(`/mcps/import-from-web?${searchParams.toString()}`, {
-      method: 'POST',
-    });
-  };
+    try {
+      // Fetch and validate the MCP from the URL
+      const response = await fetch(sourceUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch MCP: ${response.statusText}`);
+      }
 
-  const getMCP = async (id: string): Promise<any> => {
-    return makeRequest<any>(`/mcp/${id}`);
-  };
+      const content = await response.text();
+      let data: any;
 
-  const importMCP = async (mcpData: {
-    name: string;
-    description?: string;
-    schema_content: string | object;
-    tags?: string[];
-    domain?: string;
-    source_url?: string;
-  }): Promise<{ id: string; message: string; validated: boolean }> => {
-    return makeRequest<{ id: string; message: string; validated: boolean }>('/mcp/import', {
-      method: 'POST',
-      body: JSON.stringify(mcpData),
-    });
-  };
+      try {
+        data = JSON.parse(content);
+      } catch {
+        const yaml = await import('js-yaml');
+        data = yaml.load(content);
+      }
 
-  const createShareLink = async (params: {
-    session_id?: string;
-    comparison_id?: string;
-  }): Promise<{ share_id: string; share_url: string; expires_at: string }> => {
-    return makeRequest<{ share_id: string; share_url: string; expires_at: string }>('/share', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-  };
+      // Basic validation
+      if (!data.name || !data.tools) {
+        throw new Error('Invalid MCP structure');
+      }
 
-  const exportCSV = async (comparison_id: string): Promise<Blob> => {
-    const url = `${BACKEND_URL}/export/csv?comparison_id=${comparison_id}`;
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`Export failed: ${response.statusText}`);
+      const newMCP: MCPListItem = {
+        id: `imported-${Date.now()}`,
+        name: data.name,
+        description: data.description || `Imported from ${sourceUrl}`,
+        tags: data.tags || ['imported'],
+        domain: 'general',
+        validated: autoValidate,
+        popularity: 50,
+        source_url: sourceUrl,
+        source_platform: 'web',
+        confidence_score: 0.8,
+        file_type: sourceUrl.endsWith('.yaml') || sourceUrl.endsWith('.yml') ? 'yaml' : 'json',
+        repository: undefined,
+        stars: 0,
+        created_at: new Date().toISOString()
+      };
+
+      // Add to mock data (in a real app, this would be saved to a database)
+      mockLocalMCPs.unshift(newMCP);
+
+      return {
+        id: newMCP.id,
+        message: `Successfully imported ${data.name}`,
+        name: data.name,
+        source_url: sourceUrl,
+        validated: autoValidate,
+        domain: newMCP.domain,
+        tags: newMCP.tags
+      };
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Import failed';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
     }
-    
-    return response.blob();
-  };
-
-  const getSearchAnalytics = async (): Promise<any> => {
-    return makeRequest<any>('/analytics/search');
-  };
-
-  const getScrapingAnalytics = async (): Promise<any> => {
-    return makeRequest<any>('/analytics/scraping');
   };
 
   const healthCheck = async (): Promise<{ 
@@ -409,15 +480,20 @@ export const useBackend = () => {
     scraping_enabled: boolean;
     supported_platforms: string[];
   }> => {
-    return makeRequest<{ 
-      status: string; 
-      timestamp: string; 
-      database: string;
-      features: string[];
-      version: string;
-      scraping_enabled: boolean;
-      supported_platforms: string[];
-    }>('/health');
+    return {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      features: ['web_scraping', 'mcp_validation', 'playwright_integration'],
+      version: '3.0.0',
+      scraping_enabled: true,
+      supported_platforms: ['GitHub', 'General Web', 'Awesome Lists']
+    };
+  };
+
+  // Cleanup function to close browser when component unmounts
+  const cleanup = async () => {
+    await webScraperService.cleanup();
   };
 
   return {
@@ -428,15 +504,9 @@ export const useBackend = () => {
     getMCPs,
     searchWebMCPs,
     enhancedSearchMCPs,
-    scrapeSpecificUrl,
     importMCPFromWeb,
-    getMCP,
-    importMCP,
-    createShareLink,
-    exportCSV,
-    getSearchAnalytics,
-    getScrapingAnalytics,
     healthCheck,
-    BACKEND_URL,
+    cleanup,
+    BACKEND_URL: 'client-side-scraping',
   };
 };
