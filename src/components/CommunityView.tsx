@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, 
@@ -196,28 +196,32 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
 
-  const filteredPosts = posts
-    .filter(post => {
-      if (filter !== 'all' && post.type !== filter) return false;
-      if (searchQuery && !post.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
-          !post.content.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          !post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))) {
-        return false;
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'popular':
-          return (b.likes + b.comments + b.shares) - (a.likes + a.comments + a.shares);
-        case 'trending':
-          return b.views - a.views;
-        default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-    });
+  // Memoized filtered posts for better performance
+  const filteredPosts = useMemo(() => {
+    return posts
+      .filter(post => {
+        if (filter !== 'all' && post.type !== filter) return false;
+        if (searchQuery && !post.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
+            !post.content.toLowerCase().includes(searchQuery.toLowerCase()) &&
+            !post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))) {
+          return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'popular':
+            return (b.likes + b.comments + b.shares) - (a.likes + a.comments + a.shares);
+          case 'trending':
+            return b.views - a.views;
+          default:
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+      });
+  }, [posts, filter, searchQuery, sortBy]);
 
-  const handleLike = (postId: string) => {
+  // Optimized handlers with useCallback
+  const handleLike = useCallback((postId: string) => {
     setPosts(prev => prev.map(post => 
       post.id === postId 
         ? { 
@@ -227,9 +231,9 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
           }
         : post
     ));
-  };
+  }, []);
 
-  const handleBookmark = (postId: string) => {
+  const handleBookmark = useCallback((postId: string) => {
     setPosts(prev => prev.map(post => 
       post.id === postId 
         ? { 
@@ -239,18 +243,18 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
           }
         : post
     ));
-  };
+  }, []);
 
-  const handleShare = (post: Post) => {
+  const handleShare = useCallback((post: Post) => {
     const shareUrl = `${window.location.origin}/community/post/${post.id}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       setPosts(prev => prev.map(p => 
         p.id === post.id ? { ...p, shares: p.shares + 1 } : p
       ));
     });
-  };
+  }, []);
 
-  const handleComment = (postId: string) => {
+  const handleComment = useCallback((postId: string) => {
     if (!newComment.trim()) return;
     
     const comment: Comment = {
@@ -273,9 +277,9 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
     setPosts(prev => prev.map(post => 
       post.id === postId ? { ...post, comments: post.comments + 1 } : post
     ));
-  };
+  }, [newComment, user]);
 
-  const handleTryInPlayground = (post: Post) => {
+  const handleTryInPlayground = useCallback((post: Post) => {
     if (!onTryInPlayground || !post.mcpSchema) return;
 
     // Convert post MCP schema to the expected format
@@ -296,9 +300,9 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
     };
 
     onTryInPlayground(mockMCP);
-  };
+  }, [onTryInPlayground]);
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = useCallback((type: string) => {
     switch (type) {
       case 'mcp':
         return <Code className="w-4 h-4" />;
@@ -311,9 +315,9 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
       default:
         return <Users className="w-4 h-4" />;
     }
-  };
+  }, []);
 
-  const getTypeColor = (type: string) => {
+  const getTypeColor = useCallback((type: string) => {
     switch (type) {
       case 'mcp':
         return 'blue';
@@ -326,9 +330,9 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
       default:
         return 'gray';
     }
-  };
+  }, []);
 
-  const formatTimeAgo = (date: Date) => {
+  const formatTimeAgo = useCallback((date: Date) => {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -339,7 +343,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
     if (hours > 0) return `${hours}h ago`;
     if (minutes > 0) return `${minutes}m ago`;
     return 'Just now';
-  };
+  }, []);
 
   return (
     <div className="community-container">
@@ -439,22 +443,21 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
           </div>
         </motion.div>
 
-        {/* Posts Grid */}
-        <div className="space-y-6 overflow-y-auto">
+        {/* Posts Grid - Optimized for performance */}
+        <div className="space-y-6 overflow-y-auto virtual-scroll-container">
           {filteredPosts.map((post, index) => {
             const typeColor = getTypeColor(post.type);
             return (
               <motion.div
                 key={post.id}
-                className={`p-6 rounded-2xl backdrop-blur-xl border transition-all duration-300 cursor-pointer ${
+                className={`community-post-card p-6 rounded-2xl backdrop-blur-xl border transition-all duration-300 cursor-pointer ${
                   isDark 
                     ? 'bg-gray-800/30 border-gray-700/50 hover:bg-gray-800/50' 
                     : 'bg-white/30 border-white/50 hover:bg-white/50'
-                } shadow-xl hover:shadow-2xl`}
+                } shadow-xl hover:shadow-2xl smooth-animation`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.01 }}
+                transition={{ delay: index * 0.05 }}
                 onClick={() => setSelectedPost(post)}
               >
                 {/* Post Header */}
@@ -464,6 +467,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                       src={post.author.avatar}
                       alt={post.author.name}
                       className="w-12 h-12 rounded-full border-2 border-white/20"
+                      loading="lazy"
                     />
                     <div>
                       <div className="flex items-center space-x-2">
@@ -554,6 +558,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                       >
                         <ExternalLink className="w-4 h-4" />
                         <span>Demo</span>
+                
                       </a>
                     )}
                   </div>
@@ -658,7 +663,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
           })}
         </div>
 
-        {/* Post Detail Modal */}
+        {/* Post Detail Modal - Optimized */}
         <AnimatePresence>
           {selectedPost && (
             <motion.div
@@ -672,7 +677,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                 onClick={() => setSelectedPost(null)}
               />
               <motion.div
-                className={`relative w-full max-w-4xl max-h-[80vh] overflow-y-auto rounded-3xl backdrop-blur-xl border post-detail-modal ${
+                className={`relative w-full max-w-4xl max-h-[80vh] overflow-y-auto rounded-3xl backdrop-blur-xl border ${
                   isDark 
                     ? 'bg-gray-800/90 border-gray-700/50' 
                     : 'bg-white/90 border-white/50'
@@ -689,6 +694,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                         src={selectedPost.author.avatar}
                         alt={selectedPost.author.name}
                         className="w-12 h-12 rounded-full border-2 border-white/20"
+                        loading="lazy"
                       />
                       <div>
                         <div className="flex items-center space-x-2">
@@ -757,6 +763,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                           src={user.avatar}
                           alt={user.name}
                           className="w-10 h-10 rounded-full border-2 border-white/20"
+                          loading="lazy"
                         />
                         <div className="flex-1">
                           <textarea
@@ -792,6 +799,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                             src={comment.author.avatar}
                             alt={comment.author.name}
                             className="w-10 h-10 rounded-full border-2 border-white/20"
+                            loading="lazy"
                           />
                           <div className="flex-1">
                             <div className={`p-4 rounded-xl ${
@@ -860,7 +868,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                 onClick={() => setShowCreatePost(false)}
               />
               <motion.div
-                className={`relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-3xl backdrop-blur-xl border create-post-modal ${
+                className={`relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-3xl backdrop-blur-xl border ${
                   isDark 
                     ? 'bg-gray-800/90 border-gray-700/50' 
                     : 'bg-white/90 border-white/50'

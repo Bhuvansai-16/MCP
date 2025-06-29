@@ -465,7 +465,7 @@ html {
   }
 }
 
-/* PLAYGROUND SPECIFIC STYLES */
+/* PLAYGROUND SPECIFIC STYLES - ENHANCED */
 .playground-container {
   height: calc(100vh - 120px);
   overflow: hidden;
@@ -487,6 +487,8 @@ html {
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  /* Increased height for better view */
+  min-height: 600px;
 }
 
 .editor-mode-selector {
@@ -497,6 +499,8 @@ html {
   flex: 1;
   overflow: hidden;
   min-height: 0;
+  /* Ensure minimum height for editor visibility */
+  min-height: 500px;
 }
 
 .chat-panel {
@@ -504,19 +508,26 @@ html {
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  /* Increased height for better view */
+  min-height: 600px;
 }
 
-/* Monaco Editor Container */
+/* Monaco Editor Container - Enhanced */
 .monaco-editor-container {
   height: 100%;
   overflow: hidden;
+  min-height: 500px;
+  border-radius: 12px;
 }
 
-/* Chat Messages Container */
+/* Chat Messages Container - Enhanced */
 .chat-messages-container {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  /* Better scrolling performance */
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
 }
 
 /* Execution Panel */
@@ -526,9 +537,64 @@ html {
   overflow: hidden;
 }
 
+/* Performance optimizations for Community tab */
+.community-post-card {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.community-post-card:hover {
+  transform: translateY(-2px) translateZ(0);
+}
+
+/* Smooth animations for better performance */
+.smooth-animation {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Virtual scrolling optimization */
+.virtual-scroll-container {
+  contain: layout style paint;
+}
+
 @media (max-width: 1024px) {
   .playground-grid {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 1fr;
+  }
+  
+  .editor-panel,
+  .chat-panel {
+    min-height: 400px;
+  }
+  
+  .editor-content {
+    min-height: 350px;
+  }
+  
+  .monaco-editor-container {
+    min-height: 350px;
+  }
+}
+
+/* Loading states for better UX */
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.dark .loading-skeleton {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200% 100%;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }

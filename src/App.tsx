@@ -10,6 +10,8 @@ import { Footer } from './components/Footer';
 import { useTheme } from './hooks/useTheme';
 import { useAuth } from './hooks/useAuth';
 import { MCPListItem, WebMCPResult } from './data/mockMCPs';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export interface ProtocolResult {
   protocol: string;
@@ -36,7 +38,7 @@ type TabType = 'compare' | 'playground' | 'explore' | 'community';
 
 function App() {
   const { isDark, toggleTheme } = useTheme();
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated, loginWithGoogle, loginWithGithub } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('playground');
   const [playgroundMCP, setPlaygroundMCP] = useState<MCPSchema | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -405,6 +407,20 @@ function App() {
           />
         )}
       </AnimatePresence>
+
+      {/* Toast Container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme={isDark ? "dark" : "light"}
+      />
     </div>
   );
 }

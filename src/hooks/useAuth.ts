@@ -55,10 +55,79 @@ export const useAuth = () => {
     setUser(null);
   };
 
+  // Social login handlers
+  const loginWithGoogle = async () => {
+    setIsLoading(true);
+    try {
+      // In a real app, this would redirect to Google OAuth
+      // For demo purposes, we'll simulate a successful login
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const mockUser = {
+        id: `google-${Date.now()}`,
+        email: 'user@gmail.com',
+        name: 'Google User',
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=google-${Date.now()}`,
+        verified: true,
+        provider: 'google'
+      };
+
+      const mockToken = btoa(JSON.stringify({
+        ...mockUser,
+        exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+      }));
+
+      localStorage.setItem('auth_token', mockToken);
+      setUser(mockUser);
+      
+      return { success: true, user: mockUser };
+    } catch (error) {
+      console.error('Google login error:', error);
+      return { success: false, error: 'Failed to login with Google' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithGithub = async () => {
+    setIsLoading(true);
+    try {
+      // In a real app, this would redirect to GitHub OAuth
+      // For demo purposes, we'll simulate a successful login
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const mockUser = {
+        id: `github-${Date.now()}`,
+        email: 'user@github.com',
+        name: 'GitHub User',
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=github-${Date.now()}`,
+        verified: true,
+        provider: 'github'
+      };
+
+      const mockToken = btoa(JSON.stringify({
+        ...mockUser,
+        exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+      }));
+
+      localStorage.setItem('auth_token', mockToken);
+      setUser(mockUser);
+      
+      return { success: true, user: mockUser };
+    } catch (error) {
+      console.error('GitHub login error:', error);
+      return { success: false, error: 'Failed to login with GitHub' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     user,
     login,
     logout,
+    loginWithGoogle,
+    loginWithGithub,
     isLoading,
     isAuthenticated: !!user
   };

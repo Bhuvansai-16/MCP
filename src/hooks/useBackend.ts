@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { webScraperService, ScrapedMCP } from '../services/webScraper';
 import { mockLocalMCPs, MCPListItem, WebMCPResult } from '../data/mockMCPs';
 
@@ -62,6 +62,21 @@ export type { MCPListItem, WebMCPResult };
 export const useBackend = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [localMCPs, setLocalMCPs] = useState<MCPListItem[]>([]);
+
+  // Load local MCPs on initialization
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        // In a real app, this would fetch from an API
+        setLocalMCPs(mockLocalMCPs);
+      } catch (err) {
+        console.error('Failed to load initial data:', err);
+      }
+    };
+    
+    loadInitialData();
+  }, []);
 
   const runAgent = async (request: AgentRequest): Promise<AgentResponse> => {
     // Mock implementation for demo
@@ -140,7 +155,7 @@ export const useBackend = () => {
       console.log('📚 Loading local MCPs with params:', params);
       
       // Filter mock data based on parameters
-      let filteredMCPs = [...mockLocalMCPs];
+      let filteredMCPs = [...localMCPs];
 
       if (params.domain && params.domain !== 'all') {
         filteredMCPs = filteredMCPs.filter(mcp => mcp.domain === params.domain);
@@ -332,8 +347,8 @@ export const useBackend = () => {
         created_at: new Date().toISOString()
       };
 
-      // Add to mock data (in a real app, this would be saved to a database)
-      mockLocalMCPs.unshift(newMCP);
+      // Add to local MCPs
+      setLocalMCPs(prev => [newMCP, ...prev]);
 
       console.log('✅ Successfully imported MCP:', newMCP.name);
 
@@ -391,6 +406,7 @@ export const useBackend = () => {
   return {
     loading,
     error,
+    localMCPs,
     runAgent,
     compareProtocols,
     getMCPs,

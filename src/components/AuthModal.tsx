@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Lock, Mail, Github, Chrome, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { X, User, Lock, Mail, Github, Chrome, Eye, EyeOff, Sparkles, Loader } from 'lucide-react';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -61,7 +61,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
     setError('');
 
     try {
-      // Simulate social login
+      // Simulate OAuth flow
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const mockUser = {
@@ -155,7 +155,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Github className="w-5 h-5" />
+              {loading ? (
+                <Loader className="w-5 h-5 animate-spin" />
+              ) : (
+                <Github className="w-5 h-5" />
+              )}
               <span className="font-medium">Continue with GitHub</span>
             </motion.button>
 
@@ -170,7 +174,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Chrome className="w-5 h-5" />
+              {loading ? (
+                <Loader className="w-5 h-5 animate-spin" />
+              ) : (
+                <Chrome className="w-5 h-5" />
+              )}
               <span className="font-medium">Continue with Google</span>
             </motion.button>
           </div>
@@ -309,11 +317,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
             >
               {loading ? (
                 <div className="flex items-center justify-center space-x-2">
-                  <motion.div
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  />
+                  <Loader className="w-5 h-5 animate-spin" />
                   <span>Please wait...</span>
                 </div>
               ) : (

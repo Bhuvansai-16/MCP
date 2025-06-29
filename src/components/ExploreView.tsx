@@ -60,6 +60,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [localLoading, setLocalLoading] = useState(false);
   
   // Filter state
   const [filters, setFilters] = useState<SearchFilters>({
@@ -88,6 +89,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
   }, [searchQuery]);
 
   const loadLocalMCPs = async () => {
+    setLocalLoading(true);
     try {
       console.log('🔍 Loading local MCPs...');
       const mcps = await getMCPs({
@@ -101,6 +103,8 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
       console.log(`✅ Loaded ${mcps.length} local MCPs`);
     } catch (err) {
       console.error('❌ Failed to load local MCPs:', err);
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -270,7 +274,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
   };
 
   const currentMCPs = searchMode === 'web' ? webMCPs : localMCPs;
-  const isLoading = loading || isSearching;
+  const isLoading = (searchMode === 'web' ? isSearching : localLoading) || loading;
 
   return (
     <div className="h-[calc(100vh-120px)] overflow-hidden">
@@ -323,7 +327,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
                 whileTap={{ scale: 0.98 }}
               >
                 <Database className="w-5 h-5" />
-                <span>Local Library</span>
+                <span>Local Library ({localMCPs.length})</span>
               </motion.button>
               <motion.button
                 onClick={() => setSearchMode('web')}
@@ -577,11 +581,11 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
               return (
                 <motion.div
                   key={mcpId}
-                  className={`p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
+                  className={`community-post-card p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
                     isDark 
                       ? 'border-gray-600/30 bg-gray-700/20 hover:bg-gray-700/40' 
                       : 'border-gray-200/30 bg-white/20 hover:bg-white/40'
-                  } backdrop-blur-sm hover:shadow-xl hover:scale-[1.02]`}
+                  } backdrop-blur-sm hover:shadow-xl smooth-animation`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
