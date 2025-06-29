@@ -79,7 +79,7 @@ class WebScraperService {
           if (!response.ok) continue;
           
           const content = await response.text();
-          const mcp = this.parseAndValidateMCP(content, fullUrl, result.repository);
+          const mcp = await this.parseAndValidateMCP(content, fullUrl, result.repository);
           
           if (mcp) {
             results.push(mcp);
@@ -132,7 +132,7 @@ class WebScraperService {
           if (!response.ok) continue;
           
           const content = await response.text();
-          const mcp = this.parseAndValidateMCP(content, link, '');
+          const mcp = await this.parseAndValidateMCP(content, link, '');
           
           if (mcp) {
             results.push(mcp);
@@ -207,7 +207,7 @@ class WebScraperService {
                 if (!response.ok) continue;
                 
                 const content = await response.text();
-                const mcp = this.parseAndValidateMCP(content, fullUrl, repoLink);
+                const mcp = await this.parseAndValidateMCP(content, fullUrl, repoLink);
                 
                 if (mcp) {
                   results.push(mcp);
@@ -233,7 +233,7 @@ class WebScraperService {
     }
   }
 
-  private parseAndValidateMCP(content: string, sourceUrl: string, repository: string): ScrapedMCP | null {
+  private async parseAndValidateMCP(content: string, sourceUrl: string, repository: string): Promise<ScrapedMCP | null> {
     try {
       let data: any;
       let fileType = 'json';
