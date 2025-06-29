@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { webScraperService, ScrapedMCP } from '../services/webScraper';
+import { mockLocalMCPs, MCPListItem, WebMCPResult } from '../data/mockMCPs';
 
 export interface MCPSchema {
   name: string;
@@ -55,169 +56,8 @@ export interface CompareResponse {
   comparison_id: string;
 }
 
-export interface MCPListItem {
-  id: string;
-  name: string;
-  description: string;
-  tags: string[];
-  domain: string;
-  validated: boolean;
-  popularity: number;
-  source_url?: string;
-  source_platform: string;
-  confidence_score: number;
-  file_type: string;
-  repository?: string;
-  stars: number;
-  created_at: string;
-}
-
-export interface WebMCPResult {
-  name: string;
-  description: string;
-  source_url: string;
-  tags: string[];
-  domain: string;
-  validated: boolean;
-  schema?: Record<string, any>;
-  file_type: string;
-  repository?: string;
-  stars?: number;
-  source_platform: string;
-  confidence_score: number;
-}
-
-// Mock local MCPs data
-const mockLocalMCPs: MCPListItem[] = [
-  {
-    id: "weather-001",
-    name: "weather-forecast",
-    description: "Real-time weather data and forecasting with global coverage",
-    tags: ["weather", "forecast", "api"],
-    domain: "weather",
-    validated: true,
-    popularity: 95,
-    source_url: "https://github.com/modelcontextprotocol/servers/tree/main/src/weather",
-    source_platform: "github",
-    confidence_score: 0.95,
-    file_type: "typescript",
-    repository: "modelcontextprotocol/servers",
-    stars: 1250,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "filesystem-002",
-    name: "filesystem-operations",
-    description: "Secure file system operations with read/write capabilities",
-    tags: ["filesystem", "files", "io"],
-    domain: "development",
-    validated: true,
-    popularity: 88,
-    source_url: "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem",
-    source_platform: "github",
-    confidence_score: 0.92,
-    file_type: "typescript",
-    repository: "modelcontextprotocol/servers",
-    stars: 1250,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "ecommerce-003",
-    name: "ecommerce-store",
-    description: "Complete e-commerce functionality with product management",
-    tags: ["ecommerce", "shopping", "products"],
-    domain: "ecommerce",
-    validated: true,
-    popularity: 82,
-    source_url: "https://github.com/example/ecommerce-mcp",
-    source_platform: "github",
-    confidence_score: 0.88,
-    file_type: "json",
-    repository: "example/ecommerce-mcp",
-    stars: 456,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "calendar-004",
-    name: "calendar-events",
-    description: "Calendar management with Google Calendar integration",
-    tags: ["calendar", "events", "scheduling"],
-    domain: "productivity",
-    validated: true,
-    popularity: 76,
-    source_url: "https://github.com/example/calendar-mcp",
-    source_platform: "github",
-    confidence_score: 0.85,
-    file_type: "yaml",
-    repository: "example/calendar-mcp",
-    stars: 234,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "social-005",
-    name: "social-media",
-    description: "Social media posting and management tools",
-    tags: ["social", "posting", "media"],
-    domain: "social",
-    validated: true,
-    popularity: 71,
-    source_url: "https://github.com/example/social-mcp",
-    source_platform: "github",
-    confidence_score: 0.82,
-    file_type: "json",
-    repository: "example/social-mcp",
-    stars: 189,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "travel-006",
-    name: "travel-booking",
-    description: "Travel booking and itinerary management",
-    tags: ["travel", "booking", "hotels"],
-    domain: "travel",
-    validated: true,
-    popularity: 68,
-    source_url: "https://github.com/example/travel-mcp",
-    source_platform: "github",
-    confidence_score: 0.79,
-    file_type: "json",
-    repository: "example/travel-mcp",
-    stars: 167,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "finance-007",
-    name: "finance-tracker",
-    description: "Personal finance tracking and analysis",
-    tags: ["finance", "tracking", "analysis"],
-    domain: "finance",
-    validated: true,
-    popularity: 65,
-    source_url: "https://github.com/example/finance-mcp",
-    source_platform: "github",
-    confidence_score: 0.76,
-    file_type: "yaml",
-    repository: "example/finance-mcp",
-    stars: 145,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "ai-008",
-    name: "ai-assistant",
-    description: "AI-powered assistant with multiple capabilities",
-    tags: ["ai", "assistant", "automation"],
-    domain: "ai",
-    validated: true,
-    popularity: 62,
-    source_url: "https://github.com/example/ai-mcp",
-    source_platform: "github",
-    confidence_score: 0.73,
-    file_type: "json",
-    repository: "example/ai-mcp",
-    stars: 123,
-    created_at: new Date().toISOString()
-  }
-];
+// Re-export types from data file
+export type { MCPListItem, WebMCPResult };
 
 export const useBackend = () => {
   const [loading, setLoading] = useState(false);
@@ -355,14 +195,17 @@ export const useBackend = () => {
     setError(null);
 
     try {
-      console.log(`Starting web search for: ${query} with Playwright scraping`);
+      console.log(`Starting web search for: ${query} with client-side scraping`);
       
       if (!options.use_scraping) {
         // Return empty results if scraping is disabled
         return [];
       }
 
-      // Use Playwright web scraper
+      // Initialize web scraper service
+      await webScraperService.initialize();
+
+      // Use web scraper
       const results = await webScraperService.searchAll(query, limit);
       
       // Filter by confidence if specified
@@ -484,7 +327,7 @@ export const useBackend = () => {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       database: 'connected',
-      features: ['web_scraping', 'mcp_validation', 'playwright_integration'],
+      features: ['web_scraping', 'mcp_validation', 'client_side_scraping'],
       version: '3.0.0',
       scraping_enabled: true,
       supported_platforms: ['GitHub', 'General Web', 'Awesome Lists']
@@ -507,6 +350,6 @@ export const useBackend = () => {
     importMCPFromWeb,
     healthCheck,
     cleanup,
-    BACKEND_URL: 'client-side-scraping',
+    BACKEND_URL: 'client-side-implementation',
   };
 };
