@@ -532,10 +532,19 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
               scrollbar: {
                 vertical: 'visible',
                 horizontal: 'visible',
-                verticalScrollbarSize: 12,
-                horizontalScrollbarSize: 12,
-                alwaysConsumeMouseWheel: false
-              }
+                verticalScrollbarSize: 14,
+                horizontalScrollbarSize: 14,
+                alwaysConsumeMouseWheel: false,
+                useShadows: true,
+                verticalHasArrows: false,
+                horizontalHasArrows: false,
+                verticalSliderSize: 14,
+                horizontalSliderSize: 14,
+                arrowSize: 11
+              },
+              overviewRulerLanes: 0,
+              hideCursorInOverviewRuler: true,
+              overviewRulerBorder: false
             }}
           />
         </div>
