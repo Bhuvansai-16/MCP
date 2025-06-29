@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
@@ -241,12 +241,21 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
     localStorage.setItem('mcp_recently_viewed', JSON.stringify(updated));
   };
 
-  const handleTryInPlayground = (mcp: MCPListItem | WebMCPResult) => {
-    addToRecentlyViewed('id' in mcp ? mcp.id : mcp.name);
+  const handleTryInPlayground = useCallback((mcp: MCPListItem | WebMCPResult) => {
+    console.log('🎮 Try in Playground clicked for:', mcp.name);
+    
+    // Add to recently viewed
+    const mcpId = 'id' in mcp ? mcp.id : mcp.name;
+    addToRecentlyViewed(mcpId);
+    
+    // Call the parent callback
     if (onTryInPlayground) {
+      console.log('🚀 Calling onTryInPlayground callback');
       onTryInPlayground(mcp);
+    } else {
+      console.warn('⚠️ onTryInPlayground callback not provided');
     }
-  };
+  }, [onTryInPlayground]);
 
   const getDomainIcon = (domain: string) => {
     const icons: Record<string, any> = {
@@ -685,7 +694,11 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
 
                   <div className="flex space-x-2">
                     <motion.button
-                      onClick={() => handleTryInPlayground(mcp)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('🎮 Try in Playground button clicked for:', mcp.name);
+                        handleTryInPlayground(mcp);
+                      }}
                       className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}

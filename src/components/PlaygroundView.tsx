@@ -48,21 +48,28 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
 
   // Load initial MCP if provided
   useEffect(() => {
+    console.log('🎮 PlaygroundView: initialMCP changed:', initialMCP);
+    
     if (initialMCP) {
+      console.log('📋 Loading initial MCP:', initialMCP.name);
       setMcpSchema(initialMCP);
       setIsValidMCP(true);
       
       // Add system message about loaded MCP
-      setMessages([{
+      const systemMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'system',
         content: `🎯 MCP "${initialMCP.name}" loaded successfully! Available tools: ${initialMCP.tools.map(t => t.name).join(', ')}`,
         timestamp: new Date()
-      }]);
+      };
+      
+      setMessages([systemMessage]);
+      console.log('✅ System message added for loaded MCP');
     }
   }, [initialMCP]);
 
   const handleMCPValidation = (schema: MCPSchema | null, isValid: boolean) => {
+    console.log('🔍 MCP validation result:', { isValid, schema: schema?.name });
     setMcpSchema(schema);
     setIsValidMCP(isValid);
     if (!isValid) {
@@ -73,48 +80,68 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   };
 
   const handleTemplateSelect = (template: MCPSchema) => {
+    console.log('📋 Template selected:', template.name);
     setMcpSchema(template);
     setIsValidMCP(true);
     setEditorMode('code'); // Switch to code editor to show the loaded template
     
     // Add system message about loaded template
-    setMessages([{
+    const systemMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'system',
       content: `📋 Template "${template.name}" loaded! You can now start the agent to test it.`,
       timestamp: new Date()
-    }]);
+    };
+    
+    setMessages([systemMessage]);
   };
 
   const handleVisualMCPUpdate = (schema: MCPSchema) => {
+    console.log('🎨 Visual MCP updated:', schema.name);
     setMcpSchema(schema);
     setIsValidMCP(true);
   };
 
   const startAgent = () => {
-    if (!isValidMCP || !mcpSchema) return;
+    if (!isValidMCP || !mcpSchema) {
+      console.warn('⚠️ Cannot start agent: invalid MCP or no schema');
+      return;
+    }
     
+    console.log('🤖 Starting agent with MCP:', mcpSchema.name);
     setIsAgentRunning(true);
-    setMessages(prev => [...prev, {
+    
+    const systemMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'system',
       content: `🤖 Agent started with MCP "${mcpSchema.name}". Available tools: ${mcpSchema.tools.map(t => t.name).join(', ')}`,
       timestamp: new Date()
-    }]);
+    };
+    
+    setMessages(prev => [...prev, systemMessage]);
   };
 
   const stopAgent = () => {
+    console.log('🛑 Stopping agent');
     setIsAgentRunning(false);
-    setMessages(prev => [...prev, {
+    
+    const systemMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'system',
       content: '🛑 Agent stopped',
       timestamp: new Date()
-    }]);
+    };
+    
+    setMessages(prev => [...prev, systemMessage]);
   };
 
   const handleUserMessage = async (content: string) => {
-    if (!isAgentRunning || !mcpSchema) return;
+    if (!isAgentRunning || !mcpSchema) {
+      console.warn('⚠️ Cannot process message: agent not running or no schema');
+      return;
+    }
+
+    console.log('💬 Processing user message:', content);
 
     // Add user message
     const userMessage: ChatMessage = {

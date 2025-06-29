@@ -64,15 +64,19 @@ function App() {
   };
 
   // Function to handle "Try in Playground" from any tab
-  const handleTryInPlayground = async (mcp: MCPListItem | WebMCPResult) => {
+  const handleTryInPlayground = (mcp: MCPListItem | WebMCPResult) => {
+    console.log('🎮 App.tsx: handleTryInPlayground called with:', mcp.name);
+    
     requireAuth('try MCP in playground', () => {
       try {
         let mcpSchema: MCPSchema;
 
         // Check if it's a WebMCPResult with schema
         if ('schema' in mcp && mcp.schema) {
+          console.log('📋 Using existing schema from WebMCPResult');
           mcpSchema = mcp.schema as MCPSchema;
         } else {
+          console.log('🔧 Generating schema from MCP data');
           // Generate a mock schema based on the MCP data
           mcpSchema = {
             name: mcp.name,
@@ -82,14 +86,18 @@ function App() {
           };
         }
 
+        console.log('✅ Generated MCP schema:', mcpSchema);
+
         // Set the MCP in playground
         setPlaygroundMCP(mcpSchema);
         
         // Switch to playground tab
         setActiveTab('playground');
+        
+        console.log('🚀 Switched to playground tab with MCP:', mcpSchema.name);
 
       } catch (error) {
-        console.error('Failed to load MCP in playground:', error);
+        console.error('❌ Failed to load MCP in playground:', error);
       }
     });
   };
