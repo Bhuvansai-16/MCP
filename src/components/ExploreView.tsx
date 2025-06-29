@@ -1,6 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Star, Shield, Download, Play, Eye, X, Code, Tag, Globe, Users, ExternalLink, Loader, AlertCircle, RefreshCw } from 'lucide-react';
+import { 
+  Search, 
+  Filter, 
+  Star, 
+  Shield, 
+  Download, 
+  Play, 
+  Eye, 
+  X, 
+  Code, 
+  Tag, 
+  Globe, 
+  Users, 
+  ExternalLink, 
+  Loader, 
+  AlertCircle, 
+  RefreshCw,
+  CheckCircle,
+  Zap
+} from 'lucide-react';
 import { useBackend, WebMCPResult, MCPListItem } from '../hooks/useBackend';
 import { toast } from 'react-toastify';
 
@@ -9,7 +28,17 @@ interface ExploreViewProps {
 }
 
 export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
-  const { getMCPs, searchWebMCPs, importMCPFromWeb, healthCheck, loading, BACKEND_URL } = useBackend();
+  const { 
+    getMCPs, 
+    searchWebMCPs, 
+    enhancedSearchMCPs,
+    scrapeSpecificUrl,
+    importMCPFromWeb, 
+    healthCheck, 
+    loading, 
+    BACKEND_URL 
+  } = useBackend();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDomain, setSelectedDomain] = useState('all');
   const [sortBy, setSortBy] = useState('popularity');
@@ -20,8 +49,9 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'error'>('checking');
   const [retryCount, setRetryCount] = useState(0);
+  const [useWebScraping, setUseWebScraping] = useState(true);
 
-  const domains = ['all', 'travel', 'finance', 'development', 'productivity', 'data', 'weather', 'ecommerce', 'social'];
+  const domains = ['all', 'travel', 'finance', 'development', 'productivity', 'data', 'weather', 'ecommerce', 'social', 'ai', 'communication'];
 
   // Check backend connectivity on component mount
   useEffect(() => {
@@ -39,64 +69,36 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
     setBackendStatus('checking');
     try {
       console.log('Checking backend connection to:', BACKEND_URL);
-      await healthCheck();
-      setBackendStatus('connected');
-      console.log('Backend connection successful');
-      toast.success('Connected to MCP backend!');
+      const healthData = await healthCheck();
+      console.log('Backend health check response:', healthData);
+      
+      if (healthData.status === 'healthy') {
+        setBackendStatus('connected');
+        console.log('Backend connection successful');
+        toast.success(`Connected to enhanced MCP backend v${healthData.version}!`);
+        
+        // Show scraping capabilities
+        if (healthData.scraping_enabled) {
+          toast.info(`Web scraping enabled for: ${healthData.supported_platforms.join(', ')}`);
+        }
+      } else {
+        throw new Error('Backend health check failed');
+      }
     } catch (error) {
       console.error('Backend connection failed:', error);
       setBackendStatus('error');
+      
       if (retryCount < 3) {
+        const delay = 2000 * (retryCount + 1); // Exponential backoff
+        toast.warning(`Backend connection failed. Retrying in ${delay/1000}s...`);
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
           checkBackendConnection();
-        }, 2000 * (retryCount + 1)); // Exponential backoff
+        }, delay);
       } else {
-        toast.error('Failed to connect to backend. Using demo data.');
-        loadDemoData();
+        toast.error('Failed to connect to backend after multiple attempts. Please check if the backend server is running on port 8000.');
       }
     }
-  };
-
-  const loadDemoData = () => {
-    // Load demo MCPs when backend is unavailable
-    const demoMCPs: MCPListItem[] = [
-      {
-        id: 'demo-1',
-        name: 'weather.forecast',
-        description: 'Real-time weather data and forecasting with global coverage',
-        tags: ['weather', 'api', 'forecast'],
-        domain: 'weather',
-        validated: true,
-        popularity: 95,
-        source_url: 'https://github.com/example/weather-mcp',
-        created_at: new Date().toISOString()
-      },
-      {
-        id: 'demo-2',
-        name: 'ecommerce.store',
-        description: 'Complete e-commerce functionality with product management',
-        tags: ['ecommerce', 'shopping', 'payments'],
-        domain: 'ecommerce',
-        validated: true,
-        popularity: 88,
-        source_url: 'https://github.com/example/ecommerce-mcp',
-        created_at: new Date().toISOString()
-      },
-      {
-        id: 'demo-3',
-        name: 'travel.booking',
-        description: 'Travel booking and management with multiple providers',
-        tags: ['travel', 'booking', 'hotels'],
-        domain: 'travel',
-        validated: false,
-        popularity: 76,
-        source_url: 'https://github.com/example/travel-mcp',
-        created_at: new Date().toISOString()
-      }
-    ];
-    setLocalMCPs(demoMCPs);
-    setBackendStatus('connected'); // Allow UI to function with demo data
   };
 
   const loadLocalMCPs = async () => {
@@ -105,15 +107,15 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
       if (selectedDomain !== 'all') params.domain = selectedDomain;
       if (sortBy) params.sort_by = sortBy;
       params.limit = 50;
+      params.min_confidence = 0.0;
 
+      console.log('Loading local MCPs with params:', params);
       const mcps = await getMCPs(params);
+      console.log('Loaded local MCPs:', mcps);
       setLocalMCPs(mcps);
     } catch (error) {
       console.error('Failed to load local MCPs:', error);
-      if (backendStatus === 'connected') {
-        toast.error('Failed to load MCPs from backend');
-        loadDemoData(); // Fallback to demo data
-      }
+      toast.error('Failed to load MCPs from backend');
     }
   };
 
@@ -138,34 +140,26 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
           mcp.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
         );
         setLocalMCPs(filtered);
+        toast.success(`Found ${filtered.length} local MCPs matching "${searchQuery}"`);
       } else {
-        // Search web MCPs
-        if (backendStatus === 'connected') {
-          const results = await searchWebMCPs(searchQuery, 20);
-          setWebMCPs(results);
-          toast.success(`Found ${results.length} MCPs from the web`);
-        } else {
-          // Demo web search results
-          const demoWebResults: WebMCPResult[] = [
-            {
-              name: `${searchQuery}.mcp`,
-              description: `Demo MCP result for "${searchQuery}" - this would be a real result from web search`,
-              source_url: `https://github.com/demo/${searchQuery}-mcp`,
-              tags: [searchQuery, 'demo', 'web-search'],
-              domain: 'general',
-              validated: true,
-              file_type: 'json',
-              repository: `demo/${searchQuery}-mcp`,
-              stars: Math.floor(Math.random() * 100) + 10
-            }
-          ];
-          setWebMCPs(demoWebResults);
-          toast.info(`Demo: Found ${demoWebResults.length} results for "${searchQuery}"`);
-        }
+        // Enhanced web search with scraping
+        console.log('Starting enhanced web search for:', searchQuery);
+        
+        const searchOptions = {
+          sources: useWebScraping ? "github,huggingface,web,scraping" : "github,huggingface",
+          min_confidence: 0.0,
+          use_scraping: useWebScraping
+        };
+        
+        const results = await searchWebMCPs(searchQuery, 20, searchOptions);
+        console.log('Web search results:', results);
+        
+        setWebMCPs(results);
+        toast.success(`Found ${results.length} MCPs from the web using ${useWebScraping ? 'enhanced scraping' : 'API search'}`);
       }
     } catch (error) {
       console.error('Search failed:', error);
-      toast.error('Search failed. Please try again.');
+      toast.error(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSearching(false);
     }
@@ -173,35 +167,18 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
 
   const handleImportFromWeb = async (webMCP: WebMCPResult) => {
     try {
-      if (backendStatus === 'connected') {
-        const result = await importMCPFromWeb(webMCP.source_url, true);
-        toast.success(`Successfully imported ${result.name}!`);
-        
-        // Refresh local MCPs to show the newly imported one
-        loadLocalMCPs();
-        
-        // Switch to local mode to see the imported MCP
-        setSearchMode('local');
-      } else {
-        // Demo import
-        const newMCP: MCPListItem = {
-          id: `imported-${Date.now()}`,
-          name: webMCP.name,
-          description: webMCP.description,
-          tags: webMCP.tags,
-          domain: webMCP.domain,
-          validated: true,
-          popularity: 50,
-          source_url: webMCP.source_url,
-          created_at: new Date().toISOString()
-        };
-        setLocalMCPs(prev => [newMCP, ...prev]);
-        setSearchMode('local');
-        toast.success(`Demo: Imported ${webMCP.name}!`);
-      }
+      console.log('Importing MCP from web:', webMCP);
+      const result = await importMCPFromWeb(webMCP.source_url, true);
+      toast.success(`Successfully imported ${result.name}!`);
+      
+      // Refresh local MCPs to show the newly imported one
+      loadLocalMCPs();
+      
+      // Switch to local mode to see the imported MCP
+      setSearchMode('local');
     } catch (error) {
       console.error('Import failed:', error);
-      toast.error('Failed to import MCP. Please check the URL and try again.');
+      toast.error(`Failed to import MCP: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -242,8 +219,26 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
               <div className="flex items-center space-x-3">
                 <Loader className="w-5 h-5 animate-spin text-blue-500" />
                 <span className={`${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
-                  Connecting to MCP backend...
+                  Connecting to enhanced MCP backend with web scraping...
                 </span>
+              </div>
+            </motion.div>
+          )}
+
+          {backendStatus === 'connected' && (
+            <motion.div 
+              className={`mb-6 p-4 rounded-2xl ${
+                isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50/50 border border-green-200/50'
+              } backdrop-blur-sm`}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <span className={`${isDark ? 'text-green-400' : 'text-green-700'}`}>
+                  Connected to enhanced backend with web scraping capabilities
+                </span>
+                <Zap className="w-4 h-4 text-yellow-500" />
               </div>
             </motion.div>
           )}
@@ -251,17 +246,22 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
           {backendStatus === 'error' && retryCount >= 3 && (
             <motion.div 
               className={`mb-6 p-4 rounded-2xl ${
-                isDark ? 'bg-yellow-500/10 border border-yellow-500/20' : 'bg-yellow-50/50 border border-yellow-200/50'
+                isDark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50/50 border border-red-200/50'
               } backdrop-blur-sm`}
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-500" />
-                  <span className={`${isDark ? 'text-yellow-400' : 'text-yellow-700'}`}>
-                    Backend unavailable. Using demo data.
-                  </span>
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                  <div>
+                    <span className={`${isDark ? 'text-red-400' : 'text-red-700'} font-medium`}>
+                      Backend connection failed
+                    </span>
+                    <p className={`text-sm ${isDark ? 'text-red-300' : 'text-red-600'} mt-1`}>
+                      Please ensure the backend server is running on port 8000
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => {
@@ -270,8 +270,8 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
                   }}
                   className={`flex items-center space-x-2 px-3 py-1 rounded-lg transition-colors ${
                     isDark 
-                      ? 'bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400' 
-                      : 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700'
+                      ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400' 
+                      : 'bg-red-100 hover:bg-red-200 text-red-700'
                   }`}
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -298,7 +298,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
                   Explore MCPs
                 </h1>
                 <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Discover Model Context Protocols from local library and the web
+                  Discover Model Context Protocols with enhanced web scraping
                 </p>
               </div>
 
@@ -343,7 +343,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
                   type="text"
                   placeholder={searchMode === 'local' 
                     ? "🔍 Search local MCPs (e.g., weather, airbnb)" 
-                    : "🌐 Search web for MCPs (e.g., airbnb.bookings, weather API)"
+                    : "🌐 Search web for MCPs with enhanced scraping (e.g., airbnb.bookings, weather API)"
                   }
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -356,16 +356,16 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
                 />
                 <motion.button
                   onClick={handleSearch}
-                  disabled={isSearching}
+                  disabled={isSearching || backendStatus !== 'connected'}
                   className={`absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                    isSearching
+                    isSearching || backendStatus !== 'connected'
                       ? 'bg-gray-400 cursor-not-allowed'
                       : searchMode === 'local'
                         ? 'bg-blue-500 hover:bg-blue-600'
                         : 'bg-purple-500 hover:bg-purple-600'
                   } text-white`}
-                  whileHover={!isSearching ? { scale: 1.05 } : {}}
-                  whileTap={!isSearching ? { scale: 0.95 } : {}}
+                  whileHover={!isSearching && backendStatus === 'connected' ? { scale: 1.05 } : {}}
+                  whileTap={!isSearching && backendStatus === 'connected' ? { scale: 0.95 } : {}}
                 >
                   {isSearching ? (
                     <Loader className="w-4 h-4 animate-spin" />
@@ -379,16 +379,29 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
                 <div className={`mt-4 p-4 rounded-xl ${
                   isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50/50 border border-purple-200/50'
                 }`}>
-                  <p className={`text-sm ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
-                    🌐 <strong>Web Search:</strong> Find MCPs from GitHub, HuggingFace, and other repositories. Results will be validated and can be imported directly.
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className={`text-sm ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
+                      🌐 <strong>Enhanced Web Search:</strong> Find MCPs from GitHub, GitLab, HuggingFace, and general web using BeautifulSoup4 scraping.
+                    </p>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={useWebScraping}
+                        onChange={(e) => setUseWebScraping(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className={`text-sm ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
+                        Enable Scraping
+                      </span>
+                    </label>
+                  </div>
                 </div>
               )}
             </div>
           </motion.div>
 
           {/* Filters - Only show for local search */}
-          {searchMode === 'local' && (
+          {searchMode === 'local' && backendStatus === 'connected' && (
             <motion.div 
               className="flex flex-wrap items-center justify-between gap-4 mb-8"
               variants={itemVariants}
@@ -423,6 +436,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
                   <option value="popularity">Sort by Popularity</option>
                   <option value="name">Sort by Name</option>
                   <option value="created_at">Sort by Date</option>
+                  <option value="confidence_score">Sort by Confidence</option>
                 </select>
               </div>
 
@@ -442,157 +456,198 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
                 isDark ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-700'
               }`}>
                 <Globe className="w-4 h-4" />
-                <span>Found {webMCPs.length} MCPs from the web</span>
+                <span>Found {webMCPs.length} MCPs from the web using {useWebScraping ? 'enhanced scraping' : 'API search'}</span>
               </div>
             </motion.div>
           )}
 
+          {/* Backend Connection Required Message */}
+          {backendStatus !== 'connected' && (
+            <motion.div
+              className="text-center py-16"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <div className={`text-6xl mb-4`}>
+                🔌
+              </div>
+              <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Backend Connection Required
+              </h3>
+              <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
+                Please ensure the enhanced MCP backend is running on port 8000
+              </p>
+              <button
+                onClick={() => {
+                  setRetryCount(0);
+                  checkBackendConnection();
+                }}
+                className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all duration-300"
+              >
+                Retry Connection
+              </button>
+            </motion.div>
+          )}
+
           {/* MCP Grid */}
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            variants={containerVariants}
-          >
-            {displayMCPs.map((mcp, index) => {
-              const isWebResult = 'file_type' in mcp;
-              
-              return (
-                <motion.div
-                  key={isWebResult ? mcp.source_url : mcp.id}
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.02, y: -5 }}
-                  className={`relative p-6 rounded-2xl backdrop-blur-xl border transition-all duration-300 cursor-pointer ${
-                    isDark 
-                      ? 'bg-gray-800/30 border-gray-700/50 hover:bg-gray-800/50' 
-                      : 'bg-white/30 border-white/50 hover:bg-white/50'
-                  } shadow-xl hover:shadow-2xl`}
-                  onClick={() => setSelectedMCP(mcp)}
-                >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                          {mcp.name}
-                        </h3>
-                        {!isWebResult && 'popularity' in mcp && mcp.popularity > 80 && (
-                          <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                        )}
-                        {mcp.validated && (
-                          <Shield className="w-4 h-4 text-green-500" />
-                        )}
-                        {isWebResult && (
-                          <ExternalLink className="w-4 h-4 text-blue-500" />
+          {backendStatus === 'connected' && (
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              variants={containerVariants}
+            >
+              {displayMCPs.map((mcp, index) => {
+                const isWebResult = 'file_type' in mcp;
+                
+                return (
+                  <motion.div
+                    key={isWebResult ? mcp.source_url : mcp.id}
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.02, y: -5 }}
+                    className={`relative p-6 rounded-2xl backdrop-blur-xl border transition-all duration-300 cursor-pointer ${
+                      isDark 
+                        ? 'bg-gray-800/30 border-gray-700/50 hover:bg-gray-800/50' 
+                        : 'bg-white/30 border-white/50 hover:bg-white/50'
+                    } shadow-xl hover:shadow-2xl`}
+                    onClick={() => setSelectedMCP(mcp)}
+                  >
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            {mcp.name}
+                          </h3>
+                          {!isWebResult && 'popularity' in mcp && mcp.popularity > 80 && (
+                            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                          )}
+                          {mcp.validated && (
+                            <Shield className="w-4 h-4 text-green-500" />
+                          )}
+                          {isWebResult && (
+                            <ExternalLink className="w-4 h-4 text-blue-500" />
+                          )}
+                          {isWebResult && mcp.confidence_score > 0.8 && (
+                            <Zap className="w-4 h-4 text-yellow-500" />
+                          )}
+                        </div>
+                        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>
+                          {mcp.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {mcp.tags.map((tag, tagIndex) => (
+                        <span
+                          key={tagIndex}
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            isDark 
+                              ? 'bg-blue-500/20 text-blue-400' 
+                              : 'bg-blue-100 text-blue-700'
+                          }`}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Stats */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-4 text-sm">
+                        {isWebResult ? (
+                          <>
+                            <div className="flex items-center space-x-1">
+                              <Code className="w-4 h-4" />
+                              <span>{mcp.file_type.toUpperCase()}</span>
+                            </div>
+                            {mcp.stars && (
+                              <div className="flex items-center space-x-1">
+                                <Star className="w-4 h-4" />
+                                <span>{mcp.stars}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center space-x-1">
+                              <Zap className="w-4 h-4" />
+                              <span>{Math.round(mcp.confidence_score * 100)}%</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center space-x-1">
+                              <Users className="w-4 h-4" />
+                              <span>{mcp.popularity}%</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Globe className="w-4 h-4" />
+                              <span>{mcp.domain}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Zap className="w-4 h-4" />
+                              <span>{Math.round(mcp.confidence_score * 100)}%</span>
+                            </div>
+                          </>
                         )}
                       </div>
-                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>
-                        {mcp.description}
-                      </p>
                     </div>
-                  </div>
 
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {mcp.tags.map((tag, tagIndex) => (
-                      <span
-                        key={tagIndex}
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          isDark 
-                            ? 'bg-blue-500/20 text-blue-400' 
-                            : 'bg-blue-100 text-blue-700'
-                        }`}
+                    {/* Actions */}
+                    <div className="flex space-x-2">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toast.info('Try in Playground feature coming soon!');
+                        }}
                       >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Stats */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-4 text-sm">
+                        <Play className="w-4 h-4" />
+                        <span>Try in Playground</span>
+                      </motion.button>
+                      
                       {isWebResult ? (
-                        <>
-                          <div className="flex items-center space-x-1">
-                            <Code className="w-4 h-4" />
-                            <span>{mcp.file_type.toUpperCase()}</span>
-                          </div>
-                          {mcp.stars && (
-                            <div className="flex items-center space-x-1">
-                              <Star className="w-4 h-4" />
-                              <span>{mcp.stars}</span>
-                            </div>
-                          )}
-                        </>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`px-3 py-2 rounded-xl border transition-all duration-300 ${
+                            isDark 
+                              ? 'border-green-600 text-green-400 hover:bg-green-600/10' 
+                              : 'border-green-500 text-green-600 hover:bg-green-50'
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleImportFromWeb(mcp as WebMCPResult);
+                          }}
+                        >
+                          <Download className="w-4 h-4" />
+                        </motion.button>
                       ) : (
-                        <>
-                          <div className="flex items-center space-x-1">
-                            <Users className="w-4 h-4" />
-                            <span>{mcp.popularity}%</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Globe className="w-4 h-4" />
-                            <span>{mcp.domain}</span>
-                          </div>
-                        </>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`px-3 py-2 rounded-xl border transition-all duration-300 ${
+                            isDark 
+                              ? 'border-gray-600 text-gray-400 hover:text-white hover:border-gray-500' 
+                              : 'border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400'
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toast.info('Compare feature coming soon!');
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </motion.button>
                       )}
                     </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex space-x-2">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toast.info('Try in Playground feature coming soon!');
-                      }}
-                    >
-                      <Play className="w-4 h-4" />
-                      <span>Try in Playground</span>
-                    </motion.button>
-                    
-                    {isWebResult ? (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`px-3 py-2 rounded-xl border transition-all duration-300 ${
-                          isDark 
-                            ? 'border-green-600 text-green-400 hover:bg-green-600/10' 
-                            : 'border-green-500 text-green-600 hover:bg-green-50'
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleImportFromWeb(mcp as WebMCPResult);
-                        }}
-                      >
-                        <Download className="w-4 h-4" />
-                      </motion.button>
-                    ) : (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`px-3 py-2 rounded-xl border transition-all duration-300 ${
-                          isDark 
-                            ? 'border-gray-600 text-gray-400 hover:text-white hover:border-gray-500' 
-                            : 'border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400'
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toast.info('Compare feature coming soon!');
-                        }}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </motion.button>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
 
           {/* Empty State */}
-          {displayMCPs.length === 0 && !isSearching && backendStatus === 'connected' && (
+          {backendStatus === 'connected' && displayMCPs.length === 0 && !isSearching && (
             <motion.div
               className="text-center py-16"
               initial={{ opacity: 0 }}
@@ -607,7 +662,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
               <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 {searchMode === 'local' 
                   ? 'Try adjusting your filters or search terms'
-                  : 'Enter a search query to find MCPs from the web'
+                  : 'Enter a search query to find MCPs from the web using enhanced scraping'
                 }
               </p>
             </motion.div>
@@ -711,10 +766,10 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
                             isDark ? 'bg-gray-700/50' : 'bg-gray-100/50'
                           }`}>
                             <h4 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                              Stars
+                              Confidence
                             </h4>
                             <p className={`text-lg font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                              {selectedMCP.stars || 0}
+                              {Math.round(selectedMCP.confidence_score * 100)}%
                             </p>
                           </div>
                         </>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-// Dynamic API base URL detection for backend
+// Enhanced backend URL detection with better error handling
 const getBackendUrl = () => {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
@@ -11,8 +11,8 @@ const getBackendUrl = () => {
     console.log('Current protocol:', protocol);
     console.log('Current port:', port);
     
-    if (hostname.includes('webcontainer-api.io')) {
-      // Extract the WebContainer URL pattern and construct backend URL
+    // WebContainer detection with improved pattern matching
+    if (hostname.includes('webcontainer-api.io') || hostname.includes('stackblitz.io')) {
       const parts = hostname.split('.');
       if (parts.length >= 3) {
         const prefix = parts[0];
@@ -33,11 +33,12 @@ const getBackendUrl = () => {
       // If we're on a custom port, assume backend is on port 8000
       return `${protocol}//${hostname}:8000`;
     }
+    
+    // Try same origin with port 8000
+    return `${protocol}//${hostname}:8000`;
   }
   
-  const fallbackUrl = 'http://localhost:8000';
-  console.log('Using fallback Backend URL:', fallbackUrl);
-  return fallbackUrl;
+  return 'http://localhost:8000';
 };
 
 const BACKEND_URL = getBackendUrl();
@@ -105,6 +106,11 @@ export interface MCPListItem {
   validated: boolean;
   popularity: number;
   source_url?: string;
+  source_platform: string;
+  confidence_score: float;
+  file_type: string;
+  repository?: string;
+  stars: number;
   created_at: string;
 }
 
@@ -119,6 +125,8 @@ export interface WebMCPResult {
   file_type: string;
   repository?: string;
   stars?: number;
+  source_platform: string;
+  confidence_score: number;
 }
 
 export const useBackend = () => {
@@ -189,6 +197,7 @@ export const useBackend = () => {
     validated?: boolean;
     sort_by?: string;
     limit?: number;
+    min_confidence?: number;
   } = {}): Promise<MCPListItem[]> => {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -201,12 +210,73 @@ export const useBackend = () => {
     return makeRequest<MCPListItem[]>(`/mcps${query ? `?${query}` : ''}`);
   };
 
-  const searchWebMCPs = async (query: string, limit: number = 10): Promise<WebMCPResult[]> => {
+  const searchWebMCPs = async (
+    query: string, 
+    limit: number = 20,
+    options: {
+      sources?: string;
+      min_confidence?: number;
+      use_scraping?: boolean;
+    } = {}
+  ): Promise<WebMCPResult[]> => {
     const searchParams = new URLSearchParams();
     searchParams.append('query', query);
     searchParams.append('limit', limit.toString());
+    
+    if (options.sources) {
+      searchParams.append('sources', options.sources);
+    }
+    if (options.min_confidence !== undefined) {
+      searchParams.append('min_confidence', options.min_confidence.toString());
+    }
+    if (options.use_scraping !== undefined) {
+      searchParams.append('use_scraping', options.use_scraping.toString());
+    }
 
     return makeRequest<WebMCPResult[]>(`/mcps/search?${searchParams.toString()}`);
+  };
+
+  const enhancedSearchMCPs = async (request: {
+    query: string;
+    limit?: number;
+    sources?: string[];
+    min_confidence?: number;
+    domains?: string[];
+    use_web_scraping?: boolean;
+  }): Promise<WebMCPResult[]> => {
+    return makeRequest<WebMCPResult[]>('/mcps/search/enhanced', {
+      method: 'POST',
+      body: JSON.stringify({
+        limit: 20,
+        sources: ["github", "huggingface", "web", "scraping"],
+        min_confidence: 0.0,
+        use_web_scraping: true,
+        ...request
+      }),
+    });
+  };
+
+  const scrapeSpecificUrl = async (
+    url: string, 
+    validate: boolean = true
+  ): Promise<{
+    success: boolean;
+    url: string;
+    name: string;
+    description: string;
+    domain: string;
+    tags: string[];
+    confidence_score: number;
+    validated: boolean;
+    schema?: any;
+    content_length: number;
+    scrape_duration_ms: number;
+  }> => {
+    const searchParams = new URLSearchParams();
+    searchParams.append('url', url);
+    searchParams.append('validate', validate.toString());
+
+    return makeRequest(`/mcps/search/scrape?${searchParams.toString()}`);
   };
 
   const importMCPFromWeb = async (sourceUrl: string, autoValidate: boolean = true): Promise<{
@@ -274,17 +344,31 @@ export const useBackend = () => {
     return response.blob();
   };
 
+  const getSearchAnalytics = async (): Promise<any> => {
+    return makeRequest<any>('/analytics/search');
+  };
+
+  const getScrapingAnalytics = async (): Promise<any> => {
+    return makeRequest<any>('/analytics/scraping');
+  };
+
   const healthCheck = async (): Promise<{ 
     status: string; 
     timestamp: string; 
     database: string;
     features: string[];
+    version: string;
+    scraping_enabled: boolean;
+    supported_platforms: string[];
   }> => {
     return makeRequest<{ 
       status: string; 
       timestamp: string; 
       database: string;
       features: string[];
+      version: string;
+      scraping_enabled: boolean;
+      supported_platforms: string[];
     }>('/health');
   };
 
@@ -295,11 +379,15 @@ export const useBackend = () => {
     compareProtocols,
     getMCPs,
     searchWebMCPs,
+    enhancedSearchMCPs,
+    scrapeSpecificUrl,
     importMCPFromWeb,
     getMCP,
     importMCP,
     createShareLink,
     exportCSV,
+    getSearchAnalytics,
+    getScrapingAnalytics,
     healthCheck,
     BACKEND_URL,
   };
