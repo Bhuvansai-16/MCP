@@ -6,6 +6,7 @@ import { ExploreView } from './components/ExploreView';
 import { CompareView } from './components/CompareView';
 import { CommunityView } from './components/CommunityView';
 import { AuthModal } from './components/AuthModal';
+import { Footer } from './components/Footer';
 import { useTheme } from './hooks/useTheme';
 import { useAuth } from './hooks/useAuth';
 import { MCPListItem, WebMCPResult } from './data/mockMCPs';
@@ -386,6 +387,9 @@ function App() {
             </motion.div>
           </AnimatePresence>
         </main>
+        
+        {/* Footer */}
+        <Footer isDark={isDark} />
       </div>
 
       {/* Authentication Modal */}

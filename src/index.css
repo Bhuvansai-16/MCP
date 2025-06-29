@@ -245,3 +245,22 @@ body {
   height: 100%;
   overflow: hidden;
 }
+
+/* Footer styling */
+.footer {
+  margin-top: auto;
+  width: 100%;
+}
+
+/* Prevent unnecessary scrolling */
+.content-container {
+  min-height: calc(100vh - 200px); /* Adjust based on header and footer height */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main content area that should take available space but not force scrolling */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+}
