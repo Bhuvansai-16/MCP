@@ -529,7 +529,7 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="space-y-6"
+              className="space-y-6 max-h-full overflow-y-auto pr-2"
             >
               {/* Basic Information */}
               <div className={`p-6 rounded-2xl ${
@@ -668,7 +668,7 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
                   </div>
                 )}
 
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
                   {tools.map((tool, index) => (
                     <motion.div
                       key={index}

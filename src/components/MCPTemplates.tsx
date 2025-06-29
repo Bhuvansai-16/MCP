@@ -1041,7 +1041,7 @@ export const MCPTemplates: React.FC<MCPTemplatesProps> = ({ isDark, onTemplateSe
               onClick={() => setSelectedTemplate(null)}
             />
             <motion.div
-              className={`relative w-full max-w-2xl rounded-3xl backdrop-blur-xl border ${
+              className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl backdrop-blur-xl border ${
                 isDark 
                   ? 'bg-gray-800/90 border-gray-700/50' 
                   : 'bg-white/90 border-white/50'
@@ -1091,7 +1091,7 @@ export const MCPTemplates: React.FC<MCPTemplatesProps> = ({ isDark, onTemplateSe
                   </button>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
                   <div className="flex items-center justify-between">
                     <div className={`px-3 py-1 rounded-lg text-sm font-medium ${
                       isDark 
