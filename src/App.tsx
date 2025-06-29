@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { Header } from './components/Header';
 import { PlaygroundView } from './components/PlaygroundView';
 import { ExploreView } from './components/ExploreView';
@@ -64,14 +62,8 @@ function App() {
       // Switch to playground tab
       setActiveTab('playground');
 
-      // Show success message
-      const { toast } = await import('react-toastify');
-      toast.success(`${mcp.name} loaded in playground!`);
-
     } catch (error) {
       console.error('Failed to load MCP in playground:', error);
-      const { toast } = await import('react-toastify');
-      toast.error('Failed to load MCP in playground');
     }
   };
 
@@ -349,20 +341,6 @@ function App() {
           </motion.div>
         </AnimatePresence>
       </main>
-
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme={isDark ? 'dark' : 'light'}
-        className="z-50"
-      />
     </div>
   );
 }

@@ -24,9 +24,9 @@ import {
   Flag,
   Edit,
   Trash2,
-  Play
+  Play,
+  X
 } from 'lucide-react';
-import { toast } from 'react-toastify';
 import { MCPListItem, WebMCPResult } from '../data/mockMCPs';
 
 interface CommunityViewProps {
@@ -244,7 +244,6 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
   const handleShare = (post: Post) => {
     const shareUrl = `${window.location.origin}/community/post/${post.id}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
-      toast.success('Post link copied to clipboard!');
       setPosts(prev => prev.map(p => 
         p.id === post.id ? { ...p, shares: p.shares + 1 } : p
       ));
@@ -274,8 +273,6 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
     setPosts(prev => prev.map(post => 
       post.id === postId ? { ...post, comments: post.comments + 1 } : post
     ));
-    
-    toast.success('Comment added!');
   };
 
   const handleTryInPlayground = (post: Post) => {
@@ -1009,7 +1006,6 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                     </button>
                     <button
                       onClick={() => {
-                        toast.success('Post created successfully!');
                         setShowCreatePost(false);
                       }}
                       className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"

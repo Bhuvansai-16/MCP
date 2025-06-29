@@ -21,7 +21,6 @@ import {
   Zap
 } from 'lucide-react';
 import { useBackend, WebMCPResult, MCPListItem } from '../hooks/useBackend';
-import { toast } from 'react-toastify';
 
 interface ExploreViewProps {
   isDark: boolean;
@@ -76,12 +75,6 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
       if (healthData.status === 'healthy') {
         setBackendStatus('connected');
         console.log('Backend connection successful');
-        toast.success(`Connected to enhanced MCP backend v${healthData.version}!`);
-        
-        // Show scraping capabilities
-        if (healthData.scraping_enabled) {
-          toast.info(`Web scraping enabled for: ${healthData.supported_platforms.join(', ')}`);
-        }
       } else {
         throw new Error('Backend health check failed');
       }
@@ -91,13 +84,10 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
       
       if (retryCount < 3) {
         const delay = 2000 * (retryCount + 1); // Exponential backoff
-        toast.warning(`Backend connection failed. Retrying in ${delay/1000}s...`);
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
           checkBackendConnection();
         }, delay);
-      } else {
-        toast.error('Failed to connect to backend after multiple attempts. Please check if the backend server is running on port 8000.');
       }
     }
   };
@@ -116,7 +106,6 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
       setLocalMCPs(mcps);
     } catch (error) {
       console.error('Failed to load local MCPs:', error);
-      toast.error('Failed to load MCPs from backend');
     }
   };
 
@@ -141,7 +130,6 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
           mcp.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
         );
         setLocalMCPs(filtered);
-        toast.success(`Found ${filtered.length} local MCPs matching "${searchQuery}"`);
       } else {
         // Enhanced web search with scraping
         console.log('Starting enhanced web search for:', searchQuery);
@@ -156,11 +144,9 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
         console.log('Web search results:', results);
         
         setWebMCPs(results);
-        toast.success(`Found ${results.length} MCPs from the web using ${useWebScraping ? 'enhanced scraping' : 'API search'}`);
       }
     } catch (error) {
       console.error('Search failed:', error);
-      toast.error(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSearching(false);
     }
@@ -170,7 +156,6 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
     try {
       console.log('Importing MCP from web:', webMCP);
       const result = await importMCPFromWeb(webMCP.source_url, true);
-      toast.success(`Successfully imported ${result.name}!`);
       
       // Refresh local MCPs to show the newly imported one
       loadLocalMCPs();
@@ -179,7 +164,6 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
       setSearchMode('local');
     } catch (error) {
       console.error('Import failed:', error);
-      toast.error(`Failed to import MCP: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -634,7 +618,6 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
                           }`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            toast.info('Compare feature coming soon!');
                           }}
                         >
                           <Eye className="w-4 h-4" />
@@ -862,7 +845,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
                               : 'border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400'
                           }`}
                           onClick={() => {
-                            toast.info('Compare feature coming soon!');
+                            // Compare feature placeholder
                           }}
                         >
                           <Eye className="w-5 h-5" />
