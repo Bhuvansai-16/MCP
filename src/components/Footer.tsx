@@ -106,7 +106,7 @@ export const Footer: React.FC<FooterProps> = ({ isDark }) => {
               </li>
               <li>
                 <a 
-                  href="https://github.com/modelcontextprotocol/examples" 
+                  href="https://github.com/Bhuvansai-16/MCP.git" 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm hover:underline flex items-center space-x-2"

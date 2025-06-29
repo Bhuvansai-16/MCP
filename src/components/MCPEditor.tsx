@@ -199,6 +199,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
   // Load initial schema if provided
   useEffect(() => {
     if (initialSchema) {
+      console.log('📋 MCPEditor: Loading initial schema:', initialSchema.name);
       const formatted = isJsonMode 
         ? JSON.stringify(initialSchema, null, 2)
         : yaml.dump(initialSchema);
@@ -260,6 +261,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
   };
 
   const loadExample = (example: any) => {
+    console.log('📋 Loading example:', example.name);
     const formatted = isJsonMode 
       ? JSON.stringify(example.schema, null, 2)
       : yaml.dump(example.schema);
