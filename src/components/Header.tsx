@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Github, Moon, Sun, Activity, Zap, Search, BarChart3, Users, User, LogOut, Settings } from 'lucide-react';
+import { Github, Moon, Sun, Activity, Zap, Search, BarChart3, Users, User, LogOut, Settings, Menu, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { AuthModal } from './AuthModal';
 
@@ -22,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   const { user, login, logout, isAuthenticated } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const tabs = [
     { 
@@ -57,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <motion.header 
-      className="sticky top-0 z-50 py-4 transition-all duration-500"
+      className="sticky top-0 z-50 py-4 transition-all duration-500 w-full"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
@@ -92,8 +93,24 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </motion.div>
           
-          {/* Navigation Tabs - Center - IMPROVED WITH CURVES */}
-          <div className="nav-container rounded-full backdrop-blur-md border border-gray-200/20 p-1.5 bg-white/5">
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <motion.button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="p-2 rounded-full bg-white/10 backdrop-blur-md border border-gray-200/20"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {showMobileMenu ? (
+                <X className={`w-6 h-6 ${isDark ? 'text-white' : 'text-gray-900'}`} />
+              ) : (
+                <Menu className={`w-6 h-6 ${isDark ? 'text-white' : 'text-gray-900'}`} />
+              )}
+            </motion.button>
+          </div>
+          
+          {/* Navigation Tabs - Center - IMPROVED WITH CURVES (Desktop) */}
+          <div className="hidden md:flex nav-container rounded-full backdrop-blur-md border border-gray-200/20 p-1.5 bg-white/5">
             {tabs.map(({ id, label, icon: Icon, description }) => (
               <motion.button
                 key={id}
@@ -137,8 +154,8 @@ export const Header: React.FC<HeaderProps> = ({
             ))}
           </div>
           
-          {/* Right Actions */}
-          <div className="flex items-center space-x-4">
+          {/* Right Actions (Desktop) */}
+          <div className="hidden md:flex items-center space-x-4">
             <motion.button
               onClick={onToggleTheme}
               className="btn-rounded"
@@ -243,6 +260,99 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
         </div>
+        
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {showMobileMenu && (
+            <motion.div
+              className="md:hidden mt-4 rounded-2xl backdrop-blur-xl border overflow-hidden shadow-xl"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className={`p-4 ${isDark ? 'bg-gray-800/90 border-gray-700/50' : 'bg-white/90 border-white/50'}`}>
+                {/* Mobile Navigation */}
+                <div className="space-y-2 mb-4">
+                  {tabs.map(({ id, label, icon: Icon }) => (
+                    <motion.button
+                      key={id}
+                      onClick={() => {
+                        onTabChange(id);
+                        setShowMobileMenu(false);
+                      }}
+                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                        activeTab === id
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                          : isDark
+                            ? 'text-gray-300 hover:bg-gray-700/50'
+                            : 'text-gray-700 hover:bg-gray-100/50'
+                      }`}
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{label}</span>
+                    </motion.button>
+                  ))}
+                </div>
+                
+                {/* Mobile Actions */}
+                <div className="grid grid-cols-3 gap-2 pt-4 border-t border-gray-200/20">
+                  <motion.button
+                    onClick={onToggleTheme}
+                    className="flex flex-col items-center justify-center p-3 rounded-xl transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {isDark ? <Sun className="w-5 h-5 text-yellow-400 mb-1" /> : <Moon className="w-5 h-5 text-gray-600 mb-1" />}
+                    <span className="text-xs">{isDark ? 'Light' : 'Dark'}</span>
+                  </motion.button>
+                  
+                  <motion.a
+                    href="https://github.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center justify-center p-3 rounded-xl transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Github className="w-5 h-5 mb-1" />
+                    <span className="text-xs">GitHub</span>
+                  </motion.a>
+                  
+                  {isAuthenticated ? (
+                    <motion.button
+                      onClick={() => {
+                        logout();
+                        setShowMobileMenu(false);
+                      }}
+                      className="flex flex-col items-center justify-center p-3 rounded-xl transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <LogOut className="w-5 h-5 mb-1" />
+                      <span className="text-xs">Logout</span>
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      onClick={() => {
+                        setShowAuthModal(true);
+                        setShowMobileMenu(false);
+                      }}
+                      className="flex flex-col items-center justify-center p-3 rounded-xl transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <User className="w-5 h-5 mb-1" />
+                      <span className="text-xs">Sign In</span>
+                    </motion.button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Auth Modal */}
