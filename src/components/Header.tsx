@@ -57,10 +57,10 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <motion.header 
-      className={`sticky top-0 z-50 backdrop-blur-xl border-b transition-all duration-500 ${
+      className={`sticky top-0 z-50 backdrop-blur-xl transition-all duration-500 ${
         isDark 
-          ? 'bg-gray-900/80 border-gray-700/50' 
-          : 'bg-white/80 border-gray-200/50'
+          ? 'border-gray-700/50' 
+          : 'border-gray-200/50'
       }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -74,14 +74,14 @@ export const Header: React.FC<HeaderProps> = ({
             whileHover={{ scale: 1.02 }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <div className={`relative p-3 rounded-2xl ${
+            <div className={`relative p-3 rounded-full ${
               isDark 
                 ? 'bg-gradient-to-br from-blue-600 to-purple-600' 
                 : 'bg-gradient-to-br from-blue-500 to-purple-500'
             } shadow-lg`}>
               <Activity className="w-8 h-8 text-white" />
               <motion.div
-                className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-400 opacity-0"
+                className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 opacity-0"
                 whileHover={{ opacity: 0.3 }}
                 transition={{ duration: 0.2 }}
               />
@@ -101,16 +101,12 @@ export const Header: React.FC<HeaderProps> = ({
           </motion.div>
           
           {/* Navigation Tabs - Center - IMPROVED WITH CURVES */}
-          <div className={`flex items-center p-2 rounded-full ${
-            isDark ? 'bg-gray-800/70' : 'bg-gray-100/70'
-          } backdrop-blur-sm border ${
-            isDark ? 'border-gray-700/50' : 'border-gray-200/50'
-          } shadow-lg hover:shadow-xl transition-all duration-300`}>
+          <div className="nav-container">
             {tabs.map(({ id, label, icon: Icon, description }) => (
               <motion.button
                 key={id}
                 onClick={() => onTabChange(id)}
-                className={`relative flex items-center space-x-2 px-4 py-3 rounded-full font-medium transition-all duration-300 group ${
+                className={`nav-item ${activeTab === id ? 'nav-item-active' : ''} relative flex items-center space-x-2 px-4 py-3 font-medium transition-all duration-300 group ${
                   activeTab === id
                     ? 'text-white shadow-lg'
                     : isDark
@@ -153,26 +149,18 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center space-x-4">
             <motion.button
               onClick={onToggleTheme}
-              className={`p-3 rounded-full transition-all duration-300 ${
-                isDark 
-                  ? 'bg-gray-800/70 hover:bg-gray-700/70 text-yellow-400' 
-                  : 'bg-gray-100/70 hover:bg-gray-200/70 text-gray-600'
-              } backdrop-blur-sm shadow-md hover:shadow-lg`}
+              className="btn-rounded"
               whileHover={{ scale: 1.1, rotate: 180 }}
               whileTap={{ scale: 0.9 }}
             >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {isDark ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-600" />}
             </motion.button>
             
             <motion.a
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex items-center space-x-2 px-4 py-3 rounded-full transition-all duration-300 ${
-                isDark 
-                  ? 'bg-gray-800/70 hover:bg-gray-700/70 text-white' 
-                  : 'bg-gray-100/70 hover:bg-gray-200/70 text-gray-700'
-              } backdrop-blur-sm shadow-md hover:shadow-lg`}
+              className="btn-rounded flex items-center space-x-2 px-4 py-3"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -185,11 +173,7 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="relative">
                 <motion.button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-full transition-all duration-300 ${
-                    isDark 
-                      ? 'bg-gray-800/70 hover:bg-gray-700/70 text-white' 
-                      : 'bg-gray-100/70 hover:bg-gray-200/70 text-gray-700'
-                  } backdrop-blur-sm shadow-md hover:shadow-lg`}
+                  className="btn-rounded flex items-center space-x-3 px-4 py-3"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -257,11 +241,11 @@ export const Header: React.FC<HeaderProps> = ({
             ) : (
               <motion.button
                 onClick={() => setShowAuthModal(true)}
-                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-full font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="btn-gradient"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <User className="w-5 h-5" />
+                <User className="w-5 h-5 mr-2" />
                 <span>Sign In</span>
               </motion.button>
             )}
