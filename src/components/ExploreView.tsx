@@ -27,6 +27,7 @@ import {
   Activity
 } from 'lucide-react';
 import { useBackend, MCPListItem, WebMCPResult } from '../hooks/useBackend';
+import { mockLocalMCPs } from '../data/mockMCPs';
 
 interface ExploreViewProps {
   isDark: boolean;
@@ -91,16 +92,10 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
   const loadLocalMCPs = async () => {
     setLocalLoading(true);
     try {
-      console.log('🔍 Loading local MCPs...');
-      const mcps = await getMCPs({
-        domain: filters.domain !== 'all' ? filters.domain : undefined,
-        tags: filters.tags || undefined,
-        validated: filters.validated,
-        sort_by: filters.sortBy,
-        limit: 50
-      });
-      setLocalMCPs(mcps);
-      console.log(`✅ Loaded ${mcps.length} local MCPs`);
+      console.log('🔍 Loading local MCPs from mock data...');
+      // Use the mock data directly
+      setLocalMCPs(mockLocalMCPs);
+      console.log(`✅ Loaded ${mockLocalMCPs.length} local MCPs`);
     } catch (err) {
       console.error('❌ Failed to load local MCPs:', err);
     } finally {
@@ -172,7 +167,17 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlaygro
     if (searchMode === 'web') {
       await performWebSearch(searchQuery);
     } else {
-      await loadLocalMCPs();
+      // Filter local MCPs based on search query
+      if (searchQuery.trim()) {
+        const filtered = mockLocalMCPs.filter(mcp => 
+          mcp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          mcp.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          mcp.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+        setLocalMCPs(filtered);
+      } else {
+        setLocalMCPs(mockLocalMCPs);
+      }
     }
   };
 

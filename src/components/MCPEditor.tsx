@@ -530,10 +530,10 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
               lineNumbersMinChars: 3,
               glyphMargin: false,
               scrollbar: {
-                vertical: 'auto',
-                horizontal: 'auto',
-                verticalScrollbarSize: 8,
-                horizontalScrollbarSize: 8,
+                vertical: 'visible',
+                horizontal: 'visible',
+                verticalScrollbarSize: 12,
+                horizontalScrollbarSize: 12,
                 alwaysConsumeMouseWheel: false
               }
             }}
