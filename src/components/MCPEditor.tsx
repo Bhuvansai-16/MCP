@@ -387,7 +387,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap gap-3">
           <motion.button
             onClick={toggleFormat}
             className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
@@ -539,7 +539,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         </div>
       </div>
 
-      {/* Editor - No scrollbar */}
+      {/* Editor */}
       <div className="flex-1 p-6 overflow-hidden">
         <div className="h-full rounded-xl overflow-hidden border border-gray-200/20 no-scrollbar">
           <Editor

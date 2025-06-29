@@ -342,7 +342,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="community-container">
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
         <motion.div 
@@ -440,7 +440,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
         </motion.div>
 
         {/* Posts Grid */}
-        <div className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
+        <div className="space-y-6 overflow-y-auto">
           {filteredPosts.map((post, index) => {
             const typeColor = getTypeColor(post.type);
             return (
@@ -672,7 +672,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                 onClick={() => setSelectedPost(null)}
               />
               <motion.div
-                className={`relative w-full max-w-4xl max-h-[80vh] overflow-y-auto rounded-3xl backdrop-blur-xl border ${
+                className={`relative w-full max-w-4xl max-h-[80vh] overflow-y-auto rounded-3xl backdrop-blur-xl border post-detail-modal ${
                   isDark 
                     ? 'bg-gray-800/90 border-gray-700/50' 
                     : 'bg-white/90 border-white/50'
@@ -860,7 +860,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                 onClick={() => setShowCreatePost(false)}
               />
               <motion.div
-                className={`relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-3xl backdrop-blur-xl border ${
+                className={`relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-3xl backdrop-blur-xl border create-post-modal ${
                   isDark 
                     ? 'bg-gray-800/90 border-gray-700/50' 
                     : 'bg-white/90 border-white/50'

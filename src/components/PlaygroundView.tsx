@@ -323,17 +323,17 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   };
 
   return (
-    <div className="min-h-screen overflow-hidden">
+    <div className="playground-container">
       <div className="container mx-auto px-6 py-8">
         <motion.div 
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[calc(100vh-200px)]"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {/* MCP Editor Panel (Left) */}
           <motion.div 
-            className="flex flex-col h-full"
+            className="editor-container"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
@@ -396,7 +396,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
             </div>
 
             {/* Editor Content - No scrollbar */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 no-scrollbar">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={editorMode}
@@ -414,7 +414,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
 
           {/* Chat Panel (Right) */}
           <motion.div 
-            className="flex flex-col h-full"
+            className="chat-container"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}

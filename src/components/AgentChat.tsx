@@ -284,7 +284,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
       {/* Messages - Scrollable with proper height */}
       <div 
         ref={messagesContainerRef}
-        className="flex-1 p-6 overflow-y-auto min-h-0"
+        className="flex-1 p-6 overflow-y-auto min-h-0 no-scrollbar"
         style={{ scrollBehavior: 'smooth' }}
       >
         {messages.length === 0 ? (
@@ -321,7 +321,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                     <Sparkles className="w-4 h-4 inline mr-2" />
                     Try these suggestions:
                   </p>
-                  <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
+                  <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto no-scrollbar">
                     {suggestedPrompts.map((prompt, index) => (
                       <motion.button
                         key={index}
@@ -464,7 +464,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
         {/* Suggested Prompts for Active Agent */}
         {isAgentRunning && messages.length > 0 && suggestedPrompts.length > 0 && (
           <div className="mb-4">
-            <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
+            <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto no-scrollbar">
               {suggestedPrompts.slice(0, 3).map((prompt, index) => (
                 <motion.button
                   key={index}
