@@ -14,7 +14,13 @@ import {
   Upload,
   CheckCircle,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  Sliders,
+  Copy,
+  Check,
+  Move,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { MCPSchema } from '../App';
 
@@ -57,6 +63,10 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
   const [editingTool, setEditingTool] = useState<number | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [draggedToolIndex, setDraggedToolIndex] = useState<number | null>(null);
+  const [dragOverToolIndex, setDragOverToolIndex] = useState<number | null>(null);
+  const [showParameterHelp, setShowParameterHelp] = useState(false);
 
   // Load initial schema
   useEffect(() => {
@@ -226,6 +236,84 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  const copyToClipboard = async () => {
+    const schema: MCPSchema = {
+      name,
+      version,
+      description,
+      tools: tools.map(tool => ({
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.parameters
+      }))
+    };
+    
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(schema, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+    }
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedToolIndex(index);
+  };
+
+  const handleDragOver = (index: number) => {
+    setDragOverToolIndex(index);
+  };
+
+  const handleDrop = () => {
+    if (draggedToolIndex === null || dragOverToolIndex === null || draggedToolIndex === dragOverToolIndex) {
+      setDraggedToolIndex(null);
+      setDragOverToolIndex(null);
+      return;
+    }
+    
+    const newTools = [...tools];
+    const draggedTool = newTools[draggedToolIndex];
+    
+    // Remove the dragged tool
+    newTools.splice(draggedToolIndex, 1);
+    
+    // Insert at the new position
+    newTools.splice(dragOverToolIndex, 0, draggedTool);
+    
+    setTools(newTools);
+    
+    // Update editing tool index if needed
+    if (editingTool === draggedToolIndex) {
+      setEditingTool(dragOverToolIndex);
+    }
+    
+    setDraggedToolIndex(null);
+    setDragOverToolIndex(null);
+  };
+
+  const moveTool = (index: number, direction: 'up' | 'down') => {
+    if ((direction === 'up' && index === 0) || 
+        (direction === 'down' && index === tools.length - 1)) {
+      return;
+    }
+    
+    const newTools = [...tools];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    // Swap tools
+    [newTools[index], newTools[targetIndex]] = [newTools[targetIndex], newTools[index]];
+    
+    setTools(newTools);
+    
+    // Update editing tool index if needed
+    if (editingTool === index) {
+      setEditingTool(targetIndex);
+    } else if (editingTool === targetIndex) {
+      setEditingTool(index);
+    }
+  };
+
   const getFieldError = (field: string) => {
     return validationErrors.find(error => error.field === field);
   };
@@ -301,7 +389,7 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
         </div>
 
         {/* Quick Actions */}
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
           <motion.button
             onClick={generateExampleValues}
             className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
@@ -317,6 +405,24 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
           </motion.button>
 
           <motion.button
+            onClick={copyToClipboard}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+              copied
+                ? isDark
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                  : 'bg-green-50 text-green-600 border border-green-200'
+                : isDark
+                  ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50'
+                  : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
+            } backdrop-blur-sm`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            <span>{copied ? 'Copied!' : 'Copy JSON'}</span>
+          </motion.button>
+
+          <motion.button
             onClick={exportSchema}
             disabled={hasErrors}
             className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
@@ -325,8 +431,8 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
                   ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed border border-gray-600/30'
                   : 'bg-gray-100/30 text-gray-400 cursor-not-allowed border border-gray-200/30'
                 : isDark
-                  ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30'
-                  : 'bg-green-50 hover:bg-green-100 text-green-600 border border-green-200'
+                  ? 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30'
+                  : 'bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-200'
             } backdrop-blur-sm`}
             whileHover={!hasErrors ? { scale: 1.05 } : {}}
             whileTap={!hasErrors ? { scale: 0.95 } : {}}
@@ -334,7 +440,57 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
             <Download className="w-4 h-4" />
             <span>Export JSON</span>
           </motion.button>
+
+          <motion.button
+            onClick={() => setShowParameterHelp(!showParameterHelp)}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+              showParameterHelp
+                ? isDark
+                  ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                  : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
+                : isDark
+                  ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50'
+                  : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
+            } backdrop-blur-sm`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <HelpCircle className="w-4 h-4" />
+            <span>Help</span>
+          </motion.button>
         </div>
+
+        {/* Parameter Help Panel */}
+        <AnimatePresence>
+          {showParameterHelp && (
+            <motion.div
+              className={`mt-4 p-4 rounded-xl ${
+                isDark ? 'bg-yellow-500/10 border border-yellow-500/20' : 'bg-yellow-50/50 border border-yellow-200/50'
+              }`}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <h4 className={`font-semibold mb-2 ${isDark ? 'text-yellow-400' : 'text-yellow-700'}`}>
+                Parameter Types Guide
+              </h4>
+              <div className={`text-sm space-y-2 ${isDark ? 'text-yellow-300' : 'text-yellow-600'}`}>
+                <p><strong>string:</strong> Text values like "hello" or "San Francisco"</p>
+                <p><strong>number:</strong> Numeric values like 42 or 3.14</p>
+                <p><strong>boolean:</strong> True/false values</p>
+                <p><strong>array:</strong> Lists of values like ["item1", "item2"]</p>
+                <p><strong>object:</strong> Complex nested data structures</p>
+                <p><strong>date:</strong> Date values like "2023-12-25"</p>
+                <p><strong>datetime:</strong> Date and time values like "2023-12-25T14:30:00Z"</p>
+              </div>
+              <div className={`mt-3 p-3 rounded-lg ${isDark ? 'bg-gray-800/50' : 'bg-white/50'}`}>
+                <p className={`text-sm ${isDark ? 'text-yellow-300' : 'text-yellow-600'}`}>
+                  <strong>Tip:</strong> Use descriptive parameter names that clearly indicate what the parameter is for. For example, use "location" instead of "loc" or "query" instead of "q".
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Content */}
@@ -517,22 +673,35 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
                     <motion.div
                       key={index}
                       className={`p-4 rounded-xl border-2 ${
-                        editingTool === index
+                        dragOverToolIndex === index
                           ? isDark
-                            ? 'border-purple-500/50 bg-purple-500/10'
-                            : 'border-purple-400/50 bg-purple-50/50'
-                          : isDark
-                            ? 'border-gray-600/30 bg-gray-800/30'
-                            : 'border-gray-200/30 bg-white/30'
+                            ? 'border-purple-500 bg-purple-500/20'
+                            : 'border-purple-400 bg-purple-100'
+                          : editingTool === index
+                            ? isDark
+                              ? 'border-purple-500/50 bg-purple-500/10'
+                              : 'border-purple-400/50 bg-purple-50/50'
+                            : isDark
+                              ? 'border-gray-600/30 bg-gray-800/30'
+                              : 'border-gray-200/30 bg-white/30'
                       } backdrop-blur-sm`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        handleDragOver(index);
+                      }}
+                      onDragEnd={handleDrop}
+                      onDrop={handleDrop}
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
-                            <Zap className="w-4 h-4 text-white" />
+                          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 cursor-move"
+                               onMouseDown={() => handleDragStart(index)}>
+                            <Move className="w-4 h-4 text-white" />
                           </div>
                           <div>
                             <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -544,6 +713,42 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
+                          <div className="flex space-x-1">
+                            <motion.button
+                              onClick={() => moveTool(index, 'up')}
+                              disabled={index === 0}
+                              className={`p-1 rounded-lg transition-colors ${
+                                index === 0
+                                  ? isDark
+                                    ? 'text-gray-600 cursor-not-allowed'
+                                    : 'text-gray-300 cursor-not-allowed'
+                                  : isDark
+                                    ? 'text-gray-400 hover:text-white hover:bg-gray-700'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                              }`}
+                              whileHover={index !== 0 ? { scale: 1.1 } : {}}
+                              whileTap={index !== 0 ? { scale: 0.9 } : {}}
+                            >
+                              <ArrowUp className="w-4 h-4" />
+                            </motion.button>
+                            <motion.button
+                              onClick={() => moveTool(index, 'down')}
+                              disabled={index === tools.length - 1}
+                              className={`p-1 rounded-lg transition-colors ${
+                                index === tools.length - 1
+                                  ? isDark
+                                    ? 'text-gray-600 cursor-not-allowed'
+                                    : 'text-gray-300 cursor-not-allowed'
+                                  : isDark
+                                    ? 'text-gray-400 hover:text-white hover:bg-gray-700'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                              }`}
+                              whileHover={index !== tools.length - 1 ? { scale: 1.1 } : {}}
+                              whileTap={index !== tools.length - 1 ? { scale: 0.9 } : {}}
+                            >
+                              <ArrowDown className="w-4 h-4" />
+                            </motion.button>
+                          </div>
                           <motion.button
                             onClick={() => setEditingTool(editingTool === index ? null : index)}
                             className={`p-2 rounded-lg transition-colors ${
@@ -629,9 +834,19 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
                             {/* Parameters */}
                             <div>
                               <div className="flex items-center justify-between mb-3">
-                                <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                  Parameters
-                                </label>
+                                <div className="flex items-center space-x-2">
+                                  <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Parameters
+                                  </label>
+                                  <div className="group relative">
+                                    <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+                                    <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-48 ${
+                                      isDark ? 'bg-gray-800 text-white border border-gray-600' : 'bg-white text-gray-900 border border-gray-200'
+                                    } shadow-lg backdrop-blur-sm`}>
+                                      Parameters define the inputs your tool accepts. Each parameter needs a name and type.
+                                    </div>
+                                  </div>
+                                </div>
                                 <motion.button
                                   onClick={() => addParameter(index)}
                                   className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm transition-all duration-300 ${
@@ -691,6 +906,42 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
                                   </div>
                                 ))}
                               </div>
+
+                              {Object.keys(tool.parameters).length === 0 && (
+                                <div className={`p-3 rounded-lg text-center ${
+                                  isDark ? 'bg-gray-800/50' : 'bg-gray-50/50'
+                                }`}>
+                                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    No parameters yet. Click "Add Parameter" to add one.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Parameter Examples */}
+                            <div className={`p-3 rounded-lg ${
+                              isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50 border border-purple-200'
+                            }`}>
+                              <div className="flex items-center space-x-2 mb-2">
+                                <Sliders className="w-4 h-4 text-purple-500" />
+                                <h5 className={`text-sm font-medium ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
+                                  Parameter Examples
+                                </h5>
+                              </div>
+                              <div className="space-y-1 text-xs">
+                                <p className={isDark ? 'text-purple-300' : 'text-purple-600'}>
+                                  <strong>location</strong> (string): "San Francisco, CA"
+                                </p>
+                                <p className={isDark ? 'text-purple-300' : 'text-purple-600'}>
+                                  <strong>limit</strong> (number): 10
+                                </p>
+                                <p className={isDark ? 'text-purple-300' : 'text-purple-600'}>
+                                  <strong>include_images</strong> (boolean): true
+                                </p>
+                                <p className={isDark ? 'text-purple-300' : 'text-purple-600'}>
+                                  <strong>tags</strong> (array): ["news", "technology"]
+                                </p>
+                              </div>
                             </div>
                           </motion.div>
                         )}
@@ -711,6 +962,15 @@ export const VisualMCPBuilder: React.FC<VisualMCPBuilderProps> = ({
                       <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
                         Add your first tool to get started
                       </p>
+                      <motion.button
+                        onClick={addTool}
+                        className="mt-4 flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg mx-auto"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Add First Tool</span>
+                      </motion.button>
                     </div>
                   )}
                 </div>

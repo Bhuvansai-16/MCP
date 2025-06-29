@@ -1,6 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookTemplate as FileTemplate, Cloud, ShoppingCart, Plane, Calendar, DollarSign, MessageSquare, Database, Zap, Search, Info, Play, Download, Star, CheckCircle } from 'lucide-react';
+import { 
+  BookTemplate as FileTemplate, 
+  Cloud, 
+  ShoppingCart, 
+  Plane, 
+  Calendar, 
+  DollarSign, 
+  MessageSquare, 
+  Database, 
+  Zap, 
+  Search, 
+  Info, 
+  Play, 
+  Download, 
+  Star, 
+  CheckCircle,
+  X,
+  Filter,
+  Tag,
+  Sparkles,
+  Heart,
+  ThumbsUp,
+  Clock
+} from 'lucide-react';
 import { MCPSchema } from '../App';
 
 interface MCPTemplatesProps {
@@ -19,6 +42,10 @@ interface Template {
   schema: MCPSchema;
   tags: string[];
   popularity: number;
+  rating: number;
+  lastUpdated: string;
+  author: string;
+  downloads: number;
 }
 
 const templates: Template[] = [
@@ -32,6 +59,10 @@ const templates: Template[] = [
     useCase: 'Get current weather, forecasts, and weather alerts for any location worldwide',
     tags: ['weather', 'api', 'forecast', 'location'],
     popularity: 95,
+    rating: 4.8,
+    lastUpdated: '2023-12-15',
+    author: 'MCP Team',
+    downloads: 12500,
     schema: {
       name: "weather.forecast",
       version: "1.0.0",
@@ -75,6 +106,10 @@ const templates: Template[] = [
     useCase: 'Manage products, process orders, handle inventory, and track sales',
     tags: ['ecommerce', 'shopping', 'inventory', 'orders'],
     popularity: 88,
+    rating: 4.6,
+    lastUpdated: '2023-11-20',
+    author: 'Commerce Team',
+    downloads: 9800,
     schema: {
       name: "ecommerce.store",
       version: "2.1.0",
@@ -128,6 +163,10 @@ const templates: Template[] = [
     useCase: 'Book flights, hotels, create itineraries, and manage travel expenses',
     tags: ['travel', 'booking', 'flights', 'hotels', 'itinerary'],
     popularity: 82,
+    rating: 4.7,
+    lastUpdated: '2023-12-05',
+    author: 'Travel Team',
+    downloads: 7600,
     schema: {
       name: "travel.planner",
       version: "3.0.0",
@@ -187,6 +226,10 @@ const templates: Template[] = [
     useCase: 'Schedule meetings, manage events, set reminders, and coordinate calendars',
     tags: ['calendar', 'scheduling', 'meetings', 'events'],
     popularity: 76,
+    rating: 4.5,
+    lastUpdated: '2023-10-30',
+    author: 'Productivity Team',
+    downloads: 6200,
     schema: {
       name: "calendar.scheduler",
       version: "1.3.0",
@@ -244,6 +287,10 @@ const templates: Template[] = [
     useCase: 'Track expenses, manage budgets, analyze spending patterns, and financial goals',
     tags: ['finance', 'budgeting', 'expenses', 'analytics'],
     popularity: 71,
+    rating: 4.4,
+    lastUpdated: '2023-11-10',
+    author: 'Finance Team',
+    downloads: 5400,
     schema: {
       name: "finance.tracker",
       version: "2.0.0",
@@ -299,6 +346,10 @@ const templates: Template[] = [
     useCase: 'Schedule posts, analyze engagement, manage multiple accounts, and track metrics',
     tags: ['social', 'posting', 'analytics', 'engagement'],
     popularity: 68,
+    rating: 4.3,
+    lastUpdated: '2023-09-25',
+    author: 'Social Team',
+    downloads: 4800,
     schema: {
       name: "social.media",
       version: "1.5.0",
@@ -342,6 +393,123 @@ const templates: Template[] = [
         }
       ]
     }
+  },
+  {
+    id: 'database-manager',
+    name: 'Database Manager',
+    description: 'Database operations and management tools',
+    category: 'Development',
+    icon: Database,
+    difficulty: 'Advanced',
+    useCase: 'Query databases, manage tables, perform CRUD operations, and analyze data',
+    tags: ['database', 'sql', 'data', 'query'],
+    popularity: 65,
+    rating: 4.6,
+    lastUpdated: '2023-10-15',
+    author: 'Dev Team',
+    downloads: 4200,
+    schema: {
+      name: "database.manager",
+      version: "2.2.0",
+      description: "Database operations and management tools",
+      tools: [
+        {
+          name: "execute_query",
+          description: "Execute SQL query on database",
+          parameters: {
+            query: "string",
+            database: "string",
+            params: "array"
+          }
+        },
+        {
+          name: "create_table",
+          description: "Create a new database table",
+          parameters: {
+            table_name: "string",
+            columns: "array",
+            database: "string"
+          }
+        },
+        {
+          name: "insert_data",
+          description: "Insert data into a table",
+          parameters: {
+            table_name: "string",
+            data: "object",
+            database: "string"
+          }
+        },
+        {
+          name: "export_data",
+          description: "Export data from database",
+          parameters: {
+            query: "string",
+            format: "string",
+            database: "string"
+          }
+        }
+      ]
+    }
+  },
+  {
+    id: 'search-engine',
+    name: 'Search Engine',
+    description: 'Advanced search capabilities across multiple sources',
+    category: 'Data & APIs',
+    icon: Search,
+    difficulty: 'Intermediate',
+    useCase: 'Search web, documents, databases, and custom sources with advanced filtering',
+    tags: ['search', 'web', 'documents', 'filtering'],
+    popularity: 73,
+    rating: 4.5,
+    lastUpdated: '2023-11-28',
+    author: 'Search Team',
+    downloads: 5800,
+    schema: {
+      name: "search.engine",
+      version: "3.1.0",
+      description: "Advanced search capabilities across multiple sources",
+      tools: [
+        {
+          name: "web_search",
+          description: "Search the web for information",
+          parameters: {
+            query: "string",
+            limit: "number",
+            filters: "object"
+          }
+        },
+        {
+          name: "document_search",
+          description: "Search within documents",
+          parameters: {
+            query: "string",
+            document_ids: "array",
+            file_types: "array"
+          }
+        },
+        {
+          name: "image_search",
+          description: "Search for images",
+          parameters: {
+            query: "string",
+            size: "string",
+            color: "string",
+            type: "string"
+          }
+        },
+        {
+          name: "news_search",
+          description: "Search for news articles",
+          parameters: {
+            query: "string",
+            date_range: "object",
+            sources: "array"
+          }
+        }
+      ]
+    }
   }
 ];
 
@@ -349,17 +517,94 @@ export const MCPTemplates: React.FC<MCPTemplatesProps> = ({ isDark, onTemplateSe
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'popularity' | 'rating' | 'downloads' | 'name'>('popularity');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All');
+  const [showFilters, setShowFilters] = useState(false);
+  const [favoriteTemplates, setFavoriteTemplates] = useState<Set<string>>(new Set());
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [dailyHighlight, setDailyHighlight] = useState<Template | null>(null);
 
   const categories = ['All', ...Array.from(new Set(templates.map(t => t.category)))];
+  const difficulties = ['All', 'Beginner', 'Intermediate', 'Advanced'];
+  const allTags = Array.from(new Set(templates.flatMap(t => t.tags)));
+
+  // Set daily highlight on component mount
+  useEffect(() => {
+    // Use the day of the year to pick a template
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now.getTime() - start.getTime();
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    // Use the day of year to pick a template (cycle through all templates)
+    const highlightIndex = dayOfYear % templates.length;
+    setDailyHighlight(templates[highlightIndex]);
+    
+    // Load favorites from localStorage
+    const savedFavorites = localStorage.getItem('favoriteTemplates');
+    if (savedFavorites) {
+      setFavoriteTemplates(new Set(JSON.parse(savedFavorites)));
+    }
+  }, []);
+
+  // Save favorites to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem('favoriteTemplates', JSON.stringify(Array.from(favoriteTemplates)));
+  }, [favoriteTemplates]);
+
+  const toggleFavorite = (templateId: string) => {
+    const newFavorites = new Set(favoriteTemplates);
+    if (newFavorites.has(templateId)) {
+      newFavorites.delete(templateId);
+    } else {
+      newFavorites.add(templateId);
+    }
+    setFavoriteTemplates(newFavorites);
+  };
+
+  const toggleTagFilter = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter(t => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
 
   const filteredTemplates = templates.filter(template => {
+    // Filter by favorites if enabled
+    if (showFavoritesOnly && !favoriteTemplates.has(template.id)) {
+      return false;
+    }
+    
+    // Filter by category
     const matchesCategory = selectedCategory === 'All' || template.category === selectedCategory;
+    
+    // Filter by difficulty
+    const matchesDifficulty = selectedDifficulty === 'All' || template.difficulty === selectedDifficulty;
+    
+    // Filter by tags
+    const matchesTags = selectedTags.length === 0 || 
+      selectedTags.every(tag => template.tags.includes(tag));
+    
+    // Filter by search query
     const matchesSearch = searchQuery === '' || 
       template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       template.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesDifficulty && matchesTags && matchesSearch;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'rating':
+        return b.rating - a.rating;
+      case 'downloads':
+        return b.downloads - a.downloads;
+      case 'name':
+        return a.name.localeCompare(b.name);
+      default:
+        return b.popularity - a.popularity;
+    }
   });
 
   const getDifficultyColor = (difficulty: string) => {
@@ -379,21 +624,61 @@ export const MCPTemplates: React.FC<MCPTemplatesProps> = ({ isDark, onTemplateSe
     } shadow-2xl flex flex-col overflow-hidden`}>
       {/* Header */}
       <div className="flex-shrink-0 p-6 border-b border-gray-200/20">
-        <div className="flex items-center space-x-3 mb-4">
-          <motion.div
-            className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500"
-            whileHover={{ rotate: 360 }}
-            transition={{ duration: 0.5 }}
-          >
-            <FileTemplate className="w-6 h-6 text-white" />
-          </motion.div>
-          <div>
-            <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              MCP Templates
-            </h2>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Pre-built templates for common use cases
-            </p>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <motion.div
+              className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500"
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
+            >
+              <FileTemplate className="w-6 h-6 text-white" />
+            </motion.div>
+            <div>
+              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                MCP Templates
+              </h2>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Pre-built templates for common use cases
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <motion.button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+                showFilters
+                  ? isDark
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                    : 'bg-green-50 text-green-600 border border-green-200'
+                  : isDark 
+                    ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50' 
+                    : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
+              } backdrop-blur-sm`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Filter className="w-4 h-4" />
+              <span>{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
+            </motion.button>
+            
+            <motion.button
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+                showFavoritesOnly
+                  ? isDark
+                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                    : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
+                  : isDark 
+                    ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50' 
+                    : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
+              } backdrop-blur-sm`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+              <span>Favorites</span>
+            </motion.button>
           </div>
         </div>
 
@@ -414,6 +699,147 @@ export const MCPTemplates: React.FC<MCPTemplatesProps> = ({ isDark, onTemplateSe
             } focus:ring-2 focus:ring-green-500/20 backdrop-blur-sm`}
           />
         </div>
+
+        {/* Filters */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-4 overflow-hidden"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDark ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Category
+                  </label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className={`w-full px-3 py-2 rounded-xl border transition-all duration-300 ${
+                      isDark 
+                        ? 'bg-gray-900/50 border-gray-600 text-white' 
+                        : 'bg-white/50 border-gray-200 text-gray-900'
+                    } backdrop-blur-sm`}
+                  >
+                    {categories.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDark ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Difficulty
+                  </label>
+                  <select
+                    value={selectedDifficulty}
+                    onChange={(e) => setSelectedDifficulty(e.target.value)}
+                    className={`w-full px-3 py-2 rounded-xl border transition-all duration-300 ${
+                      isDark 
+                        ? 'bg-gray-900/50 border-gray-600 text-white' 
+                        : 'bg-white/50 border-gray-200 text-gray-900'
+                    } backdrop-blur-sm`}
+                  >
+                    {difficulties.map(difficulty => (
+                      <option key={difficulty} value={difficulty}>{difficulty}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDark ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Sort By
+                  </label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className={`w-full px-3 py-2 rounded-xl border transition-all duration-300 ${
+                      isDark 
+                        ? 'bg-gray-900/50 border-gray-600 text-white' 
+                        : 'bg-white/50 border-gray-200 text-gray-900'
+                    } backdrop-blur-sm`}
+                  >
+                    <option value="popularity">Popularity</option>
+                    <option value="rating">Rating</option>
+                    <option value="downloads">Downloads</option>
+                    <option value="name">Name (A-Z)</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  Filter by Tags
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {allTags.map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => toggleTagFilter(tag)}
+                      className={`px-2 py-1 rounded-full text-xs transition-all duration-300 ${
+                        selectedTags.includes(tag)
+                          ? isDark
+                            ? 'bg-green-500 text-white'
+                            : 'bg-green-500 text-white'
+                          : isDark
+                            ? 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+                            : 'bg-gray-100/50 text-gray-600 hover:bg-gray-200/50'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Daily Highlight */}
+        {dailyHighlight && (
+          <div className={`p-4 rounded-xl mb-4 ${
+            isDark ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30' : 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200'
+          }`}>
+            <div className="flex items-center space-x-2 mb-2">
+              <Sparkles className="w-4 h-4 text-green-500" />
+              <h3 className={`font-medium text-sm ${isDark ? 'text-green-400' : 'text-green-700'}`}>
+                Today's Highlight
+              </h3>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500">
+                <dailyHighlight.icon className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h4 className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {dailyHighlight.name}
+                </h4>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {dailyHighlight.description}
+                </p>
+              </div>
+              <motion.button
+                onClick={() => onTemplateSelect(dailyHighlight.schema)}
+                className="flex items-center space-x-1 px-3 py-1 rounded-lg text-xs bg-white text-green-600 shadow-sm"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Play className="w-3 h-3" />
+                <span>Try Now</span>
+              </motion.button>
+            </div>
+          </div>
+        )}
 
         {/* Categories */}
         <div className="flex flex-wrap gap-2">
@@ -443,6 +869,7 @@ export const MCPTemplates: React.FC<MCPTemplatesProps> = ({ isDark, onTemplateSe
           {filteredTemplates.map((template, index) => {
             const Icon = template.icon;
             const difficultyColor = getDifficultyColor(template.difficulty);
+            const isFavorite = favoriteTemplates.has(template.id);
             
             return (
               <motion.div
@@ -480,12 +907,23 @@ export const MCPTemplates: React.FC<MCPTemplatesProps> = ({ isDark, onTemplateSe
                     }`}>
                       {template.difficulty}
                     </span>
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                      <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {template.popularity}
-                      </span>
-                    </div>
+                    <motion.button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(template.id);
+                      }}
+                      className={`p-1 rounded-lg transition-colors ${
+                        isFavorite
+                          ? 'text-yellow-500'
+                          : isDark
+                            ? 'text-gray-400 hover:text-yellow-400'
+                            : 'text-gray-500 hover:text-yellow-500'
+                      }`}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <Star className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+                    </motion.button>
                   </div>
                 </div>
 
@@ -513,6 +951,29 @@ export const MCPTemplates: React.FC<MCPTemplatesProps> = ({ isDark, onTemplateSe
                       +{template.tags.length - 3}
                     </span>
                   )}
+                </div>
+
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center">
+                      <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                      <span className={`text-xs ml-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {template.rating}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <Download className="w-3 h-3 text-gray-400" />
+                      <span className={`text-xs ml-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {template.downloads.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="w-3 h-3 text-gray-400" />
+                    <span className={`text-xs ml-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {new Date(template.lastUpdated).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex space-x-2">
@@ -596,9 +1057,23 @@ export const MCPTemplates: React.FC<MCPTemplatesProps> = ({ isDark, onTemplateSe
                       <selectedTemplate.icon className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {selectedTemplate.name}
-                      </h2>
+                      <div className="flex items-center space-x-2">
+                        <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          {selectedTemplate.name}
+                        </h2>
+                        <motion.button
+                          onClick={() => toggleFavorite(selectedTemplate.id)}
+                          className={`p-1 rounded-lg transition-colors`}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          {favoriteTemplates.has(selectedTemplate.id) ? (
+                            <Star className="w-5 h-5 text-yellow-500 fill-current" />
+                          ) : (
+                            <Star className="w-5 h-5 text-gray-400" />
+                          )}
+                        </motion.button>
+                      </div>
                       <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         {selectedTemplate.category}
                       </p>
@@ -612,11 +1087,36 @@ export const MCPTemplates: React.FC<MCPTemplatesProps> = ({ isDark, onTemplateSe
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                   >
-                    ×
+                    <X className="w-6 h-6" />
                   </button>
                 </div>
 
                 <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                      isDark 
+                        ? `bg-${getDifficultyColor(selectedTemplate.difficulty)}-500/20 text-${getDifficultyColor(selectedTemplate.difficulty)}-400` 
+                        : `bg-${getDifficultyColor(selectedTemplate.difficulty)}-100 text-${getDifficultyColor(selectedTemplate.difficulty)}-700`
+                    }`}>
+                      {selectedTemplate.difficulty} Level
+                    </div>
+                    
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center">
+                        <ThumbsUp className="w-4 h-4 text-green-500" />
+                        <span className={`ml-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {selectedTemplate.rating}/5
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <Download className="w-4 h-4 text-blue-500" />
+                        <span className={`ml-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {selectedTemplate.downloads.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       Description
