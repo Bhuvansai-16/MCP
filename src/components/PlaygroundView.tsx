@@ -320,11 +320,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
           {/* Editor Panel */}
           <div className="editor-panel">
             {/* Editor Mode Selector */}
-            <div className={`editor-mode-selector mb-4 p-2 rounded-2xl ${
-              isDark ? 'bg-gray-800/50' : 'bg-gray-100/50'
-            } backdrop-blur-sm border ${
-              isDark ? 'border-gray-700/50' : 'border-gray-200/50'
-            }`}>
+            <div className="editor-mode-selector mb-4 p-2 rounded-2xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
               <div className="flex space-x-2">
                 <motion.button
                   onClick={() => setEditorMode('templates')}

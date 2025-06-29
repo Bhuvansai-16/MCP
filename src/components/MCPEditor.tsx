@@ -334,11 +334,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
   };
 
   return (
-    <div className={`h-full rounded-3xl backdrop-blur-xl border transition-all duration-500 ${
-      isDark 
-        ? 'bg-gray-800/30 border-gray-700/50' 
-        : 'bg-white/30 border-white/50'
-    } shadow-2xl flex flex-col overflow-hidden`}>
+    <div className="h-full rounded-3xl backdrop-blur-xl border transition-all duration-500 bg-white/30 dark:bg-gray-800/30 border-white/50 dark:border-gray-700/50 shadow-2xl flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex-shrink-0 p-6 border-b border-gray-200/20">
         <div className="flex items-center justify-between mb-4">
@@ -351,10 +347,10 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
               <Code className="w-6 h-6 text-white" />
             </motion.div>
             <div>
-              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 MCP Editor
               </h2>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Write or import Model Context Protocol schemas
               </p>
             </div>
@@ -390,11 +386,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         <div className="flex flex-wrap gap-3">
           <motion.button
             onClick={toggleFormat}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
-              isDark 
-                ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50' 
-                : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
-            } backdrop-blur-sm`}
+            className="flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50 dark:bg-gray-700/50 dark:hover:bg-gray-600/50 dark:text-gray-300 dark:border-gray-600/50 backdrop-blur-sm"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -407,9 +399,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
             className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
               copied
                 ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                : isDark 
-                  ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50' 
-                  : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
+                : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50 dark:bg-gray-700/50 dark:hover:bg-gray-600/50 dark:text-gray-300 dark:border-gray-600/50'
             } backdrop-blur-sm`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -420,11 +410,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
 
           <motion.button
             onClick={generateExampleValues}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
-              isDark 
-                ? 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30' 
-                : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200'
-            } backdrop-blur-sm`}
+            className="flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 dark:text-blue-400 dark:border-blue-500/30 backdrop-blur-sm"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -437,12 +423,8 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
             disabled={!isValid}
             className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
               isValid
-                ? isDark
-                  ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30'
-                  : 'bg-green-50 hover:bg-green-100 text-green-600 border border-green-200'
-                : isDark
-                  ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed border border-gray-600/30'
-                  : 'bg-gray-100/30 text-gray-400 cursor-not-allowed border border-gray-200/30'
+                ? 'bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 dark:bg-green-500/20 dark:hover:bg-green-500/30 dark:text-green-400 dark:border-green-500/30'
+                : 'bg-gray-100/30 text-gray-400 cursor-not-allowed border border-gray-200/30 dark:bg-gray-700/30 dark:text-gray-500 dark:border-gray-600/30'
             } backdrop-blur-sm`}
             whileHover={isValid ? { scale: 1.05 } : {}}
             whileTap={isValid ? { scale: 0.95 } : {}}
@@ -455,12 +437,8 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
             onClick={() => setShowHelp(!showHelp)}
             className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
               showHelp
-                ? isDark
-                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                  : 'bg-purple-50 text-purple-600 border border-purple-200'
-                : isDark 
-                  ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50' 
-                  : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
+                ? 'bg-purple-50 text-purple-600 border border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30'
+                : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50 dark:bg-gray-700/50 dark:hover:bg-gray-600/50 dark:text-gray-300 dark:border-gray-600/50'
             } backdrop-blur-sm`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -474,17 +452,15 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         <AnimatePresence>
           {showHelp && (
             <motion.div
-              className={`mt-4 p-4 rounded-xl ${
-                isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50/50 border border-purple-200/50'
-              }`}
+              className="mt-4 p-4 rounded-xl bg-purple-50/50 border border-purple-200/50 dark:bg-purple-500/10 dark:border-purple-500/20"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
             >
-              <h4 className={`font-semibold mb-2 ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
+              <h4 className="font-semibold mb-2 text-purple-700 dark:text-purple-400">
                 MCP Schema Structure
               </h4>
-              <div className={`text-sm space-y-2 ${isDark ? 'text-purple-300' : 'text-purple-600'}`}>
+              <div className="text-sm space-y-2 text-purple-600 dark:text-purple-300">
                 <p><strong>name:</strong> Unique identifier for your MCP (required)</p>
                 <p><strong>version:</strong> Semantic version number (required)</p>
                 <p><strong>description:</strong> Brief description of functionality (optional)</p>
@@ -501,7 +477,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
 
         {/* Example MCPs */}
         <div className="mt-4">
-          <p className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+          <p className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
             <Sparkles className="w-4 h-4 inline mr-1" />
             Load Example MCP:
           </p>
@@ -510,11 +486,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
               <motion.button
                 key={index}
                 onClick={() => loadExample(example)}
-                className={`group relative px-3 py-2 rounded-lg text-xs transition-all duration-300 ${
-                  isDark 
-                    ? 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30' 
-                    : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200'
-                }`}
+                className="group relative px-3 py-2 rounded-lg text-xs transition-all duration-300 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 dark:text-blue-400 dark:border-blue-500/30"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -524,14 +496,10 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
                 </div>
                 
                 {/* Tooltip */}
-                <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 whitespace-nowrap ${
-                  isDark ? 'bg-gray-800 text-white border border-gray-600' : 'bg-white text-gray-900 border border-gray-200'
-                } shadow-lg backdrop-blur-sm`}>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 whitespace-nowrap bg-white text-gray-900 border border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 shadow-lg backdrop-blur-sm">
                 
                   {example.description}
-                  <div className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 ${
-                    isDark ? 'bg-gray-800 border-r border-b border-gray-600' : 'bg-white border-r border-b border-gray-200'
-                  }`} />
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-white border-r border-b border-gray-200 dark:bg-gray-800 dark:border-r dark:border-b dark:border-gray-600" />
                 </div>
               </motion.button>
             ))}
@@ -592,9 +560,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         {/* MCP Info */}
         {isValid && mcpSchema && (
           <motion.div
-            className={`mt-4 p-4 rounded-xl ${
-              isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50/50 border border-green-200/50'
-            }`}
+            className="mt-4 p-4 rounded-xl bg-green-50/50 border border-green-200/50 dark:bg-green-500/10 dark:border-green-500/20"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >

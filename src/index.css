@@ -396,75 +396,6 @@ html {
   border-color: rgba(99, 102, 241, 0.5);
 }
 
-/* Enhanced scrollbar for content areas */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.5);
-  border-radius: 3px;
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.5);
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.7);
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(55, 65, 81, 0.7);
-}
-
-/* Animated gradient borders */
-.gradient-border {
-  position: relative;
-  border-radius: 1rem;
-  overflow: hidden;
-}
-
-.gradient-border::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
-  background-size: 400% 400%;
-  z-index: -1;
-  border-radius: inherit;
-  animation: gradient-border-animation 6s ease infinite;
-}
-
-@keyframes gradient-border-animation {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-/* Improved mobile responsiveness */
-@media (max-width: 768px) {
-  .app-container {
-    width: 100%;
-    max-width: 100vw;
-    padding: 0 1rem;
-  }
-  
-  .card-header, .card-body, .card-footer {
-    padding: 1rem;
-  }
-}
-
 /* PLAYGROUND SPECIFIC STYLES - ENHANCED */
 .playground-container {
   height: calc(100vh - 120px);
@@ -488,7 +419,7 @@ html {
   overflow: hidden;
   min-height: 0;
   /* Increased height for better view */
-  min-height: 600px;
+  min-height: 700px;
 }
 
 .editor-mode-selector {
@@ -500,7 +431,7 @@ html {
   overflow: hidden;
   min-height: 0;
   /* Ensure minimum height for editor visibility */
-  min-height: 500px;
+  min-height: 650px;
 }
 
 .chat-panel {
@@ -509,14 +440,14 @@ html {
   overflow: hidden;
   min-height: 0;
   /* Increased height for better view */
-  min-height: 600px;
+  min-height: 700px;
 }
 
 /* Monaco Editor Container - Enhanced */
 .monaco-editor-container {
   height: 100%;
   overflow: hidden;
-  min-height: 500px;
+  min-height: 650px;
   border-radius: 12px;
 }
 

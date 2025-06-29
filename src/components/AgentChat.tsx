@@ -175,11 +175,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   const suggestedPrompts = getSuggestedPrompts();
 
   return (
-    <div className={`h-full rounded-3xl backdrop-blur-xl border transition-all duration-500 ${
-      isDark 
-        ? 'bg-gray-800/30 border-gray-700/50' 
-        : 'bg-white/30 border-white/50'
-    } shadow-2xl flex flex-col overflow-hidden`}>
+    <div className="h-full rounded-3xl backdrop-blur-xl border transition-all duration-500 bg-white/30 dark:bg-gray-800/30 border-white/50 dark:border-gray-700/50 shadow-2xl flex flex-col overflow-hidden">
       {/* Header - Fixed */}
       <div className="flex-shrink-0 p-6 border-b border-gray-200/20">
         <div className="flex items-center justify-between mb-4">
@@ -196,10 +192,10 @@ export const AgentChat: React.FC<AgentChatProps> = ({
               <Bot className="w-6 h-6 text-white" />
             </motion.div>
             <div>
-              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Agent Chat
               </h2>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {isAgentRunning 
                   ? `Active with ${mcpSchema?.name || 'MCP'}` 
                   : 'Agent stopped'
@@ -260,10 +256,8 @@ export const AgentChat: React.FC<AgentChatProps> = ({
 
         {/* MCP Status */}
         {mcpSchema && (
-          <div className={`p-3 rounded-xl ${
-            isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50/50 border border-blue-200/50'
-          }`}>
-            <p className={`text-sm ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
+          <div className="p-3 rounded-xl bg-blue-50/50 border border-blue-200/50 dark:bg-blue-500/10 dark:border-blue-500/20">
+            <p className="text-sm text-blue-700 dark:text-blue-400">
               <strong>Available Tools:</strong> {mcpSchema.tools.map((t: any) => t.name).join(', ')}
             </p>
           </div>
