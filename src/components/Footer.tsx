@@ -201,18 +201,21 @@ export const Footer: React.FC<FooterProps> = ({ isDark }) => {
               <span className="text-sm">for the AI community</span>
             </div>
             
-            <a 
+            <motion.a 
               href="https://bolt.new" 
               target="_blank" 
               rel="noopener noreferrer"
-              className={`flex items-center space-x-2 px-3 py-1 rounded-lg text-sm transition-all duration-300 ${
+              className={`flex items-center space-x-2 px-3 py-1 rounded-lg text-sm font-medium transition-all duration-300 ${
                 isDark 
-                  ? 'bg-gray-800 hover:bg-gray-700 text-blue-400' 
-                  : 'bg-gray-100 hover:bg-gray-200 text-blue-600'
-              }`}
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white' 
+                  : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white'
+              } shadow-lg hover:shadow-xl`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <span className="font-medium">Built with Bolt.new</span>
-            </a>
+              <Code className="w-4 h-4" />
+              <span>Built with Bolt.new</span>
+            </motion.a>
           </div>
         </div>
       </div>
