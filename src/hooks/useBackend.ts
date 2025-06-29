@@ -1,47 +1,7 @@
 import { useState } from 'react';
 
-// Enhanced backend URL detection with better error handling
-const getBackendUrl = () => {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
-    const port = window.location.port;
-    
-    console.log('Current hostname:', hostname);
-    console.log('Current protocol:', protocol);
-    console.log('Current port:', port);
-    
-    // WebContainer detection with improved pattern matching
-    if (hostname.includes('webcontainer-api.io') || hostname.includes('stackblitz.io')) {
-      const parts = hostname.split('.');
-      if (parts.length >= 3) {
-        const prefix = parts[0];
-        const suffix = parts.slice(1).join('.');
-        const backendUrl = `${protocol}//${prefix}--8000--${suffix}`;
-        console.log('WebContainer Backend URL:', backendUrl);
-        return backendUrl;
-      }
-    }
-    
-    // Check if we're in development mode - use HTTP for backend
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return `http://${hostname}:8000`;
-    }
-    
-    // For other environments, try to construct the backend URL
-    if (port && port !== '80' && port !== '443') {
-      // If we're on a custom port, assume backend is on port 8000 with HTTP
-      return `http://${hostname}:8000`;
-    }
-    
-    // Try same origin with port 8000 and HTTP
-    return `http://${hostname}:8000`;
-  }
-  
-  return 'http://localhost:8000';
-};
-
-const BACKEND_URL = getBackendUrl();
+// Mock backend for demo purposes
+const MOCK_BACKEND = true;
 
 export interface MCPSchema {
   name: string;
@@ -129,66 +89,437 @@ export interface WebMCPResult {
   confidence_score: number;
 }
 
+// Demo MCP data based on official MCP GitHub repositories
+const DEMO_MCPS: MCPListItem[] = [
+  {
+    id: 'mcp-weather-001',
+    name: 'weather-forecast',
+    description: 'Real-time weather data and forecasting with global coverage and severe weather alerts',
+    tags: ['weather', 'api', 'forecast', 'alerts'],
+    domain: 'weather',
+    validated: true,
+    popularity: 95,
+    source_url: 'https://github.com/modelcontextprotocol/servers/tree/main/src/weather',
+    source_platform: 'github',
+    confidence_score: 0.95,
+    file_type: 'typescript',
+    repository: 'modelcontextprotocol/servers',
+    stars: 1250,
+    created_at: new Date('2024-01-15').toISOString(),
+  },
+  {
+    id: 'mcp-filesystem-002',
+    name: 'filesystem-operations',
+    description: 'Secure file system operations with read/write capabilities and directory management',
+    tags: ['filesystem', 'files', 'directories', 'io'],
+    domain: 'development',
+    validated: true,
+    popularity: 88,
+    source_url: 'https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem',
+    source_platform: 'github',
+    confidence_score: 0.92,
+    file_type: 'typescript',
+    repository: 'modelcontextprotocol/servers',
+    stars: 1250,
+    created_at: new Date('2024-01-14').toISOString(),
+  },
+  {
+    id: 'mcp-memory-003',
+    name: 'memory-storage',
+    description: 'Persistent memory storage for maintaining context across conversations',
+    tags: ['memory', 'storage', 'context', 'persistence'],
+    domain: 'ai',
+    validated: true,
+    popularity: 82,
+    source_url: 'https://github.com/modelcontextprotocol/servers/tree/main/src/memory',
+    source_platform: 'github',
+    confidence_score: 0.89,
+    file_type: 'typescript',
+    repository: 'modelcontextprotocol/servers',
+    stars: 1250,
+    created_at: new Date('2024-01-13').toISOString(),
+  },
+  {
+    id: 'mcp-fetch-004',
+    name: 'web-fetch',
+    description: 'HTTP client for fetching web content with support for various formats',
+    tags: ['http', 'web', 'fetch', 'client'],
+    domain: 'web',
+    validated: true,
+    popularity: 76,
+    source_url: 'https://github.com/modelcontextprotocol/servers/tree/main/src/fetch',
+    source_platform: 'github',
+    confidence_score: 0.87,
+    file_type: 'typescript',
+    repository: 'modelcontextprotocol/servers',
+    stars: 1250,
+    created_at: new Date('2024-01-12').toISOString(),
+  },
+  {
+    id: 'mcp-sqlite-005',
+    name: 'sqlite-database',
+    description: 'SQLite database operations with query execution and schema management',
+    tags: ['database', 'sqlite', 'sql', 'queries'],
+    domain: 'data',
+    validated: true,
+    popularity: 79,
+    source_url: 'https://github.com/modelcontextprotocol/servers/tree/main/src/sqlite',
+    source_platform: 'github',
+    confidence_score: 0.91,
+    file_type: 'typescript',
+    repository: 'modelcontextprotocol/servers',
+    stars: 1250,
+    created_at: new Date('2024-01-11').toISOString(),
+  },
+  {
+    id: 'mcp-github-006',
+    name: 'github-integration',
+    description: 'GitHub API integration for repository management and issue tracking',
+    tags: ['github', 'git', 'repositories', 'issues'],
+    domain: 'development',
+    validated: true,
+    popularity: 85,
+    source_url: 'https://github.com/modelcontextprotocol/servers/tree/main/src/github',
+    source_platform: 'github',
+    confidence_score: 0.93,
+    file_type: 'typescript',
+    repository: 'modelcontextprotocol/servers',
+    stars: 1250,
+    created_at: new Date('2024-01-10').toISOString(),
+  },
+  {
+    id: 'mcp-slack-007',
+    name: 'slack-connector',
+    description: 'Slack workspace integration for messaging and channel management',
+    tags: ['slack', 'messaging', 'communication', 'workspace'],
+    domain: 'communication',
+    validated: true,
+    popularity: 71,
+    source_url: 'https://github.com/modelcontextprotocol/servers/tree/main/src/slack',
+    source_platform: 'github',
+    confidence_score: 0.84,
+    file_type: 'typescript',
+    repository: 'modelcontextprotocol/servers',
+    stars: 1250,
+    created_at: new Date('2024-01-09').toISOString(),
+  },
+  {
+    id: 'mcp-postgres-008',
+    name: 'postgresql-client',
+    description: 'PostgreSQL database client with advanced query capabilities',
+    tags: ['postgresql', 'database', 'sql', 'client'],
+    domain: 'data',
+    validated: true,
+    popularity: 83,
+    source_url: 'https://github.com/modelcontextprotocol/servers/tree/main/src/postgres',
+    source_platform: 'github',
+    confidence_score: 0.90,
+    file_type: 'typescript',
+    repository: 'modelcontextprotocol/servers',
+    stars: 1250,
+    created_at: new Date('2024-01-08').toISOString(),
+  }
+];
+
+// Mock tool implementations
+async function executeWeatherTool(location: string, units: string = 'metric') {
+  await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+  
+  const mockData: Record<string, any> = {
+    'paris': { temp: 22, condition: 'Sunny', humidity: 65 },
+    'london': { temp: 18, condition: 'Cloudy', humidity: 78 },
+    'new york': { temp: 25, condition: 'Partly Cloudy', humidity: 60 },
+    'tokyo': { temp: 28, condition: 'Rainy', humidity: 85 },
+    'san francisco': { temp: 19, condition: 'Foggy', humidity: 72 }
+  };
+  
+  const locationKey = location.toLowerCase();
+  const data = mockData[locationKey] || { temp: 20, condition: 'Unknown', humidity: 50 };
+  
+  return {
+    location,
+    temperature: data.temp,
+    condition: data.condition,
+    humidity: data.humidity,
+    units,
+    timestamp: new Date().toISOString()
+  };
+}
+
+async function executeSearchTool(query: string, limit: number = 5) {
+  await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
+  
+  const mockResults = Array.from({ length: Math.min(limit, 5) }, (_, i) => ({
+    title: `Search result for "${query}" - Article ${i + 1}`,
+    url: `https://example.com/article-${i + 1}`,
+    snippet: `This is a mock search result snippet for ${query}. It contains relevant information about the topic.`,
+    relevance: Math.random() * 0.3 + 0.7
+  }));
+  
+  return {
+    query,
+    results: mockResults,
+    total: mockResults.length,
+    search_time_ms: Math.floor(Math.random() * 200) + 100
+  };
+}
+
+async function executeFilesystemTool(operation: string, path: string, content?: string) {
+  await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+  
+  switch (operation) {
+    case 'read':
+      return {
+        operation,
+        path,
+        content: `Mock file content from ${path}`,
+        size: Math.floor(Math.random() * 10000) + 1000,
+        modified: new Date().toISOString()
+      };
+    case 'write':
+      return {
+        operation,
+        path,
+        bytes_written: content?.length || 0,
+        success: true
+      };
+    case 'list':
+      return {
+        operation,
+        path,
+        files: [
+          { name: 'file1.txt', type: 'file', size: 1024 },
+          { name: 'file2.json', type: 'file', size: 2048 },
+          { name: 'subfolder', type: 'directory', size: 0 }
+        ]
+      };
+    default:
+      return {
+        operation,
+        path,
+        error: 'Unknown operation'
+      };
+  }
+}
+
+async function executeGenericTool(toolName: string, parameters: Record<string, any>) {
+  await new Promise(resolve => setTimeout(resolve, 150 + Math.random() * 300));
+  
+  return {
+    tool: toolName,
+    input: parameters,
+    result: `Mock result from ${toolName}`,
+    success: true,
+    timestamp: new Date().toISOString()
+  };
+}
+
+async function executeTool(toolName: string, parameters: Record<string, any>): Promise<any> {
+  const lowerToolName = toolName.toLowerCase();
+  
+  if (lowerToolName.includes('weather')) {
+    return executeWeatherTool(
+      parameters.location || 'Unknown',
+      parameters.units || 'metric'
+    );
+  }
+  
+  if (lowerToolName.includes('search')) {
+    return executeSearchTool(
+      parameters.query || '',
+      parameters.limit || 5
+    );
+  }
+  
+  if (lowerToolName.includes('file') || lowerToolName.includes('filesystem')) {
+    return executeFilesystemTool(
+      parameters.operation || 'read',
+      parameters.path || '/tmp/example.txt',
+      parameters.content
+    );
+  }
+  
+  return executeGenericTool(toolName, parameters);
+}
+
+function generateMockParameters(tool: any, userPrompt: string): Record<string, any> {
+  const params: Record<string, any> = {};
+  const promptLower = userPrompt.toLowerCase();
+  
+  // Extract parameters based on tool definition and user prompt
+  Object.entries(tool.parameters || {}).forEach(([paramName, paramType]) => {
+    switch (paramName) {
+      case 'location':
+        // Try to extract location from prompt
+        const locationMatch = promptLower.match(/(?:in|for|at)\s+([a-zA-Z\s]+?)(?:\s|$|[.!?])/);
+        params[paramName] = locationMatch ? locationMatch[1].trim() : 'San Francisco';
+        break;
+      case 'query':
+        // Use part of the prompt as query
+        params[paramName] = userPrompt.slice(0, 50);
+        break;
+      case 'units':
+        params[paramName] = promptLower.includes('celsius') ? 'metric' : 'imperial';
+        break;
+      case 'limit':
+        params[paramName] = 5;
+        break;
+      case 'operation':
+        if (promptLower.includes('read')) params[paramName] = 'read';
+        else if (promptLower.includes('write')) params[paramName] = 'write';
+        else if (promptLower.includes('list')) params[paramName] = 'list';
+        else params[paramName] = 'read';
+        break;
+      case 'path':
+        params[paramName] = '/tmp/example.txt';
+        break;
+      default:
+        // Generate mock value based on type
+        if (typeof paramType === 'string') {
+          switch (paramType) {
+            case 'string':
+              params[paramName] = `sample_${paramName}`;
+              break;
+            case 'number':
+              params[paramName] = Math.floor(Math.random() * 100);
+              break;
+            case 'boolean':
+              params[paramName] = Math.random() > 0.5;
+              break;
+            default:
+              params[paramName] = `sample_${paramName}`;
+          }
+        }
+    }
+  });
+  
+  return params;
+}
+
+function generateAgentResponse(prompt: string, toolCalls: ToolCall[], mcpSchema: any): string {
+  if (toolCalls.length === 0) {
+    return `I understand you're asking about "${prompt}". However, I don't have the right tools available in the current MCP to help with that specific request. The available tools are: ${mcpSchema.tools.map((t: any) => t.name).join(', ')}.`;
+  }
+
+  let response = `I've processed your request using the following tools:\n\n`;
+  
+  toolCalls.forEach(call => {
+    response += `🔧 **${call.tool}**: `;
+    
+    if (call.tool.toLowerCase().includes('weather')) {
+      const output = call.output;
+      response += `The weather in ${output.location} is ${output.temperature}°C and ${output.condition} with ${output.humidity}% humidity.\n`;
+    } else if (call.tool.toLowerCase().includes('search')) {
+      const output = call.output;
+      response += `Found ${output.total} results for "${output.query}" in ${output.search_time_ms}ms.\n`;
+    } else if (call.tool.toLowerCase().includes('file')) {
+      const output = call.output;
+      response += `File operation "${output.operation}" completed successfully for ${output.path}.\n`;
+    } else {
+      response += `Executed successfully with result: ${JSON.stringify(call.output).substring(0, 100)}...\n`;
+    }
+  });
+
+  response += `\nIs there anything else you'd like me to help you with using the available MCP tools?`;
+  return response;
+}
+
 export const useBackend = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const makeRequest = async <T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> => {
+  const runAgent = async (request: AgentRequest): Promise<AgentResponse> => {
     setLoading(true);
     setError(null);
 
     try {
-      const url = `${BACKEND_URL}${endpoint}`;
-      console.log('Making request to:', url);
+      const { prompt, document, mcp_schema } = request;
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const startTime = Date.now();
 
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      });
+      // Determine which tools to use based on prompt content
+      const toolCalls: ToolCall[] = [];
+      const promptLower = prompt.toLowerCase();
 
-      console.log('Response status:', response.status);
+      for (const tool of mcp_schema.tools) {
+        const toolName = tool.name.toLowerCase();
+        let shouldUseTool = false;
 
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch {
-          errorData = { detail: `HTTP ${response.status}: ${response.statusText}` };
+        // Simple keyword matching
+        if (toolName.includes('weather') && (promptLower.includes('weather') || promptLower.includes('temperature'))) {
+          shouldUseTool = true;
+        } else if (toolName.includes('search') && (promptLower.includes('search') || promptLower.includes('find'))) {
+          shouldUseTool = true;
+        } else if (toolName.includes('file') && (promptLower.includes('file') || promptLower.includes('read') || promptLower.includes('write'))) {
+          shouldUseTool = true;
+        } else if (promptLower.includes(toolName) || promptLower.includes(tool.description.toLowerCase().split(' ')[0])) {
+          shouldUseTool = true;
         }
-        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+
+        if (shouldUseTool) {
+          const toolStartTime = Date.now();
+          const mockParams = generateMockParameters(tool, prompt);
+          const toolOutput = await executeTool(tool.name, mockParams);
+          const toolLatency = Date.now() - toolStartTime;
+          const toolTokens = Math.floor(JSON.stringify(toolOutput).length / 4);
+
+          toolCalls.push({
+            tool: tool.name,
+            input: mockParams,
+            output: toolOutput,
+            latency_ms: toolLatency,
+            tokens_used: toolTokens
+          });
+        }
       }
 
-      const data = await response.json();
-      console.log('Response data:', data);
-      return data;
+      const agentOutput = generateAgentResponse(prompt, toolCalls, mcp_schema);
+      const totalLatency = Date.now() - startTime;
+      const totalTokens = toolCalls.reduce((sum, call) => sum + call.tokens_used, 0) + Math.floor(agentOutput.length / 4);
+
+      return {
+        output: agentOutput,
+        tool_calls: toolCalls,
+        tokens_used: totalTokens,
+        latency_ms: totalLatency,
+        model_used: 'mcp-simulator',
+        session_id: sessionId
+      };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Request failed';
+      const errorMessage = err instanceof Error ? err.message : 'Agent execution failed';
       setError(errorMessage);
-      console.error('Backend request failed:', errorMessage);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const runAgent = async (request: AgentRequest): Promise<AgentResponse> => {
-    return makeRequest<AgentResponse>('/run-agent', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    });
-  };
-
   const compareProtocols = async (request: CompareRequest): Promise<CompareResponse> => {
-    return makeRequest<CompareResponse>('/compare-protocols', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    });
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Mock implementation for protocol comparison
+      const mockResults: ProtocolResult[] = request.protocols.map(protocol => ({
+        protocol,
+        response: `Mock response from ${protocol} protocol analyzing: ${request.prompt.substring(0, 100)}...`,
+        latency_ms: Math.floor(Math.random() * 2000) + 500,
+        tokens_used: Math.floor(Math.random() * 800) + 200,
+        quality_score: Math.floor(Math.random() * 3) + 7
+      }));
+
+      return {
+        results: mockResults,
+        total_latency_ms: mockResults.reduce((sum, r) => sum + r.latency_ms, 0),
+        comparison_id: `comp_${Date.now()}`
+      };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Protocol comparison failed';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getMCPs = async (params: {
@@ -199,15 +530,56 @@ export const useBackend = () => {
     limit?: number;
     min_confidence?: number;
   } = {}): Promise<MCPListItem[]> => {
-    const searchParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        searchParams.append(key, value.toString());
-      }
-    });
+    setLoading(true);
+    setError(null);
 
-    const query = searchParams.toString();
-    return makeRequest<MCPListItem[]>(`/mcps${query ? `?${query}` : ''}`);
+    try {
+      let filteredMCPs = [...DEMO_MCPS];
+
+      // Apply filters
+      if (params.domain && params.domain !== 'all') {
+        filteredMCPs = filteredMCPs.filter(mcp => mcp.domain === params.domain);
+      }
+
+      if (params.tags) {
+        const tagList = params.tags.split(',').map(tag => tag.trim().toLowerCase());
+        filteredMCPs = filteredMCPs.filter(mcp => 
+          mcp.tags.some(tag => tagList.includes(tag.toLowerCase()))
+        );
+      }
+
+      if (params.validated !== undefined) {
+        filteredMCPs = filteredMCPs.filter(mcp => mcp.validated === params.validated);
+      }
+
+      // Apply sorting
+      switch (params.sort_by) {
+        case 'name':
+          filteredMCPs.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'created_at':
+          filteredMCPs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          break;
+        case 'confidence_score':
+          filteredMCPs.sort((a, b) => b.confidence_score - a.confidence_score);
+          break;
+        default: // popularity
+          filteredMCPs.sort((a, b) => b.popularity - a.popularity);
+      }
+
+      // Apply limit
+      if (params.limit) {
+        filteredMCPs = filteredMCPs.slice(0, params.limit);
+      }
+
+      return filteredMCPs;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch MCPs';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const searchWebMCPs = async (
@@ -219,21 +591,68 @@ export const useBackend = () => {
       use_scraping?: boolean;
     } = {}
   ): Promise<WebMCPResult[]> => {
-    const searchParams = new URLSearchParams();
-    searchParams.append('query', query);
-    searchParams.append('limit', limit.toString());
-    
-    if (options.sources) {
-      searchParams.append('sources', options.sources);
-    }
-    if (options.min_confidence !== undefined) {
-      searchParams.append('min_confidence', options.min_confidence.toString());
-    }
-    if (options.use_scraping !== undefined) {
-      searchParams.append('use_scraping', options.use_scraping.toString());
-    }
+    setLoading(true);
+    setError(null);
 
-    return makeRequest<WebMCPResult[]>(`/mcps/search?${searchParams.toString()}`);
+    try {
+      // Mock web search results based on official MCP repositories
+      const mockWebResults: WebMCPResult[] = [
+        {
+          name: 'mcp-server-weather',
+          description: 'Official weather MCP server from ModelContextProtocol organization',
+          source_url: 'https://github.com/modelcontextprotocol/servers/tree/main/src/weather',
+          tags: ['weather', 'official', 'mcp'],
+          domain: 'weather',
+          validated: true,
+          file_type: 'typescript',
+          repository: 'modelcontextprotocol/servers',
+          stars: 1250,
+          source_platform: 'github',
+          confidence_score: 0.95
+        },
+        {
+          name: 'mcp-server-filesystem',
+          description: 'Official filesystem MCP server for file operations',
+          source_url: 'https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem',
+          tags: ['filesystem', 'official', 'mcp'],
+          domain: 'development',
+          validated: true,
+          file_type: 'typescript',
+          repository: 'modelcontextprotocol/servers',
+          stars: 1250,
+          source_platform: 'github',
+          confidence_score: 0.92
+        },
+        {
+          name: 'mcp-server-fetch',
+          description: 'Official HTTP fetch MCP server for web requests',
+          source_url: 'https://github.com/modelcontextprotocol/servers/tree/main/src/fetch',
+          tags: ['http', 'fetch', 'official', 'mcp'],
+          domain: 'web',
+          validated: true,
+          file_type: 'typescript',
+          repository: 'modelcontextprotocol/servers',
+          stars: 1250,
+          source_platform: 'github',
+          confidence_score: 0.90
+        }
+      ];
+
+      // Filter based on query
+      const filteredResults = mockWebResults.filter(result => 
+        result.name.toLowerCase().includes(query.toLowerCase()) ||
+        result.description.toLowerCase().includes(query.toLowerCase()) ||
+        result.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+      );
+
+      return filteredResults.slice(0, limit);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Web search failed';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const enhancedSearchMCPs = async (request: {
@@ -244,15 +663,10 @@ export const useBackend = () => {
     domains?: string[];
     use_web_scraping?: boolean;
   }): Promise<WebMCPResult[]> => {
-    return makeRequest<WebMCPResult[]>('/mcps/search/enhanced', {
-      method: 'POST',
-      body: JSON.stringify({
-        limit: 20,
-        sources: ["github", "huggingface", "web", "scraping"],
-        min_confidence: 0.0,
-        use_web_scraping: true,
-        ...request
-      }),
+    return searchWebMCPs(request.query, request.limit, {
+      sources: request.sources?.join(','),
+      min_confidence: request.min_confidence,
+      use_scraping: request.use_web_scraping
     });
   };
 
@@ -272,11 +686,19 @@ export const useBackend = () => {
     content_length: number;
     scrape_duration_ms: number;
   }> => {
-    const searchParams = new URLSearchParams();
-    searchParams.append('url', url);
-    searchParams.append('validate', validate.toString());
-
-    return makeRequest(`/mcps/search/scrape?${searchParams.toString()}`);
+    // Mock implementation
+    return {
+      success: true,
+      url,
+      name: 'Scraped MCP',
+      description: 'MCP scraped from provided URL',
+      domain: 'general',
+      tags: ['scraped', 'mcp'],
+      confidence_score: 0.8,
+      validated: validate,
+      content_length: 1024,
+      scrape_duration_ms: 500
+    };
   };
 
   const importMCPFromWeb = async (sourceUrl: string, autoValidate: boolean = true): Promise<{
@@ -288,25 +710,24 @@ export const useBackend = () => {
     domain: string;
     tags: string[];
   }> => {
-    const searchParams = new URLSearchParams();
-    searchParams.append('source_url', sourceUrl);
-    searchParams.append('auto_validate', autoValidate.toString());
-
-    return makeRequest<{
-      id: string;
-      message: string;
-      name: string;
-      source_url: string;
-      validated: boolean;
-      domain: string;
-      tags: string[];
-    }>(`/mcps/import-from-web?${searchParams.toString()}`, {
-      method: 'POST',
-    });
+    // Mock implementation
+    return {
+      id: `imported_${Date.now()}`,
+      message: 'MCP imported successfully',
+      name: 'Imported MCP',
+      source_url: sourceUrl,
+      validated: autoValidate,
+      domain: 'general',
+      tags: ['imported']
+    };
   };
 
   const getMCP = async (id: string): Promise<any> => {
-    return makeRequest<any>(`/mcp/${id}`);
+    const mcp = DEMO_MCPS.find(m => m.id === id);
+    if (!mcp) {
+      throw new Error('MCP not found');
+    }
+    return mcp;
   };
 
   const importMCP = async (mcpData: {
@@ -317,39 +738,43 @@ export const useBackend = () => {
     domain?: string;
     source_url?: string;
   }): Promise<{ id: string; message: string; validated: boolean }> => {
-    return makeRequest<{ id: string; message: string; validated: boolean }>('/mcp/import', {
-      method: 'POST',
-      body: JSON.stringify(mcpData),
-    });
+    return {
+      id: `mcp_${Date.now()}`,
+      message: 'MCP imported successfully',
+      validated: true
+    };
   };
 
   const createShareLink = async (params: {
     session_id?: string;
     comparison_id?: string;
   }): Promise<{ share_id: string; share_url: string; expires_at: string }> => {
-    return makeRequest<{ share_id: string; share_url: string; expires_at: string }>('/share', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
+    return {
+      share_id: `share_${Date.now()}`,
+      share_url: `${window.location.origin}/shared/${Date.now()}`,
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    };
   };
 
   const exportCSV = async (comparison_id: string): Promise<Blob> => {
-    const url = `${BACKEND_URL}/export/csv?comparison_id=${comparison_id}`;
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`Export failed: ${response.statusText}`);
-    }
-    
-    return response.blob();
+    const csvContent = 'Protocol,Latency,Tokens,Quality\nMock,500,200,8.5';
+    return new Blob([csvContent], { type: 'text/csv' });
   };
 
   const getSearchAnalytics = async (): Promise<any> => {
-    return makeRequest<any>('/analytics/search');
+    return {
+      total_searches: 150,
+      avg_results: 12.5,
+      top_queries: ['weather', 'filesystem', 'github']
+    };
   };
 
   const getScrapingAnalytics = async (): Promise<any> => {
-    return makeRequest<any>('/analytics/scraping');
+    return {
+      total_scrapes: 75,
+      success_rate: 0.85,
+      avg_response_time: 1200
+    };
   };
 
   const healthCheck = async (): Promise<{ 
@@ -361,15 +786,24 @@ export const useBackend = () => {
     scraping_enabled: boolean;
     supported_platforms: string[];
   }> => {
-    return makeRequest<{ 
-      status: string; 
-      timestamp: string; 
-      database: string;
-      features: string[];
-      version: string;
-      scraping_enabled: boolean;
-      supported_platforms: string[];
-    }>('/health');
+    return {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      features: [
+        'demo_data',
+        'mock_tools',
+        'mcp_validation',
+        'web_search_simulation'
+      ],
+      version: '3.0.0',
+      scraping_enabled: true,
+      supported_platforms: [
+        'GitHub',
+        'Official MCP Servers',
+        'Demo Environment'
+      ]
+    };
   };
 
   return {
@@ -389,6 +823,6 @@ export const useBackend = () => {
     getSearchAnalytics,
     getScrapingAnalytics,
     healthCheck,
-    BACKEND_URL,
+    BACKEND_URL: 'mock://demo',
   };
 };
