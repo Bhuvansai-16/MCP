@@ -115,7 +115,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
               <motion.div
-                className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500"
+                className="p-2 rounded-full bg-gradient-to-br from-blue-500 to-purple-500"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               >
@@ -132,7 +132,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
             </div>
             <button
               onClick={onClose}
-              className={`p-2 rounded-xl transition-colors ${
+              className={`p-2 rounded-full transition-colors ${
                 isDark 
                   ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
@@ -147,11 +147,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
             <motion.button
               onClick={() => handleSocialLogin('github')}
               disabled={loading}
-              className={`w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
+              className={`w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-full border-2 transition-all duration-300 ${
                 isDark 
                   ? 'border-gray-600 hover:border-gray-500 bg-gray-700/50 hover:bg-gray-700/70 text-white' 
                   : 'border-gray-200 hover:border-gray-300 bg-white/50 hover:bg-white/70 text-gray-900'
-              } backdrop-blur-sm disabled:opacity-50`}
+              } backdrop-blur-sm disabled:opacity-50 shadow-md hover:shadow-lg`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -162,11 +162,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
             <motion.button
               onClick={() => handleSocialLogin('google')}
               disabled={loading}
-              className={`w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
+              className={`w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-full border-2 transition-all duration-300 ${
                 isDark 
                   ? 'border-gray-600 hover:border-gray-500 bg-gray-700/50 hover:bg-gray-700/70 text-white' 
                   : 'border-gray-200 hover:border-gray-300 bg-white/50 hover:bg-white/70 text-gray-900'
-              } backdrop-blur-sm disabled:opacity-50`}
+              } backdrop-blur-sm disabled:opacity-50 shadow-md hover:shadow-lg`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -212,11 +212,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required={!isLogin}
-                  className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
+                  className={`w-full px-4 py-3 rounded-full border-2 transition-all duration-300 ${
                     isDark 
                       ? 'bg-gray-900/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500' 
                       : 'bg-white/50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500'
-                  } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm`}
+                  } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm shadow-md`}
                   placeholder="Enter your full name"
                 />
               </div>
@@ -234,11 +234,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
+                className={`w-full px-4 py-3 rounded-full border-2 transition-all duration-300 ${
                   isDark 
                     ? 'bg-gray-900/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500' 
                     : 'bg-white/50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500'
-                } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm`}
+                } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm shadow-md`}
                 placeholder="Enter your email"
               />
             </div>
@@ -257,11 +257,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 transition-all duration-300 ${
+                  className={`w-full px-4 py-3 pr-12 rounded-full border-2 transition-all duration-300 ${
                     isDark 
                       ? 'bg-gray-900/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500' 
                       : 'bg-white/50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500'
-                  } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm`}
+                  } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm shadow-md`}
                   placeholder="Enter your password"
                 />
                 <button
@@ -290,11 +290,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required={!isLogin}
                   minLength={6}
-                  className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
+                  className={`w-full px-4 py-3 rounded-full border-2 transition-all duration-300 ${
                     isDark 
                       ? 'bg-gray-900/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500' 
                       : 'bg-white/50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500'
-                  } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm`}
+                  } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm shadow-md`}
                   placeholder="Confirm your password"
                 />
               </div>
@@ -303,7 +303,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
             <motion.button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-3 px-4 rounded-full font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >

@@ -100,17 +100,17 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </motion.div>
           
-          {/* Navigation Tabs - Center */}
-          <div className={`flex items-center space-x-2 p-2 rounded-2xl ${
-            isDark ? 'bg-gray-800/50' : 'bg-gray-100/50'
+          {/* Navigation Tabs - Center - IMPROVED WITH CURVES */}
+          <div className={`flex items-center p-2 rounded-full ${
+            isDark ? 'bg-gray-800/70' : 'bg-gray-100/70'
           } backdrop-blur-sm border ${
             isDark ? 'border-gray-700/50' : 'border-gray-200/50'
-          }`}>
+          } shadow-lg hover:shadow-xl transition-all duration-300`}>
             {tabs.map(({ id, label, icon: Icon, description }) => (
               <motion.button
                 key={id}
                 onClick={() => onTabChange(id)}
-                className={`relative flex items-center space-x-2 px-4 py-3 rounded-xl font-medium transition-all duration-300 group ${
+                className={`relative flex items-center space-x-2 px-4 py-3 rounded-full font-medium transition-all duration-300 group ${
                   activeTab === id
                     ? 'text-white shadow-lg'
                     : isDark
@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {/* Active tab background */}
                 {activeTab === id && (
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl"
+                    className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
                     layoutId="activeTab"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
@@ -153,11 +153,11 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center space-x-4">
             <motion.button
               onClick={onToggleTheme}
-              className={`p-3 rounded-xl transition-all duration-300 ${
+              className={`p-3 rounded-full transition-all duration-300 ${
                 isDark 
-                  ? 'bg-gray-800/50 hover:bg-gray-700/50 text-yellow-400' 
-                  : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600'
-              } backdrop-blur-sm`}
+                  ? 'bg-gray-800/70 hover:bg-gray-700/70 text-yellow-400' 
+                  : 'bg-gray-100/70 hover:bg-gray-200/70 text-gray-600'
+              } backdrop-blur-sm shadow-md hover:shadow-lg`}
               whileHover={{ scale: 1.1, rotate: 180 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -168,11 +168,11 @@ export const Header: React.FC<HeaderProps> = ({
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex items-center space-x-2 px-4 py-3 rounded-xl transition-all duration-300 ${
+              className={`flex items-center space-x-2 px-4 py-3 rounded-full transition-all duration-300 ${
                 isDark 
-                  ? 'bg-gray-800/50 hover:bg-gray-700/50 text-white' 
-                  : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-700'
-              } backdrop-blur-sm`}
+                  ? 'bg-gray-800/70 hover:bg-gray-700/70 text-white' 
+                  : 'bg-gray-100/70 hover:bg-gray-200/70 text-gray-700'
+              } backdrop-blur-sm shadow-md hover:shadow-lg`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -185,11 +185,11 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="relative">
                 <motion.button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-full transition-all duration-300 ${
                     isDark 
-                      ? 'bg-gray-800/50 hover:bg-gray-700/50 text-white' 
-                      : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-700'
-                  } backdrop-blur-sm`}
+                      ? 'bg-gray-800/70 hover:bg-gray-700/70 text-white' 
+                      : 'bg-gray-100/70 hover:bg-gray-200/70 text-gray-700'
+                  } backdrop-blur-sm shadow-md hover:shadow-lg`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -257,7 +257,7 @@ export const Header: React.FC<HeaderProps> = ({
             ) : (
               <motion.button
                 onClick={() => setShowAuthModal(true)}
-                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-full font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
