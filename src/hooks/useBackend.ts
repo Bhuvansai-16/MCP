@@ -23,19 +23,19 @@ const getBackendUrl = () => {
       }
     }
     
-    // Check if we're in development mode
+    // Check if we're in development mode - use HTTP for backend
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return `${protocol}//${hostname}:8000`;
+      return `http://${hostname}:8000`;
     }
     
     // For other environments, try to construct the backend URL
     if (port && port !== '80' && port !== '443') {
-      // If we're on a custom port, assume backend is on port 8000
-      return `${protocol}//${hostname}:8000`;
+      // If we're on a custom port, assume backend is on port 8000 with HTTP
+      return `http://${hostname}:8000`;
     }
     
-    // Try same origin with port 8000
-    return `${protocol}//${hostname}:8000`;
+    // Try same origin with port 8000 and HTTP
+    return `http://${hostname}:8000`;
   }
   
   return 'http://localhost:8000';
@@ -107,7 +107,7 @@ export interface MCPListItem {
   popularity: number;
   source_url?: string;
   source_platform: string;
-  confidence_score: float;
+  confidence_score: number;
   file_type: string;
   repository?: string;
   stars: number;
