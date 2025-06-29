@@ -3,12 +3,14 @@ import { motion } from 'framer-motion';
 import Editor from '@monaco-editor/react';
 import { Code, Download, Github, FileText, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import * as yaml from 'js-yaml';
+import { MCPSchema } from '../App';
 
 interface MCPEditorProps {
   isDark: boolean;
   onValidation: (schema: any, isValid: boolean) => void;
   mcpSchema: any;
   isValid: boolean;
+  initialSchema?: MCPSchema | null;
 }
 
 const exampleMCP = {
@@ -127,11 +129,22 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
   isDark, 
   onValidation, 
   mcpSchema, 
-  isValid 
+  isValid,
+  initialSchema
 }) => {
   const [editorValue, setEditorValue] = useState(JSON.stringify(exampleMCP, null, 2));
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isJsonMode, setIsJsonMode] = useState(true);
+
+  // Load initial schema if provided
+  useEffect(() => {
+    if (initialSchema) {
+      const formatted = isJsonMode 
+        ? JSON.stringify(initialSchema, null, 2)
+        : yaml.dump(initialSchema);
+      setEditorValue(formatted);
+    }
+  }, [initialSchema, isJsonMode]);
 
   useEffect(() => {
     validateMCP(editorValue);

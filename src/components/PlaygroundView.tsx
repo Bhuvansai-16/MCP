@@ -1,22 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MCPEditor } from './MCPEditor';
 import { AgentChat } from './AgentChat';
 import { ExecutionVisualization } from './ExecutionVisualization';
+import { MCPSchema } from '../App';
 
 interface PlaygroundViewProps {
   isDark: boolean;
-}
-
-interface MCPSchema {
-  name: string;
-  version: string;
-  description?: string;
-  tools: Array<{
-    name: string;
-    description: string;
-    parameters: Record<string, any>;
-  }>;
+  initialMCP?: MCPSchema | null;
 }
 
 interface ChatMessage {
@@ -41,13 +32,29 @@ interface ExecutionLog {
   latency: number;
 }
 
-export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark }) => {
+export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialMCP }) => {
   const [mcpSchema, setMcpSchema] = useState<MCPSchema | null>(null);
   const [isValidMCP, setIsValidMCP] = useState(false);
   const [isAgentRunning, setIsAgentRunning] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [executionLogs, setExecutionLogs] = useState<ExecutionLog[]>([]);
   const [showExecutionPanel, setShowExecutionPanel] = useState(false);
+
+  // Load initial MCP if provided
+  useEffect(() => {
+    if (initialMCP) {
+      setMcpSchema(initialMCP);
+      setIsValidMCP(true);
+      
+      // Add system message about loaded MCP
+      setMessages([{
+        id: Date.now().toString(),
+        type: 'system',
+        content: `🎯 MCP "${initialMCP.name}" loaded successfully! Available tools: ${initialMCP.tools.map(t => t.name).join(', ')}`,
+        timestamp: new Date()
+      }]);
+    }
+  }, [initialMCP]);
 
   const handleMCPValidation = (schema: MCPSchema | null, isValid: boolean) => {
     setMcpSchema(schema);
@@ -63,7 +70,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark }) => {
     if (!isValidMCP || !mcpSchema) return;
     
     setIsAgentRunning(true);
-    setMessages([{
+    setMessages(prev => [...prev, {
       id: Date.now().toString(),
       type: 'system',
       content: `🤖 Agent started with MCP "${mcpSchema.name}". Available tools: ${mcpSchema.tools.map(t => t.name).join(', ')}`,
@@ -281,6 +288,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark }) => {
               onValidation={handleMCPValidation}
               mcpSchema={mcpSchema}
               isValid={isValidMCP}
+              initialSchema={initialMCP}
             />
           </motion.div>
 

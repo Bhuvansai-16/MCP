@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart3, Play, Plus, X, Clock, Zap, Target, CheckCircle, Settings, FileText } from 'lucide-react';
 import { ProtocolResult } from '../App';
+import { MCPListItem, WebMCPResult } from '../data/mockMCPs';
 
 interface CompareViewProps {
   isDark: boolean;
+  onTryInPlayground?: (mcp: MCPListItem | WebMCPResult) => void;
 }
 
 interface ComparisonProtocol {
@@ -61,7 +63,7 @@ const availableProtocols: ComparisonProtocol[] = [
   }
 ];
 
-export const CompareView: React.FC<CompareViewProps> = ({ isDark }) => {
+export const CompareView: React.FC<CompareViewProps> = ({ isDark, onTryInPlayground }) => {
   const [protocols, setProtocols] = useState<ComparisonProtocol[]>(availableProtocols);
   const [isRunning, setIsRunning] = useState(false);
   const [showProtocolSelector, setShowProtocolSelector] = useState(false);
@@ -450,6 +452,38 @@ The comparison will help identify the most suitable protocol for different use c
                       {protocol.results?.metrics.quality}/10
                     </p>
                   </div>
+                </div>
+
+                {/* Try in Playground Button */}
+                <div className="mt-4 pt-4 border-t border-gray-200/20">
+                  <motion.button
+                    onClick={() => {
+                      if (onTryInPlayground) {
+                        // Create a mock MCP for the protocol
+                        const mockMCP: MCPListItem = {
+                          id: protocol.id,
+                          name: protocol.name,
+                          description: protocol.description,
+                          tags: [protocol.id, 'protocol', 'comparison'],
+                          domain: 'general',
+                          validated: true,
+                          popularity: 85,
+                          source_platform: 'comparison',
+                          confidence_score: 0.9,
+                          file_type: 'json',
+                          stars: 0,
+                          created_at: new Date().toISOString()
+                        };
+                        onTryInPlayground(mockMCP);
+                      }
+                    }}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Play className="w-4 h-4" />
+                    <span>Try in Playground</span>
+                  </motion.button>
                 </div>
               </motion.div>
             ))}

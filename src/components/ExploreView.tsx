@@ -25,9 +25,10 @@ import { toast } from 'react-toastify';
 
 interface ExploreViewProps {
   isDark: boolean;
+  onTryInPlayground: (mcp: MCPListItem | WebMCPResult) => void;
 }
 
-export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
+export const ExploreView: React.FC<ExploreViewProps> = ({ isDark, onTryInPlayground }) => {
   const { 
     getMCPs, 
     searchWebMCPs, 
@@ -599,7 +600,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
                         className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg"
                         onClick={(e) => {
                           e.stopPropagation();
-                          toast.info('Try in Playground feature coming soon!');
+                          onTryInPlayground(mcp);
                         }}
                       >
                         <Play className="w-4 h-4" />
@@ -692,7 +693,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
                   exit={{ scale: 0.9, opacity: 0 }}
                 >
                   <div className="p-8">
-                    {/* Header */}
+                    {/* Modal Header */}
                     <div className="flex items-start justify-between mb-6">
                       <div>
                         <div className="flex items-center space-x-3 mb-2">
@@ -829,7 +830,8 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ isDark }) => {
                         whileTap={{ scale: 0.95 }}
                         className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg"
                         onClick={() => {
-                          toast.info('Try in Playground feature coming soon!');
+                          onTryInPlayground(selectedMCP);
+                          setSelectedMCP(null);
                         }}
                       >
                         <Play className="w-5 h-5" />

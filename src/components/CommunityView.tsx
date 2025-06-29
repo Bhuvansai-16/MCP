@@ -23,13 +23,16 @@ import {
   MoreHorizontal,
   Flag,
   Edit,
-  Trash2
+  Trash2,
+  Play
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { MCPListItem, WebMCPResult } from '../data/mockMCPs';
 
 interface CommunityViewProps {
   isDark: boolean;
   user: any;
+  onTryInPlayground?: (mcp: MCPListItem | WebMCPResult) => void;
 }
 
 interface Post {
@@ -166,6 +169,11 @@ const mockPosts: Post[] = [
     type: 'showcase',
     tags: ['travel', 'ai-assistant', 'booking', 'recommendations'],
     demoUrl: 'https://travel-assistant-demo.netlify.app',
+    mcpSchema: {
+      name: 'travel.assistant',
+      version: '1.0.0',
+      tools: ['search_flights', 'book_hotel', 'plan_itinerary', 'get_recommendations']
+    },
     likes: 203,
     comments: 41,
     shares: 35,
@@ -178,7 +186,7 @@ const mockPosts: Post[] = [
   }
 ];
 
-export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user }) => {
+export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTryInPlayground }) => {
   const [posts, setPosts] = useState<Post[]>(mockPosts);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -268,6 +276,29 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user }) =>
     ));
     
     toast.success('Comment added!');
+  };
+
+  const handleTryInPlayground = (post: Post) => {
+    if (!onTryInPlayground || !post.mcpSchema) return;
+
+    // Convert post MCP schema to the expected format
+    const mockMCP: MCPListItem = {
+      id: post.id,
+      name: post.mcpSchema.name,
+      description: post.content.substring(0, 200) + '...',
+      tags: post.tags,
+      domain: 'community',
+      validated: true,
+      popularity: Math.floor((post.likes + post.views) / 20),
+      source_url: post.githubUrl,
+      source_platform: 'community',
+      confidence_score: 0.9,
+      file_type: 'json',
+      stars: post.likes,
+      created_at: post.createdAt.toISOString()
+    };
+
+    onTryInPlayground(mockMCP);
   };
 
   const getTypeIcon = (type: string) => {
@@ -606,6 +637,24 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user }) =>
                   </button>
                 </div>
               </div>
+
+              {/* Try in Playground Button - Only show for MCP and showcase posts */}
+              {(post.type === 'mcp' || post.type === 'showcase') && post.mcpSchema && onTryInPlayground && (
+                <div className="mt-4 pt-4 border-t border-gray-200/20">
+                  <motion.button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTryInPlayground(post);
+                    }}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Play className="w-4 h-4" />
+                    <span>Try in Playground</span>
+                  </motion.button>
+                </div>
+              )}
             </motion.div>
           );
         })}
@@ -678,6 +727,24 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user }) =>
                     {selectedPost.content}
                   </p>
                 </div>
+
+                {/* Try in Playground Button - Only show for MCP and showcase posts */}
+                {(selectedPost.type === 'mcp' || selectedPost.type === 'showcase') && selectedPost.mcpSchema && onTryInPlayground && (
+                  <div className="mb-6">
+                    <motion.button
+                      onClick={() => {
+                        handleTryInPlayground(selectedPost);
+                        setSelectedPost(null);
+                      }}
+                      className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Play className="w-5 h-5" />
+                      <span>Try in Playground</span>
+                    </motion.button>
+                  </div>
+                )}
 
                 {/* Comments Section */}
                 <div className="border-t border-gray-200/20 pt-6">
