@@ -4,13 +4,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Header } from '../components/Header';
-import { PlaygroundView } from '../components/PlaygroundView';
-import { ExploreView } from '../components/ExploreView';
-import { CompareView } from '../components/CompareView';
-import { CommunityView } from '../components/CommunityView';
-import { useTheme } from '../hooks/useTheme';
-import { useAuth } from '../hooks/useAuth';
+import { Header } from '../src/components/Header';
+import { PlaygroundView } from '../src/components/PlaygroundView';
+import { ExploreView } from '../src/components/ExploreView';
+import { CompareView } from '../src/components/CompareView';
+import { CommunityView } from '../src/components/CommunityView';
+import { useTheme } from '../src/hooks/useTheme';
+import { useAuth } from '../src/hooks/useAuth';
 
 export interface ProtocolResult {
   protocol: string;
