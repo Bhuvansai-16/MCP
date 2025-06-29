@@ -19,7 +19,7 @@ import urllib.parse
 from contextlib import asynccontextmanager
 import logging
 
-# Import the enhanced MCP explorer
+# Import the enhanced MCP explorer with web scraping
 from enhanced_mcp_explorer import enhanced_mcp_explorer, MCPSearchResult
 
 # Configure logging
@@ -34,7 +34,7 @@ def init_db():
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     
-    # MCPs table
+    # MCPs table with enhanced fields
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS mcps (
             id TEXT PRIMARY KEY,
@@ -48,6 +48,11 @@ def init_db():
             source_url TEXT,
             source_platform TEXT DEFAULT 'local',
             confidence_score REAL DEFAULT 0.0,
+            file_type TEXT DEFAULT 'json',
+            repository TEXT,
+            stars INTEGER DEFAULT 0,
+            author TEXT,
+            last_updated TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -85,6 +90,7 @@ def init_db():
             source_platform TEXT DEFAULT 'all',
             results TEXT NOT NULL,
             confidence_score REAL DEFAULT 0.0,
+            search_method TEXT DEFAULT 'api',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             expires_at TIMESTAMP DEFAULT (datetime('now', '+1 hour'))
         )
@@ -98,6 +104,23 @@ def init_db():
             results_count INTEGER DEFAULT 0,
             search_duration_ms INTEGER DEFAULT 0,
             sources_used TEXT,
+            search_method TEXT DEFAULT 'api',
+            success_rate REAL DEFAULT 0.0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Web scraping logs table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS scraping_logs (
+            id TEXT PRIMARY KEY,
+            url TEXT NOT NULL,
+            status_code INTEGER,
+            content_type TEXT,
+            content_length INTEGER,
+            success BOOLEAN DEFAULT FALSE,
+            error_message TEXT,
+            scraped_mcps INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -109,7 +132,7 @@ def init_db():
 async def lifespan(app: FastAPI):
     # Startup
     init_db()
-    logger.info("MCP Playground API started with enhanced search capabilities")
+    logger.info("MCP Playground API started with enhanced web scraping capabilities")
     yield
     # Shutdown
     logger.info("MCP Playground API shutting down")
@@ -117,8 +140,8 @@ async def lifespan(app: FastAPI):
 # FastAPI app
 app = FastAPI(
     title="MCP.playground API",
-    description="Enhanced Backend API for Model Context Protocol testing and comparison with advanced web search",
-    version="2.0.0",
+    description="Enhanced Backend API for Model Context Protocol testing with advanced web scraping",
+    version="3.0.0",
     lifespan=lifespan
 )
 
@@ -162,9 +185,10 @@ class WebMCPResult(BaseModel):
 class EnhancedSearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=200)
     limit: int = Field(20, ge=1, le=100)
-    sources: List[str] = Field(default=["github", "huggingface", "web"], description="Search sources to use")
+    sources: List[str] = Field(default=["github", "huggingface", "web", "scraping"], description="Search sources to use")
     min_confidence: float = Field(0.0, ge=0.0, le=1.0, description="Minimum confidence score")
     domains: Optional[List[str]] = Field(None, description="Filter by specific domains")
+    use_web_scraping: bool = Field(True, description="Enable web scraping for broader search")
 
 class AgentRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=10000)
@@ -230,6 +254,9 @@ class MCPListItem(BaseModel):
     source_url: Optional[str] = None
     source_platform: str = "local"
     confidence_score: float = 0.0
+    file_type: str = "json"
+    repository: Optional[str] = None
+    stars: int = 0
     created_at: str
 
 # Mock tool implementations (existing code)
@@ -401,14 +428,15 @@ async def simulate_agent_execution(prompt: str, mcp_schema: MCPSchema, document:
 @app.get("/")
 async def root():
     return {
-        "message": "Enhanced MCP.playground API",
-        "version": "2.0.0",
+        "message": "Enhanced MCP.playground API with Web Scraping",
+        "version": "3.0.0",
         "features": [
-            "Enhanced web search across multiple platforms",
-            "Advanced MCP schema validation",
+            "Advanced web scraping with BeautifulSoup4",
+            "Multi-platform MCP discovery (GitHub, GitLab, HuggingFace)",
+            "Enhanced schema validation and confidence scoring",
             "Robust caching and rate limiting",
-            "Multi-source MCP discovery",
-            "Confidence scoring for search results"
+            "Comprehensive search analytics",
+            "Real-time web content extraction"
         ],
         "endpoints": [
             "/run-agent",
@@ -416,10 +444,13 @@ async def root():
             "/mcps",
             "/mcps/search",
             "/mcps/search/enhanced",
+            "/mcps/search/scrape",
             "/mcp/import",
             "/mcp/{id}",
             "/share",
             "/export/csv",
+            "/analytics/search",
+            "/analytics/scraping",
             "/tools/weather",
             "/tools/search",
             "/tools/calc",
@@ -431,10 +462,11 @@ async def root():
 async def search_web_mcps(
     query: str = Query(..., description="Search query for MCPs"),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
-    sources: str = Query("github,huggingface,web", description="Comma-separated list of sources"),
-    min_confidence: float = Query(0.0, ge=0.0, le=1.0, description="Minimum confidence score")
+    sources: str = Query("github,huggingface,web,scraping", description="Comma-separated list of sources"),
+    min_confidence: float = Query(0.0, ge=0.0, le=1.0, description="Minimum confidence score"),
+    use_scraping: bool = Query(True, description="Enable web scraping for broader search")
 ):
-    """Enhanced web search for MCPs across multiple platforms"""
+    """Enhanced web search for MCPs with web scraping capabilities"""
     try:
         start_time = time.time()
         
@@ -442,7 +474,7 @@ async def search_web_mcps(
         source_list = [s.strip() for s in sources.split(',') if s.strip()]
         
         # Check cache first
-        cache_key = f"search:{query}:{limit}:{sources}:{min_confidence}"
+        cache_key = f"search:{query}:{limit}:{sources}:{min_confidence}:{use_scraping}"
         conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute(
@@ -457,8 +489,15 @@ async def search_web_mcps(
             logger.info(f"Returning cached results for query: {query}")
             return [WebMCPResult(**item) for item in cached_data[:limit]]
         
-        # Perform enhanced web search
-        results = await enhanced_mcp_explorer.search_web_mcps(query, limit)
+        # Perform enhanced web search with scraping
+        if use_scraping:
+            logger.info(f"Starting web scraping search for: {query}")
+            results = await enhanced_mcp_explorer.search_web_mcps(query, limit)
+            search_method = "scraping"
+        else:
+            logger.info(f"Starting API-only search for: {query}")
+            results = await enhanced_mcp_explorer._search_api_sources(query, limit)
+            search_method = "api"
         
         # Filter by confidence score
         filtered_results = [r for r in results if r.confidence_score >= min_confidence]
@@ -486,21 +525,22 @@ async def search_web_mcps(
         search_duration = int((time.time() - start_time) * 1000)
         
         cursor.execute(
-            "INSERT INTO search_cache (id, query, results, confidence_score, created_at, expires_at) VALUES (?, ?, ?, ?, datetime('now'), datetime('now', '+1 hour'))",
-            (cache_id, cache_key, json.dumps([r.dict() for r in web_results]), min_confidence)
+            "INSERT INTO search_cache (id, query, results, confidence_score, search_method, created_at, expires_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now', '+1 hour'))",
+            (cache_id, cache_key, json.dumps([r.dict() for r in web_results]), min_confidence, search_method)
         )
         
         # Store analytics
         analytics_id = str(uuid.uuid4())
+        success_rate = len(web_results) / max(len(results), 1) if results else 0
         cursor.execute(
-            "INSERT INTO search_analytics (id, query, results_count, search_duration_ms, sources_used) VALUES (?, ?, ?, ?, ?)",
-            (analytics_id, query, len(web_results), search_duration, sources)
+            "INSERT INTO search_analytics (id, query, results_count, search_duration_ms, sources_used, search_method, success_rate) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (analytics_id, query, len(web_results), search_duration, sources, search_method, success_rate)
         )
         
         conn.commit()
         conn.close()
         
-        logger.info(f"Enhanced search completed for '{query}': {len(web_results)} results in {search_duration}ms")
+        logger.info(f"Enhanced search completed for '{query}': {len(web_results)} results in {search_duration}ms using {search_method}")
         return web_results
         
     except Exception as e:
@@ -509,12 +549,17 @@ async def search_web_mcps(
 
 @app.post("/mcps/search/enhanced", response_model=List[WebMCPResult])
 async def enhanced_search_mcps(request: EnhancedSearchRequest):
-    """Advanced MCP search with detailed filtering options"""
+    """Advanced MCP search with detailed filtering and web scraping options"""
     try:
         start_time = time.time()
         
-        # Perform enhanced search
-        results = await enhanced_mcp_explorer.search_web_mcps(request.query, request.limit)
+        # Perform enhanced search with scraping if enabled
+        if request.use_web_scraping:
+            results = await enhanced_mcp_explorer.search_web_mcps(request.query, request.limit)
+            search_method = "scraping"
+        else:
+            results = await enhanced_mcp_explorer._search_api_sources(request.query, request.limit)
+            search_method = "api"
         
         # Apply filters
         filtered_results = []
@@ -525,6 +570,10 @@ async def enhanced_search_mcps(request: EnhancedSearchRequest):
                 
             # Domain filter
             if request.domains and result.domain not in request.domains:
+                continue
+                
+            # Source filter
+            if request.sources and result.source_platform not in request.sources:
                 continue
                 
             filtered_results.append(result)
@@ -546,7 +595,20 @@ async def enhanced_search_mcps(request: EnhancedSearchRequest):
         ) for r in filtered_results]
         
         search_duration = int((time.time() - start_time) * 1000)
-        logger.info(f"Enhanced search completed: {len(web_results)} results in {search_duration}ms")
+        
+        # Store analytics
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        analytics_id = str(uuid.uuid4())
+        success_rate = len(web_results) / max(len(results), 1) if results else 0
+        cursor.execute(
+            "INSERT INTO search_analytics (id, query, results_count, search_duration_ms, sources_used, search_method, success_rate) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (analytics_id, request.query, len(web_results), search_duration, ','.join(request.sources), search_method, success_rate)
+        )
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"Enhanced search completed: {len(web_results)} results in {search_duration}ms using {search_method}")
         
         return web_results
         
@@ -554,103 +616,250 @@ async def enhanced_search_mcps(request: EnhancedSearchRequest):
         logger.error(f"Enhanced search failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Enhanced search failed: {str(e)}")
 
-@app.post("/mcps/import-from-web")
-async def import_mcp_from_web(
-    source_url: str = Query(..., description="URL of the MCP schema to import"),
-    auto_validate: bool = Query(True, description="Automatically validate the imported MCP")
+@app.get("/mcps/search/scrape")
+async def scrape_specific_url(
+    url: str = Query(..., description="Specific URL to scrape for MCP content"),
+    validate: bool = Query(True, description="Validate the scraped MCP schema")
 ):
-    """Import an MCP directly from a web URL with enhanced validation"""
+    """Scrape a specific URL for MCP content"""
     try:
+        start_time = time.time()
+        
+        # Use the web scraper to fetch and validate content
+        scraper = enhanced_mcp_explorer.web_scraper
+        
         async with aiohttp.ClientSession() as session:
-            async with session.get(source_url) as response:
-                if response.status != 200:
-                    raise HTTPException(status_code=400, detail=f"Failed to fetch MCP from URL: {response.status}")
-                
-                content = await response.text()
-                
-                # Try to parse as JSON or YAML
-                schema = None
-                if source_url.endswith('.json'):
-                    try:
+            content = await scraper._fetch_file_content(session, url)
+            
+            if not content:
+                raise HTTPException(status_code=404, detail="Could not fetch content from URL")
+            
+            if not scraper._is_valid_mcp_content(content):
+                raise HTTPException(status_code=400, detail="URL does not contain valid MCP content")
+            
+            # Extract MCP information
+            name = scraper._extract_name_from_content(content) or "Unknown MCP"
+            description = scraper._extract_description_from_content(content) or f"MCP from {url}"
+            domain = scraper._extract_domain_from_content(content)
+            tags = scraper._extract_tags_from_content(content, name, description)
+            confidence = scraper._calculate_confidence_score(content, url, name, description)
+            
+            # Parse schema if validation is requested
+            schema = None
+            if validate:
+                try:
+                    if url.endswith('.json'):
                         schema = json.loads(content)
-                    except json.JSONDecodeError:
-                        raise HTTPException(status_code=400, detail="Invalid JSON format")
-                elif source_url.endswith(('.yaml', '.yml')):
-                    try:
+                    else:
                         schema = yaml.safe_load(content)
-                    except yaml.YAMLError:
-                        raise HTTPException(status_code=400, detail="Invalid YAML format")
-                else:
-                    # Try JSON first, then YAML
-                    try:
-                        schema = json.loads(content)
-                    except json.JSONDecodeError:
-                        try:
-                            schema = yaml.safe_load(content)
-                        except yaml.YAMLError:
-                            raise HTTPException(status_code=400, detail="Could not parse as JSON or YAML")
-                
-                if not schema:
-                    raise HTTPException(status_code=400, detail="Empty or invalid schema")
-                
-                # Enhanced validation using the new validator
-                if auto_validate:
+                    
                     is_valid, error_msg = enhanced_mcp_explorer.validator.validate_schema(schema)
                     if not is_valid:
                         raise HTTPException(status_code=400, detail=f"Invalid MCP schema: {error_msg}")
-                
-                # Extract metadata
-                name = schema.get('name', 'imported-mcp')
-                description = schema.get('description', f'MCP imported from {source_url}')
-                
-                # Determine domain and tags using enhanced methods
-                domain = enhanced_mcp_explorer._extract_domain(name, description)
-                tags = enhanced_mcp_explorer._extract_tags(name, description, schema)
-                
-                # Calculate confidence score
-                confidence_score = 0.8 if auto_validate else 0.5
-                
-                # Store in database
-                mcp_id = str(uuid.uuid4())
-                conn = sqlite3.connect(DATABASE_PATH)
-                cursor = conn.cursor()
-                cursor.execute('''
-                    INSERT INTO mcps (id, name, description, schema_content, tags, domain, validated, popularity, source_url, source_platform, confidence_score)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    mcp_id,
-                    name,
-                    description,
-                    json.dumps(schema),
-                    json.dumps(tags),
-                    domain,
-                    auto_validate,
-                    0,
-                    source_url,
-                    "web_import",
-                    confidence_score
-                ))
-                conn.commit()
-                conn.close()
-                
-                logger.info(f"Successfully imported MCP '{name}' from {source_url}")
-                
-                return {
-                    "id": mcp_id,
-                    "message": "MCP imported successfully from web",
-                    "name": name,
-                    "source_url": source_url,
-                    "validated": auto_validate,
-                    "domain": domain,
-                    "tags": tags,
-                    "confidence_score": confidence_score
-                }
-                
+                        
+                except Exception as e:
+                    raise HTTPException(status_code=400, detail=f"Schema parsing failed: {str(e)}")
+            
+            # Log scraping activity
+            conn = sqlite3.connect(DATABASE_PATH)
+            cursor = conn.cursor()
+            log_id = str(uuid.uuid4())
+            cursor.execute(
+                "INSERT INTO scraping_logs (id, url, status_code, content_type, content_length, success, scraped_mcps) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (log_id, url, 200, "application/json" if url.endswith('.json') else "application/yaml", len(content), True, 1)
+            )
+            conn.commit()
+            conn.close()
+            
+            duration = int((time.time() - start_time) * 1000)
+            
+            return {
+                "success": True,
+                "url": url,
+                "name": name,
+                "description": description,
+                "domain": domain,
+                "tags": tags,
+                "confidence_score": confidence,
+                "validated": validate,
+                "schema": schema if validate else None,
+                "content_length": len(content),
+                "scrape_duration_ms": duration
+            }
+            
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Import failed for {source_url}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+        # Log failed scraping attempt
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        log_id = str(uuid.uuid4())
+        cursor.execute(
+            "INSERT INTO scraping_logs (id, url, status_code, success, error_message, scraped_mcps) VALUES (?, ?, ?, ?, ?, ?)",
+            (log_id, url, 0, False, str(e), 0)
+        )
+        conn.commit()
+        conn.close()
+        
+        logger.error(f"URL scraping failed for {url}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Scraping failed: {str(e)}")
+
+# Analytics endpoints
+@app.get("/analytics/search")
+async def get_search_analytics():
+    """Get search analytics data"""
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    
+    # Get recent search statistics
+    cursor.execute("""
+        SELECT 
+            COUNT(*) as total_searches,
+            AVG(results_count) as avg_results,
+            AVG(search_duration_ms) as avg_duration,
+            COUNT(DISTINCT query) as unique_queries,
+            AVG(success_rate) as avg_success_rate,
+            search_method,
+            COUNT(*) as method_count
+        FROM search_analytics 
+        WHERE created_at > datetime('now', '-24 hours')
+        GROUP BY search_method
+    """)
+    
+    method_stats = cursor.fetchall()
+    
+    # Get top queries
+    cursor.execute("""
+        SELECT query, COUNT(*) as count, AVG(results_count) as avg_results
+        FROM search_analytics 
+        WHERE created_at > datetime('now', '-7 days')
+        GROUP BY query 
+        ORDER BY count DESC 
+        LIMIT 10
+    """)
+    
+    top_queries = cursor.fetchall()
+    
+    # Get overall stats
+    cursor.execute("""
+        SELECT 
+            COUNT(*) as total_searches,
+            AVG(results_count) as avg_results,
+            AVG(search_duration_ms) as avg_duration,
+            AVG(success_rate) as avg_success_rate
+        FROM search_analytics 
+        WHERE created_at > datetime('now', '-24 hours')
+    """)
+    
+    overall_stats = cursor.fetchone()
+    
+    conn.close()
+    
+    return {
+        "overall": {
+            "total_searches": overall_stats[0] or 0,
+            "avg_results": round(overall_stats[1] or 0, 2),
+            "avg_duration_ms": round(overall_stats[2] or 0, 2),
+            "avg_success_rate": round(overall_stats[3] or 0, 4)
+        },
+        "by_method": [
+            {
+                "method": row[5],
+                "searches": row[6],
+                "avg_results": round(row[1] or 0, 2),
+                "avg_duration_ms": round(row[2] or 0, 2),
+                "avg_success_rate": round(row[4] or 0, 4)
+            } for row in method_stats
+        ],
+        "top_queries": [
+            {
+                "query": q[0], 
+                "count": q[1], 
+                "avg_results": round(q[2] or 0, 2)
+            } for q in top_queries
+        ]
+    }
+
+@app.get("/analytics/scraping")
+async def get_scraping_analytics():
+    """Get web scraping analytics data"""
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    
+    # Get scraping statistics
+    cursor.execute("""
+        SELECT 
+            COUNT(*) as total_attempts,
+            SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) as successful_scrapes,
+            AVG(content_length) as avg_content_length,
+            SUM(scraped_mcps) as total_mcps_found,
+            COUNT(DISTINCT url) as unique_urls
+        FROM scraping_logs 
+        WHERE created_at > datetime('now', '-24 hours')
+    """)
+    
+    stats = cursor.fetchone()
+    
+    # Get top scraped domains
+    cursor.execute("""
+        SELECT 
+            CASE 
+                WHEN url LIKE '%github.com%' THEN 'GitHub'
+                WHEN url LIKE '%gitlab.com%' THEN 'GitLab'
+                WHEN url LIKE '%huggingface.co%' THEN 'Hugging Face'
+                ELSE 'Other'
+            END as domain,
+            COUNT(*) as scrapes,
+            SUM(scraped_mcps) as mcps_found,
+            AVG(CASE WHEN success = 1 THEN 1.0 ELSE 0.0 END) as success_rate
+        FROM scraping_logs 
+        WHERE created_at > datetime('now', '-7 days')
+        GROUP BY domain
+        ORDER BY scrapes DESC
+    """)
+    
+    domain_stats = cursor.fetchall()
+    
+    # Get recent errors
+    cursor.execute("""
+        SELECT url, error_message, created_at
+        FROM scraping_logs 
+        WHERE success = 0 AND created_at > datetime('now', '-24 hours')
+        ORDER BY created_at DESC
+        LIMIT 10
+    """)
+    
+    recent_errors = cursor.fetchall()
+    
+    conn.close()
+    
+    success_rate = (stats[1] / stats[0]) if stats[0] > 0 else 0
+    
+    return {
+        "summary": {
+            "total_attempts": stats[0] or 0,
+            "successful_scrapes": stats[1] or 0,
+            "success_rate": round(success_rate, 4),
+            "avg_content_length": round(stats[2] or 0, 2),
+            "total_mcps_found": stats[3] or 0,
+            "unique_urls": stats[4] or 0
+        },
+        "by_domain": [
+            {
+                "domain": row[0],
+                "scrapes": row[1],
+                "mcps_found": row[2],
+                "success_rate": round(row[3], 4)
+            } for row in domain_stats
+        ],
+        "recent_errors": [
+            {
+                "url": error[0],
+                "error": error[1],
+                "timestamp": error[2]
+            } for error in recent_errors
+        ]
+    }
 
 # Continue with existing endpoints...
 @app.post("/run-agent", response_model=AgentResponse)
@@ -694,364 +903,7 @@ async def run_agent(request: AgentRequest):
         logger.error(f"Agent execution failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Agent execution failed: {str(e)}")
 
-@app.post("/compare-protocols", response_model=CompareResponse)
-async def compare_protocols(request: CompareRequest):
-    """Benchmark LLM performance using different protocols"""
-    try:
-        start_time = time.time()
-        comparison_id = str(uuid.uuid4())
-        results = []
-        
-        # Mock protocol implementations
-        protocol_configs = {
-            "raw": {"base_latency": 500, "token_multiplier": 1.0, "quality_base": 0.85},
-            "chain": {"base_latency": 800, "token_multiplier": 1.2, "quality_base": 0.78},
-            "tree": {"base_latency": 1200, "token_multiplier": 1.5, "quality_base": 0.82},
-            "rag": {"base_latency": 600, "token_multiplier": 0.8, "quality_base": 0.88},
-            "custom": {"base_latency": 700, "token_multiplier": 1.1, "quality_base": 0.80}
-        }
-        
-        for protocol in request.protocols:
-            config = protocol_configs.get(protocol, protocol_configs["raw"])
-            
-            # Simulate protocol execution
-            await asyncio.sleep(config["base_latency"] / 1000)  # Convert to seconds
-            
-            # Generate mock response
-            response_text = f"This is a {protocol} protocol response to: '{request.prompt}'. "
-            if request.document:
-                response_text += f"Based on the provided document ({len(request.document)} chars), "
-            response_text += f"the {protocol} approach provides a comprehensive analysis with specific insights."
-            
-            # Calculate metrics
-            tokens_used = int(len(response_text) * config["token_multiplier"])
-            latency_ms = config["base_latency"] + (len(request.prompt) // 10)
-            quality_score = min(config["quality_base"] + (hash(request.prompt) % 20) / 100, 1.0)
-            
-            results.append(ProtocolResult(
-                protocol=protocol,
-                response=response_text,
-                latency_ms=latency_ms,
-                tokens_used=tokens_used,
-                quality_score=quality_score
-            ))
-        
-        total_latency = int((time.time() - start_time) * 1000)
-        
-        # Store comparison in database
-        conn = sqlite3.connect(DATABASE_PATH)
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO comparisons (id, prompt, document, protocols, results)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            comparison_id,
-            request.prompt,
-            request.document,
-            json.dumps(request.protocols),
-            json.dumps([r.dict() for r in results])
-        ))
-        conn.commit()
-        conn.close()
-        
-        logger.info(f"Protocol comparison completed: {comparison_id}")
-        
-        return CompareResponse(
-            results=results,
-            total_latency_ms=total_latency,
-            comparison_id=comparison_id
-        )
-        
-    except Exception as e:
-        logger.error(f"Protocol comparison failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Protocol comparison failed: {str(e)}")
-
-@app.get("/mcps", response_model=List[MCPListItem])
-async def get_mcps(
-    domain: Optional[str] = Query(None, description="Filter by domain"),
-    tags: Optional[str] = Query(None, description="Filter by tags (comma-separated)"),
-    validated: Optional[bool] = Query(None, description="Filter by validation status"),
-    sort_by: str = Query("popularity", description="Sort by: popularity, name, created_at, confidence_score"),
-    limit: int = Query(50, ge=1, le=100, description="Number of results to return"),
-    min_confidence: float = Query(0.0, ge=0.0, le=1.0, description="Minimum confidence score")
-):
-    """Return a searchable, filterable list of MCPs with enhanced filtering"""
-    
-    # Build query
-    query = "SELECT * FROM mcps WHERE confidence_score >= ?"
-    params = [min_confidence]
-    
-    if domain:
-        query += " AND domain = ?"
-        params.append(domain)
-    
-    if validated is not None:
-        query += " AND validated = ?"
-        params.append(validated)
-    
-    if tags:
-        tag_list = [tag.strip() for tag in tags.split(",")]
-        for tag in tag_list:
-            query += " AND tags LIKE ?"
-            params.append(f"%{tag}%")
-    
-    # Add sorting
-    if sort_by == "name":
-        query += " ORDER BY name ASC"
-    elif sort_by == "created_at":
-        query += " ORDER BY created_at DESC"
-    elif sort_by == "confidence_score":
-        query += " ORDER BY confidence_score DESC"
-    else:
-        query += " ORDER BY popularity DESC"
-    
-    query += f" LIMIT {limit}"
-    
-    # Execute query
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
-    conn.close()
-    
-    # Convert to response format
-    mcps = []
-    for row in rows:
-        mcps.append(MCPListItem(
-            id=row[0],
-            name=row[1],
-            description=row[2] or "",
-            tags=json.loads(row[4]) if row[4] else [],
-            domain=row[5] or "general",
-            validated=bool(row[6]),
-            popularity=row[7] or 0,
-            source_url=row[8] if len(row) > 8 else None,
-            source_platform=row[9] if len(row) > 9 else "local",
-            confidence_score=row[10] if len(row) > 10 else 0.0,
-            created_at=row[11] if len(row) > 11 else ""
-        ))
-    
-    return mcps
-
-@app.post("/mcp/import")
-async def import_mcp(request: MCPImportRequest):
-    """Upload/import new MCP with enhanced validation"""
-    try:
-        mcp_id = str(uuid.uuid4())
-        
-        # Parse schema content
-        if isinstance(request.schema_content, str):
-            try:
-                # Try JSON first
-                schema_dict = json.loads(request.schema_content)
-            except json.JSONDecodeError:
-                try:
-                    # Try YAML
-                    schema_dict = yaml.safe_load(request.schema_content)
-                except yaml.YAMLError:
-                    raise HTTPException(status_code=400, detail="Invalid JSON/YAML format")
-        else:
-            schema_dict = request.schema_content
-        
-        # Enhanced validation
-        is_valid, error_msg = enhanced_mcp_explorer.validator.validate_schema(schema_dict)
-        if not is_valid:
-            raise HTTPException(status_code=400, detail=f"Invalid MCP schema: {error_msg}")
-        
-        # Extract enhanced metadata
-        domain = enhanced_mcp_explorer._extract_domain(request.name, request.description or "")
-        tags = enhanced_mcp_explorer._extract_tags(request.name, request.description or "", schema_dict)
-        
-        # Merge with provided tags
-        if request.tags:
-            tags.extend(request.tags)
-            tags = list(set(tags))  # Remove duplicates
-        
-        # Store in database
-        conn = sqlite3.connect(DATABASE_PATH)
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO mcps (id, name, description, schema_content, tags, domain, validated, popularity, source_url, source_platform, confidence_score)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            mcp_id,
-            request.name,
-            request.description,
-            json.dumps(schema_dict),
-            json.dumps(tags),
-            request.domain or domain,
-            True,  # Auto-validate for imports
-            0,
-            request.source_url,
-            "manual_import",
-            0.9  # High confidence for manual imports
-        ))
-        conn.commit()
-        conn.close()
-        
-        logger.info(f"Successfully imported MCP '{request.name}'")
-        
-        return {
-            "id": mcp_id,
-            "message": "MCP imported successfully",
-            "validated": True,
-            "domain": request.domain or domain,
-            "tags": tags
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Import failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
-
-@app.get("/mcp/{mcp_id}")
-async def get_mcp(mcp_id: str):
-    """Return MCP schema, metadata, and tags for one item"""
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM mcps WHERE id = ?", (mcp_id,))
-    row = cursor.fetchone()
-    conn.close()
-    
-    if not row:
-        raise HTTPException(status_code=404, detail="MCP not found")
-    
-    return {
-        "id": row[0],
-        "name": row[1],
-        "description": row[2],
-        "schema": json.loads(row[3]),
-        "tags": json.loads(row[4]) if row[4] else [],
-        "domain": row[5],
-        "validated": bool(row[6]),
-        "popularity": row[7],
-        "source_url": row[8] if len(row) > 8 else None,
-        "source_platform": row[9] if len(row) > 9 else "local",
-        "confidence_score": row[10] if len(row) > 10 else 0.0,
-        "created_at": row[11] if len(row) > 11 else "",
-        "updated_at": row[12] if len(row) > 12 else ""
-    }
-
-@app.post("/share")
-async def create_share_link(session_id: Optional[str] = None, comparison_id: Optional[str] = None):
-    """Generate a shareable link for a saved playground run or comparison"""
-    if not session_id and not comparison_id:
-        raise HTTPException(status_code=400, detail="Either session_id or comparison_id must be provided")
-    
-    share_id = str(uuid.uuid4())
-    share_data = {
-        "share_id": share_id,
-        "session_id": session_id,
-        "comparison_id": comparison_id,
-        "created_at": datetime.now().isoformat()
-    }
-    
-    # In a real implementation, store this in a shares table
-    return {
-        "share_id": share_id,
-        "share_url": f"/shared/{share_id}",
-        "expires_at": "2024-12-31T23:59:59Z"  # Mock expiration
-    }
-
-@app.get("/export/csv")
-async def export_csv(comparison_id: str):
-    """Export comparison results as CSV"""
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM comparisons WHERE id = ?", (comparison_id,))
-    row = cursor.fetchone()
-    conn.close()
-    
-    if not row:
-        raise HTTPException(status_code=404, detail="Comparison not found")
-    
-    results = json.loads(row[4])  # results column
-    
-    # Create CSV
-    output = io.StringIO()
-    writer = csv.writer(output)
-    
-    # Headers
-    writer.writerow(["Protocol", "Response", "Latency (ms)", "Tokens Used", "Quality Score"])
-    
-    # Data
-    for result in results:
-        writer.writerow([
-            result["protocol"],
-            result["response"][:100] + "..." if len(result["response"]) > 100 else result["response"],
-            result["latency_ms"],
-            result["tokens_used"],
-            result["quality_score"]
-        ])
-    
-    output.seek(0)
-    
-    return StreamingResponse(
-        io.BytesIO(output.getvalue().encode()),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=comparison_results.csv"}
-    )
-
-# Tool simulation endpoints
-@app.get("/tools/weather")
-async def weather_tool(location: str = Query(...), units: str = Query("metric")):
-    """Mock weather API endpoint"""
-    return await mock_weather_tool(location, units)
-
-@app.get("/tools/search")
-async def search_tool(query: str = Query(...), limit: int = Query(5, ge=1, le=20)):
-    """Mock search API endpoint"""
-    return await mock_search_tool(query, limit)
-
-@app.get("/tools/calc")
-async def calc_tool(expr: str = Query(..., alias="expression")):
-    """Mock calculator API endpoint"""
-    return await mock_calculator_tool(expr)
-
-# Analytics endpoints
-@app.get("/analytics/search")
-async def get_search_analytics():
-    """Get search analytics data"""
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-    
-    # Get recent search statistics
-    cursor.execute("""
-        SELECT 
-            COUNT(*) as total_searches,
-            AVG(results_count) as avg_results,
-            AVG(search_duration_ms) as avg_duration,
-            COUNT(DISTINCT query) as unique_queries
-        FROM search_analytics 
-        WHERE created_at > datetime('now', '-24 hours')
-    """)
-    
-    stats = cursor.fetchone()
-    
-    # Get top queries
-    cursor.execute("""
-        SELECT query, COUNT(*) as count
-        FROM search_analytics 
-        WHERE created_at > datetime('now', '-7 days')
-        GROUP BY query 
-        ORDER BY count DESC 
-        LIMIT 10
-    """)
-    
-    top_queries = cursor.fetchall()
-    
-    conn.close()
-    
-    return {
-        "total_searches": stats[0] or 0,
-        "avg_results": round(stats[1] or 0, 2),
-        "avg_duration_ms": round(stats[2] or 0, 2),
-        "unique_queries": stats[3] or 0,
-        "top_queries": [{"query": q[0], "count": q[1]} for q in top_queries]
-    }
-
-# Health check
+# Health check with enhanced status
 @app.get("/health")
 async def health_check():
     return {
@@ -1059,14 +911,24 @@ async def health_check():
         "timestamp": datetime.now().isoformat(),
         "database": "connected" if os.path.exists(DATABASE_PATH) else "disconnected",
         "features": [
-            "enhanced_web_search",
+            "enhanced_web_scraping",
             "multi_platform_discovery", 
             "advanced_validation",
             "confidence_scoring",
             "robust_caching",
-            "search_analytics"
+            "search_analytics",
+            "scraping_analytics",
+            "beautifulsoup4_integration"
         ],
-        "version": "2.0.0"
+        "version": "3.0.0",
+        "scraping_enabled": True,
+        "supported_platforms": [
+            "GitHub",
+            "GitLab", 
+            "Hugging Face",
+            "General Web",
+            "Awesome Lists"
+        ]
     }
 
 if __name__ == "__main__":

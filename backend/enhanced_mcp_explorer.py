@@ -16,6 +16,9 @@ from ratelimit import limits, sleep_and_retry
 import redis
 from bs4 import BeautifulSoup
 
+# Import our new web scraper
+from web_scraper import MCPWebScraper, ScrapedMCP
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -136,12 +139,13 @@ class MCPSchemaValidator:
         return True
 
 class EnhancedMCPExplorer:
-    """Enhanced MCP Explorer with multiple search sources and robust validation"""
+    """Enhanced MCP Explorer with web scraping and multiple search sources"""
     
     def __init__(self, redis_url: str = "redis://localhost:6379"):
         self.github_api_base = "https://api.github.com"
         self.huggingface_api_base = "https://huggingface.co/api"
         self.validator = MCPSchemaValidator()
+        self.web_scraper = MCPWebScraper()
         
         # Initialize Redis for caching
         try:
@@ -153,26 +157,6 @@ class EnhancedMCPExplorer:
             logger.warning(f"Redis not available, using in-memory cache: {e}")
             self.cache_enabled = False
             self.memory_cache = {}
-        
-        # Search patterns for different file types
-        self.search_patterns = {
-            'mcp_files': [
-                r'\.mcp\.json$',
-                r'\.mcp\.yaml$',
-                r'\.mcp\.yml$',
-                r'mcp.*\.json$',
-                r'mcp.*\.yaml$',
-                r'model.*context.*protocol',
-                r'context.*protocol'
-            ],
-            'keywords': [
-                'model context protocol',
-                'mcp schema',
-                'mcp definition',
-                'llm tools',
-                'ai agent tools'
-            ]
-        }
         
         # Known MCP repositories and registries
         self.known_sources = [
@@ -194,7 +178,7 @@ class EnhancedMCPExplorer:
         ]
 
     async def search_web_mcps(self, query: str, limit: int = 20) -> List[MCPSearchResult]:
-        """Enhanced web search across multiple platforms"""
+        """Enhanced web search using BeautifulSoup4 scraping"""
         cache_key = f"mcp_search:{hashlib.md5(f'{query}:{limit}'.encode()).hexdigest()}"
         
         # Check cache first
@@ -206,22 +190,61 @@ class EnhancedMCPExplorer:
         results = []
         
         try:
-            # Search across multiple sources in parallel
-            search_tasks = [
-                self._search_github_enhanced(query, limit // 4),
-                self._search_huggingface(query, limit // 4),
-                self._search_known_repositories(query, limit // 4),
-                self._search_web_general(query, limit // 4)
-            ]
+            logger.info(f"Starting web scraping search for: {query}")
             
-            search_results = await asyncio.gather(*search_tasks, return_exceptions=True)
+            # Use our enhanced web scraper
+            scraped_mcps = await self.web_scraper.search_web_mcps(query, limit)
             
-            # Combine results from all sources
-            for result in search_results:
-                if isinstance(result, list):
-                    results.extend(result)
-                elif isinstance(result, Exception):
-                    logger.error(f"Search error: {result}")
+            # Convert scraped results to our format
+            for scraped_mcp in scraped_mcps:
+                # Validate the scraped content
+                try:
+                    if scraped_mcp.file_type == 'json':
+                        schema = json.loads(scraped_mcp.content)
+                    else:
+                        schema = yaml.safe_load(scraped_mcp.content)
+                    
+                    is_valid, error_msg = self.validator.validate_schema(schema)
+                    
+                    result = MCPSearchResult(
+                        name=scraped_mcp.name,
+                        description=scraped_mcp.description,
+                        source_url=scraped_mcp.source_url,
+                        tags=scraped_mcp.tags,
+                        domain=scraped_mcp.domain,
+                        validated=is_valid,
+                        schema=schema if is_valid else None,
+                        file_type=scraped_mcp.file_type,
+                        repository=scraped_mcp.repository,
+                        stars=scraped_mcp.stars,
+                        source_platform="web_scraping",
+                        confidence_score=scraped_mcp.confidence_score
+                    )
+                    
+                    results.append(result)
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to validate scraped MCP {scraped_mcp.name}: {e}")
+                    # Still include it but mark as unvalidated
+                    result = MCPSearchResult(
+                        name=scraped_mcp.name,
+                        description=scraped_mcp.description,
+                        source_url=scraped_mcp.source_url,
+                        tags=scraped_mcp.tags,
+                        domain=scraped_mcp.domain,
+                        validated=False,
+                        schema=None,
+                        file_type=scraped_mcp.file_type,
+                        repository=scraped_mcp.repository,
+                        stars=scraped_mcp.stars,
+                        source_platform="web_scraping",
+                        confidence_score=scraped_mcp.confidence_score * 0.5  # Reduce confidence for unvalidated
+                    )
+                    results.append(result)
+            
+            # Also search using API methods as fallback
+            api_results = await self._search_api_sources(query, limit // 2)
+            results.extend(api_results)
             
             # Remove duplicates and sort by confidence
             unique_results = self._deduplicate_results(results)
@@ -239,6 +262,32 @@ class EnhancedMCPExplorer:
         except Exception as e:
             logger.error(f"Web search failed for query '{query}': {e}")
             return []
+
+    async def _search_api_sources(self, query: str, limit: int) -> List[MCPSearchResult]:
+        """Search using API methods as fallback"""
+        results = []
+        
+        try:
+            # Search across different sources in parallel
+            search_tasks = [
+                self._search_github_enhanced(query, limit // 3),
+                self._search_huggingface(query, limit // 3),
+                self._search_known_repositories(query, limit // 3)
+            ]
+            
+            search_results = await asyncio.gather(*search_tasks, return_exceptions=True)
+            
+            # Combine results from all sources
+            for result in search_results:
+                if isinstance(result, list):
+                    results.extend(result)
+                elif isinstance(result, Exception):
+                    logger.error(f"API search error: {result}")
+            
+        except Exception as e:
+            logger.error(f"API search failed: {e}")
+        
+        return results
 
     async def _search_github_enhanced(self, query: str, limit: int) -> List[MCPSearchResult]:
         """Enhanced GitHub search with better API usage"""
@@ -490,42 +539,6 @@ class EnhancedMCPExplorer:
                                 
         except Exception as e:
             logger.error(f"GitHub repo search error for {repo_url}: {e}")
-        
-        return results
-
-    async def _search_web_general(self, query: str, limit: int) -> List[MCPSearchResult]:
-        """General web search for MCP content using web scraping"""
-        results = []
-        
-        # This is a placeholder for general web search
-        # In production, you would integrate with Google Custom Search API, Bing API, etc.
-        
-        try:
-            # Mock some general web results for demonstration
-            mock_results = [
-                {
-                    "name": f"web.{query.lower().replace(' ', '.')}",
-                    "description": f"Web-discovered MCP for {query}",
-                    "url": f"https://example.com/{query.lower().replace(' ', '-')}-mcp",
-                    "domain": "general",
-                    "tags": [query.lower(), "web-discovered"]
-                }
-            ]
-            
-            for mock in mock_results[:limit]:
-                results.append(MCPSearchResult(
-                    name=mock["name"],
-                    description=mock["description"],
-                    source_url=mock["url"],
-                    tags=mock["tags"],
-                    domain=mock["domain"],
-                    validated=False,  # Would need validation
-                    source_platform="web",
-                    confidence_score=0.3
-                ))
-                
-        except Exception as e:
-            logger.error(f"General web search error: {e}")
         
         return results
 

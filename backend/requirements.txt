@@ -12,3 +12,7 @@ redis==5.0.1
 ratelimit==2.2.1
 requests==2.31.0
 beautifulsoup4==4.12.2
+lxml==4.9.3
+html5lib==1.1
+selenium==4.15.2
+fake-useragent==1.4.0
