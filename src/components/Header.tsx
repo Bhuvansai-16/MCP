@@ -57,16 +57,12 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <motion.header 
-      className={`sticky top-0 z-50 backdrop-blur-xl transition-all duration-500 ${
-        isDark 
-          ? 'border-gray-700/50' 
-          : 'border-gray-200/50'
-      }`}
+      className="sticky top-0 z-50 py-4 transition-all duration-500"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="container mx-auto px-6 py-4">
+      <div className="container mx-auto px-6">
         <div className="flex items-center justify-between">
           {/* Logo Section */}
           <motion.div 
@@ -74,11 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
             whileHover={{ scale: 1.02 }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <div className={`relative p-3 rounded-full ${
-              isDark 
-                ? 'bg-gradient-to-br from-blue-600 to-purple-600' 
-                : 'bg-gradient-to-br from-blue-500 to-purple-500'
-            } shadow-lg`}>
+            <div className="relative p-3 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg">
               <Activity className="w-8 h-8 text-white" />
               <motion.div
                 className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 opacity-0"
@@ -101,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({
           </motion.div>
           
           {/* Navigation Tabs - Center - IMPROVED WITH CURVES */}
-          <div className="nav-container">
+          <div className="nav-container rounded-full backdrop-blur-md border border-gray-200/20 p-1.5 bg-white/5">
             {tabs.map(({ id, label, icon: Icon, description }) => (
               <motion.button
                 key={id}
