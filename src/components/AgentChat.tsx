@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Square, Send, Bot, User, Settings, Eye, EyeOff, Zap, Clock, Target } from 'lucide-react';
+import { Play, Square, Send, Bot, User, Settings, Eye, EyeOff, Zap, Clock, Target, Sparkles } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -85,6 +85,13 @@ export const AgentChat: React.FC<AgentChatProps> = ({
     }
   };
 
+  const handleSuggestedPrompt = (prompt: string) => {
+    setInputMessage(prompt);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
   const formatTimestamp = (timestamp: Date) => {
     return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -123,12 +130,60 @@ export const AgentChat: React.FC<AgentChatProps> = ({
     }
   };
 
-  const exampleQueries = [
-    "What's the weather like in San Francisco?",
-    "Search for the latest news about AI",
-    "Create a calendar event for tomorrow",
-    "Help me find products under $50"
-  ];
+  // Enhanced suggested prompts based on MCP tools
+  const getSuggestedPrompts = () => {
+    if (!mcpSchema || !mcpSchema.tools) {
+      return [
+        "What can you help me with?",
+        "Show me what tools are available",
+        "How do I use this MCP?",
+        "Give me an example of what you can do"
+      ];
+    }
+
+    const prompts = [];
+    
+    // Generate prompts based on available tools
+    mcpSchema.tools.forEach((tool: any) => {
+      const toolName = tool.name.toLowerCase();
+      
+      if (toolName.includes('weather')) {
+        prompts.push("What's the weather like in San Francisco?");
+        prompts.push("Show me the forecast for next week in Tokyo");
+      } else if (toolName.includes('search')) {
+        prompts.push("Search for the latest news about AI");
+        prompts.push("Find information about machine learning");
+      } else if (toolName.includes('calendar') || toolName.includes('event')) {
+        prompts.push("Create a calendar event for tomorrow");
+        prompts.push("Show me my upcoming meetings");
+      } else if (toolName.includes('product') || toolName.includes('shop')) {
+        prompts.push("Help me find products under $50");
+        prompts.push("Search for electronics on sale");
+      } else if (toolName.includes('travel') || toolName.includes('flight')) {
+        prompts.push("Find flights from NYC to London");
+        prompts.push("Plan a trip to Paris for next month");
+      } else if (toolName.includes('finance') || toolName.includes('budget')) {
+        prompts.push("Show me my spending analysis");
+        prompts.push("Create a budget for this month");
+      } else if (toolName.includes('social') || toolName.includes('post')) {
+        prompts.push("Schedule a social media post");
+        prompts.push("Get my social media analytics");
+      } else {
+        // Generic prompts for unknown tools
+        prompts.push(`Use the ${tool.name} tool`);
+        prompts.push(`Help me with ${tool.description.toLowerCase()}`);
+      }
+    });
+
+    // Add some generic helpful prompts
+    prompts.push("What tools do you have available?");
+    prompts.push("Show me an example of what you can do");
+    
+    // Return unique prompts, limited to 6
+    return [...new Set(prompts)].slice(0, 6);
+  };
+
+  const suggestedPrompts = getSuggestedPrompts();
 
   return (
     <div className={`h-full rounded-3xl backdrop-blur-xl border transition-all duration-500 ${
@@ -258,27 +313,34 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                 }
               </p>
 
-              {isAgentRunning && (
+              {isAgentRunning && suggestedPrompts.length > 0 && (
                 <div>
                   <p className={`text-sm font-medium mb-3 ${
                     isDark ? 'text-gray-400' : 'text-gray-600'
                   }`}>
-                    Try these example queries:
+                    <Sparkles className="w-4 h-4 inline mr-2" />
+                    Try these suggestions:
                   </p>
-                  <div className="space-y-2">
-                    {exampleQueries.map((query, index) => (
+                  <div className="grid grid-cols-1 gap-2">
+                    {suggestedPrompts.map((prompt, index) => (
                       <motion.button
                         key={index}
-                        onClick={() => setInputMessage(query)}
-                        className={`block w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-300 ${
+                        onClick={() => handleSuggestedPrompt(prompt)}
+                        className={`text-left px-4 py-3 rounded-xl text-sm transition-all duration-300 ${
                           isDark 
-                            ? 'bg-gray-600/30 hover:bg-gray-600/50 text-gray-300' 
-                            : 'bg-white/50 hover:bg-white/70 text-gray-700'
-                        }`}
-                        whileHover={{ scale: 1.02 }}
+                            ? 'bg-gray-600/30 hover:bg-gray-600/50 text-gray-300 border border-gray-600/30 hover:border-gray-500/50' 
+                            : 'bg-white/50 hover:bg-white/70 text-gray-700 border border-gray-200/50 hover:border-gray-300/50'
+                        } backdrop-blur-sm`}
+                        whileHover={{ scale: 1.02, x: 4 }}
                         whileTap={{ scale: 0.98 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
                       >
-                        "{query}"
+                        <div className="flex items-center space-x-2">
+                          <Zap className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                          <span>"{prompt}"</span>
+                        </div>
                       </motion.button>
                     ))}
                   </div>
@@ -399,6 +461,29 @@ export const AgentChat: React.FC<AgentChatProps> = ({
 
       {/* Input - Fixed */}
       <div className="flex-shrink-0 p-6 border-t border-gray-200/20">
+        {/* Suggested Prompts for Active Agent */}
+        {isAgentRunning && messages.length > 0 && suggestedPrompts.length > 0 && (
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-2">
+              {suggestedPrompts.slice(0, 3).map((prompt, index) => (
+                <motion.button
+                  key={index}
+                  onClick={() => handleSuggestedPrompt(prompt)}
+                  className={`px-3 py-1 rounded-lg text-xs transition-all duration-300 ${
+                    isDark 
+                      ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50' 
+                      : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
+                  } backdrop-blur-sm`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {prompt.length > 30 ? prompt.substring(0, 30) + '...' : prompt}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex space-x-3">
           <input
             ref={inputRef}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Zap, Clock, Target, ChevronDown, ChevronRight, Activity, Database } from 'lucide-react';
+import { X, Zap, Clock, Target, ChevronDown, ChevronRight, Activity, Database, Play, Download } from 'lucide-react';
 
 interface ExecutionLog {
   id: string;
@@ -25,6 +25,7 @@ export const ExecutionVisualization: React.FC<ExecutionVisualizationProps> = ({
 }) => {
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
   const [selectedTab, setSelectedTab] = useState<'logs' | 'metrics'>('logs');
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
   const toggleLogExpansion = (logId: string) => {
     const newExpanded = new Set(expandedLogs);
@@ -76,6 +77,32 @@ export const ExecutionVisualization: React.FC<ExecutionVisualizationProps> = ({
 
   const metrics = calculateMetrics();
 
+  // Filter logs by selected tool
+  const filteredLogs = selectedTool 
+    ? executionLogs.filter(log => log.tool === selectedTool)
+    : executionLogs;
+
+  // Get unique tools for filter
+  const uniqueTools = Array.from(new Set(executionLogs.map(log => log.tool)));
+
+  // Function to test a tool execution
+  const testToolExecution = (tool: string) => {
+    console.log(`Testing tool execution: ${tool}`);
+    // This would trigger a test execution in a real implementation
+  };
+
+  // Function to export logs
+  const exportLogs = () => {
+    const logsData = JSON.stringify(executionLogs, null, 2);
+    const blob = new Blob([logsData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'execution-logs.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <motion.div
       className={`rounded-3xl backdrop-blur-xl border transition-all duration-500 ${
@@ -109,6 +136,41 @@ export const ExecutionVisualization: React.FC<ExecutionVisualizationProps> = ({
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* Tool Filter */}
+            {uniqueTools.length > 0 && (
+              <select
+                value={selectedTool || ''}
+                onChange={(e) => setSelectedTool(e.target.value || null)}
+                className={`px-3 py-2 rounded-xl border transition-all duration-300 ${
+                  isDark 
+                    ? 'bg-gray-700/50 border-gray-600 text-white' 
+                    : 'bg-white/50 border-gray-200 text-gray-900'
+                } backdrop-blur-sm`}
+              >
+                <option value="">All Tools</option>
+                {uniqueTools.map(tool => (
+                  <option key={tool} value={tool}>{tool}</option>
+                ))}
+              </select>
+            )}
+
+            {/* Export Button */}
+            {executionLogs.length > 0 && (
+              <motion.button
+                onClick={exportLogs}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
+                  isDark 
+                    ? 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30' 
+                    : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200'
+                } backdrop-blur-sm`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Download className="w-4 h-4" />
+                <span>Export</span>
+              </motion.button>
+            )}
+
             {/* Tab Selector */}
             <div className={`flex rounded-xl p-1 ${
               isDark ? 'bg-gray-700/50' : 'bg-gray-100/50'
@@ -168,7 +230,7 @@ export const ExecutionVisualization: React.FC<ExecutionVisualizationProps> = ({
               exit={{ opacity: 0, x: 20 }}
               className="space-y-4 max-h-96 overflow-y-auto"
             >
-              {executionLogs.length === 0 ? (
+              {filteredLogs.length === 0 ? (
                 <div className={`text-center py-12 ${
                   isDark ? 'text-gray-500' : 'text-gray-400'
                 }`}>
@@ -177,7 +239,7 @@ export const ExecutionVisualization: React.FC<ExecutionVisualizationProps> = ({
                   <p className="text-sm mt-1">Tool executions will appear here</p>
                 </div>
               ) : (
-                executionLogs.map((log) => (
+                filteredLogs.map((log) => (
                   <motion.div
                     key={log.id}
                     className={`rounded-xl border backdrop-blur-sm ${
@@ -263,6 +325,26 @@ export const ExecutionVisualization: React.FC<ExecutionVisualizationProps> = ({
                                   {JSON.stringify(log.output, null, 2)}
                                 </pre>
                               </div>
+                            </div>
+
+                            {/* Test Tool Button */}
+                            <div className="flex justify-end pt-2">
+                              <motion.button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  testToolExecution(log.tool);
+                                }}
+                                className={`flex items-center space-x-2 px-3 py-1 rounded-lg text-xs transition-all duration-300 ${
+                                  isDark 
+                                    ? 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30' 
+                                    : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200'
+                                }`}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <Play className="w-3 h-3" />
+                                <span>Test Again</span>
+                              </motion.button>
                             </div>
                           </div>
                         </motion.div>
@@ -379,6 +461,19 @@ export const ExecutionVisualization: React.FC<ExecutionVisualizationProps> = ({
                           <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {count}
                           </span>
+                          <motion.button
+                            onClick={() => testToolExecution(tool)}
+                            className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs transition-all duration-300 ${
+                              isDark 
+                                ? 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30' 
+                                : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200'
+                            }`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Play className="w-3 h-3" />
+                            <span>Test</span>
+                          </motion.button>
                         </div>
                       </div>
                     ))}

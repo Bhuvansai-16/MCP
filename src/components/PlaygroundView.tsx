@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MCPEditor } from './MCPEditor';
 import { AgentChat } from './AgentChat';
 import { ExecutionVisualization } from './ExecutionVisualization';
+import { VisualMCPBuilder } from './VisualMCPBuilder';
+import { MCPTemplates } from './MCPTemplates';
 import { MCPSchema } from '../App';
+import { Code, Palette, FileTemplate, Sparkles, Zap } from 'lucide-react';
 
 interface PlaygroundViewProps {
   isDark: boolean;
@@ -32,6 +35,8 @@ interface ExecutionLog {
   latency: number;
 }
 
+type EditorMode = 'code' | 'visual' | 'templates';
+
 export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialMCP }) => {
   const [mcpSchema, setMcpSchema] = useState<MCPSchema | null>(null);
   const [isValidMCP, setIsValidMCP] = useState(false);
@@ -39,6 +44,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [executionLogs, setExecutionLogs] = useState<ExecutionLog[]>([]);
   const [showExecutionPanel, setShowExecutionPanel] = useState(false);
+  const [editorMode, setEditorMode] = useState<EditorMode>('code');
 
   // Load initial MCP if provided
   useEffect(() => {
@@ -64,6 +70,25 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
       setMessages([]);
       setExecutionLogs([]);
     }
+  };
+
+  const handleTemplateSelect = (template: MCPSchema) => {
+    setMcpSchema(template);
+    setIsValidMCP(true);
+    setEditorMode('code'); // Switch to code editor to show the loaded template
+    
+    // Add system message about loaded template
+    setMessages([{
+      id: Date.now().toString(),
+      type: 'system',
+      content: `📋 Template "${template.name}" loaded! You can now start the agent to test it.`,
+      timestamp: new Date()
+    }]);
+  };
+
+  const handleVisualMCPUpdate = (schema: MCPSchema) => {
+    setMcpSchema(schema);
+    setIsValidMCP(true);
   };
 
   const startAgent = () => {
@@ -257,6 +282,36 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     return response;
   };
 
+  const renderEditor = () => {
+    switch (editorMode) {
+      case 'templates':
+        return (
+          <MCPTemplates
+            isDark={isDark}
+            onTemplateSelect={handleTemplateSelect}
+          />
+        );
+      case 'visual':
+        return (
+          <VisualMCPBuilder
+            isDark={isDark}
+            initialSchema={mcpSchema}
+            onSchemaUpdate={handleVisualMCPUpdate}
+          />
+        );
+      default:
+        return (
+          <MCPEditor
+            isDark={isDark}
+            onValidation={handleMCPValidation}
+            mcpSchema={mcpSchema}
+            isValid={isValidMCP}
+            initialSchema={initialMCP}
+          />
+        );
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -283,13 +338,78 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <MCPEditor
-              isDark={isDark}
-              onValidation={handleMCPValidation}
-              mcpSchema={mcpSchema}
-              isValid={isValidMCP}
-              initialSchema={initialMCP}
-            />
+            {/* Editor Mode Selector */}
+            <div className={`mb-4 p-2 rounded-2xl ${
+              isDark ? 'bg-gray-800/50' : 'bg-gray-100/50'
+            } backdrop-blur-sm border ${
+              isDark ? 'border-gray-700/50' : 'border-gray-200/50'
+            }`}>
+              <div className="flex space-x-2">
+                <motion.button
+                  onClick={() => setEditorMode('templates')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    editorMode === 'templates'
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
+                      : isDark
+                        ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <FileTemplate className="w-4 h-4" />
+                  <span>Templates</span>
+                </motion.button>
+
+                <motion.button
+                  onClick={() => setEditorMode('visual')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    editorMode === 'visual'
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                      : isDark
+                        ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Palette className="w-4 h-4" />
+                  <span>Visual</span>
+                </motion.button>
+
+                <motion.button
+                  onClick={() => setEditorMode('code')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    editorMode === 'code'
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                      : isDark
+                        ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Code className="w-4 h-4" />
+                  <span>Code</span>
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Editor Content */}
+            <div className="flex-1 min-h-0">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={editorMode}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="h-full"
+                >
+                  {renderEditor()}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </motion.div>
 
           {/* Chat Panel (Right) */}
