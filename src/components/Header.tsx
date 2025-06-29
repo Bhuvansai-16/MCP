@@ -166,7 +166,7 @@ export const Header: React.FC<HeaderProps> = ({
             </motion.button>
             
             <motion.a
-              href="https://github.com"
+              href="https://github.com/Bhuvansai-16/MCP.git"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-rounded flex items-center space-x-2 px-4 py-3"
@@ -310,7 +310,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </motion.button>
                   
                   <motion.a
-                    href="https://github.com"
+                    href="https://github.com/Bhuvansai-16/MCP.git"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex flex-col items-center justify-center p-3 rounded-xl transition-colors"
