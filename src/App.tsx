@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from './components/Header';
 import { PlaygroundView } from './components/PlaygroundView';
 import { ExploreView } from './components/ExploreView';
 import { CompareView } from './components/CompareView';
 import { CommunityView } from './components/CommunityView';
+import { AuthModal } from './components/AuthModal';
 import { useTheme } from './hooks/useTheme';
 import { useAuth } from './hooks/useAuth';
 import { MCPListItem, WebMCPResult } from './data/mockMCPs';
@@ -34,36 +35,77 @@ type TabType = 'compare' | 'playground' | 'explore' | 'community';
 
 function App() {
   const { isDark, toggleTheme } = useTheme();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('playground');
   const [playgroundMCP, setPlaygroundMCP] = useState<MCPSchema | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [attemptedAction, setAttemptedAction] = useState<string | null>(null);
+
+  // Check authentication for protected actions
+  const requireAuth = (action: string, callback: () => void) => {
+    if (!isAuthenticated) {
+      setAttemptedAction(action);
+      setShowAuthModal(true);
+      return;
+    }
+    callback();
+  };
+
+  // Handle tab changes with auth check
+  const handleTabChange = (tab: TabType) => {
+    if (tab === 'community' && !isAuthenticated) {
+      requireAuth('access community features', () => setActiveTab(tab));
+      return;
+    }
+    setActiveTab(tab);
+  };
 
   // Function to handle "Try in Playground" from any tab
   const handleTryInPlayground = async (mcp: MCPListItem | WebMCPResult) => {
-    try {
-      let mcpSchema: MCPSchema;
+    requireAuth('try MCP in playground', () => {
+      try {
+        let mcpSchema: MCPSchema;
 
-      // Check if it's a WebMCPResult with schema
-      if ('schema' in mcp && mcp.schema) {
-        mcpSchema = mcp.schema as MCPSchema;
-      } else {
-        // Generate a mock schema based on the MCP data
-        mcpSchema = {
-          name: mcp.name,
-          version: "1.0.0",
-          description: mcp.description,
-          tools: generateToolsFromMCP(mcp)
-        };
+        // Check if it's a WebMCPResult with schema
+        if ('schema' in mcp && mcp.schema) {
+          mcpSchema = mcp.schema as MCPSchema;
+        } else {
+          // Generate a mock schema based on the MCP data
+          mcpSchema = {
+            name: mcp.name,
+            version: "1.0.0",
+            description: mcp.description,
+            tools: generateToolsFromMCP(mcp)
+          };
+        }
+
+        // Set the MCP in playground
+        setPlaygroundMCP(mcpSchema);
+        
+        // Switch to playground tab
+        setActiveTab('playground');
+
+      } catch (error) {
+        console.error('Failed to load MCP in playground:', error);
       }
+    });
+  };
 
-      // Set the MCP in playground
-      setPlaygroundMCP(mcpSchema);
-      
-      // Switch to playground tab
-      setActiveTab('playground');
-
-    } catch (error) {
-      console.error('Failed to load MCP in playground:', error);
+  // Handle successful authentication
+  const handleAuthSuccess = (token: string, userData: any) => {
+    setShowAuthModal(false);
+    
+    // Execute the attempted action if any
+    if (attemptedAction) {
+      switch (attemptedAction) {
+        case 'access community features':
+          setActiveTab('community');
+          break;
+        case 'try MCP in playground':
+          // The action will be retried automatically
+          break;
+      }
+      setAttemptedAction(null);
     }
   };
 
@@ -321,26 +363,43 @@ function App() {
         />
       </div>
 
-      <Header 
-        isDark={isDark} 
-        onToggleTheme={toggleTheme}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-      
-      <main className="relative z-10">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            {renderActiveView()}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+      {/* Main App Container - 80% width */}
+      <div className="w-full max-w-[80vw] mx-auto min-h-screen">
+        <Header 
+          isDark={isDark} 
+          onToggleTheme={toggleTheme}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
+        
+        <main className="relative z-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              {renderActiveView()}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
+
+      {/* Authentication Modal */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <AuthModal
+            onClose={() => {
+              setShowAuthModal(false);
+              setAttemptedAction(null);
+            }}
+            onAuthSuccess={handleAuthSuccess}
+            isDark={isDark}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

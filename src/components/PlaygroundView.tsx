@@ -324,16 +324,16 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
 
   return (
     <div className="h-[calc(100vh-120px)] overflow-hidden">
-      <div className="container mx-auto px-6 py-8 h-full overflow-y-auto">
+      <div className="container mx-auto px-6 py-8 h-full">
         <motion.div 
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full min-h-0"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {/* MCP Editor Panel (Left) */}
           <motion.div 
-            className="flex flex-col h-full min-h-0 overflow-hidden"
+            className="flex flex-col h-full overflow-hidden"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
@@ -396,7 +396,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
             </div>
 
             {/* Editor Content */}
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={editorMode}
@@ -404,7 +404,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className="h-full"
+                  className="h-full overflow-hidden"
                 >
                   {renderEditor()}
                 </motion.div>
@@ -414,23 +414,25 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
 
           {/* Chat Panel (Right) */}
           <motion.div 
-            className="flex flex-col h-full min-h-0 overflow-hidden"
+            className="flex flex-col h-full overflow-hidden"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <AgentChat
-              isDark={isDark}
-              messages={messages}
-              isAgentRunning={isAgentRunning}
-              isValidMCP={isValidMCP}
-              mcpSchema={mcpSchema}
-              onStartAgent={startAgent}
-              onStopAgent={stopAgent}
-              onUserMessage={handleUserMessage}
-              onToggleExecution={() => setShowExecutionPanel(!showExecutionPanel)}
-              showExecutionPanel={showExecutionPanel}
-            />
+            <div className="h-full overflow-hidden">
+              <AgentChat
+                isDark={isDark}
+                messages={messages}
+                isAgentRunning={isAgentRunning}
+                isValidMCP={isValidMCP}
+                mcpSchema={mcpSchema}
+                onStartAgent={startAgent}
+                onStopAgent={stopAgent}
+                onUserMessage={handleUserMessage}
+                onToggleExecution={() => setShowExecutionPanel(!showExecutionPanel)}
+                showExecutionPanel={showExecutionPanel}
+              />
+            </div>
           </motion.div>
         </motion.div>
 
