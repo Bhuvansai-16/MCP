@@ -541,7 +541,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
 
       {/* Editor */}
       <div className="flex-1 p-6 overflow-hidden">
-        <div className="h-full rounded-xl overflow-hidden border border-gray-200/20 no-scrollbar">
+        <div className="monaco-editor-container h-full rounded-xl overflow-hidden border border-gray-200/20">
           <Editor
             height="100%"
             language={isJsonMode ? 'json' : 'yaml'}
@@ -569,7 +569,6 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
                 alwaysConsumeMouseWheel: false
               }
             }}
-            className="no-scrollbar"
           />
         </div>
 

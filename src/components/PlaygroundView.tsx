@@ -312,34 +312,15 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
   return (
     <div className="playground-container">
-      <div className="container mx-auto px-6 py-8">
-        <motion.div 
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {/* MCP Editor Panel (Left) */}
-          <motion.div 
-            className="editor-container"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+      <div className="container mx-auto px-6 py-8 h-full flex flex-col">
+        {/* Playground Grid */}
+        <div className="playground-grid">
+          {/* Editor Panel */}
+          <div className="editor-panel">
             {/* Editor Mode Selector */}
-            <div className={`mb-4 p-2 rounded-2xl ${
+            <div className={`editor-mode-selector mb-4 p-2 rounded-2xl ${
               isDark ? 'bg-gray-800/50' : 'bg-gray-100/50'
             } backdrop-blur-sm border ${
               isDark ? 'border-gray-700/50' : 'border-gray-200/50'
@@ -395,8 +376,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
               </div>
             </div>
 
-            {/* Editor Content - No scrollbar */}
-            <div className="flex-1 no-scrollbar">
+            {/* Editor Content */}
+            <div className="editor-content">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={editorMode}
@@ -410,46 +391,34 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                 </motion.div>
               </AnimatePresence>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Chat Panel (Right) */}
-          <motion.div 
-            className="chat-container"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="h-full">
-              <AgentChat
-                isDark={isDark}
-                messages={messages}
-                isAgentRunning={isAgentRunning}
-                isValidMCP={isValidMCP}
-                mcpSchema={mcpSchema}
-                onStartAgent={startAgent}
-                onStopAgent={stopAgent}
-                onUserMessage={handleUserMessage}
-                onToggleExecution={() => setShowExecutionPanel(!showExecutionPanel)}
-                showExecutionPanel={showExecutionPanel}
-              />
-            </div>
-          </motion.div>
-        </motion.div>
+          {/* Chat Panel */}
+          <div className="chat-panel">
+            <AgentChat
+              isDark={isDark}
+              messages={messages}
+              isAgentRunning={isAgentRunning}
+              isValidMCP={isValidMCP}
+              mcpSchema={mcpSchema}
+              onStartAgent={startAgent}
+              onStopAgent={stopAgent}
+              onUserMessage={handleUserMessage}
+              onToggleExecution={() => setShowExecutionPanel(!showExecutionPanel)}
+              showExecutionPanel={showExecutionPanel}
+            />
+          </div>
+        </div>
 
         {/* Execution Visualization Panel */}
         {showExecutionPanel && (
-          <motion.div
-            className="mt-6 h-96"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
+          <div className="execution-panel mt-6">
             <ExecutionVisualization
               isDark={isDark}
               executionLogs={executionLogs}
               onClose={() => setShowExecutionPanel(false)}
             />
-          </motion.div>
+          </div>
         )}
       </div>
     </div>

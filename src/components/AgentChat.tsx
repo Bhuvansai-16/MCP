@@ -43,24 +43,13 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Only scroll when new messages are added, not on every render
+  // Auto-scroll to bottom when new messages are added
   useEffect(() => {
-    if (messages.length > 0 && messagesEndRef.current) {
-      const scrollContainer = messagesContainerRef.current;
-      if (scrollContainer) {
-        const isScrolledToBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
-        
-        // Only auto-scroll if user is already at the bottom
-        if (isScrolledToBottom) {
-          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
-      }
-    }
-  }, [messages.length]); // Only depend on message count, not the messages array itself
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-  // Focus input when agent starts, but don't scroll
+  // Focus input when agent starts
   useEffect(() => {
     if (isAgentRunning && inputRef.current) {
       inputRef.current.focus();
@@ -281,12 +270,8 @@ export const AgentChat: React.FC<AgentChatProps> = ({
         )}
       </div>
 
-      {/* Messages - Scrollable with proper height */}
-      <div 
-        ref={messagesContainerRef}
-        className="flex-1 p-6 overflow-y-auto min-h-0 no-scrollbar"
-        style={{ scrollBehavior: 'smooth' }}
-      >
+      {/* Messages - Scrollable */}
+      <div className="chat-messages-container flex-1 p-6 overflow-y-auto">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center">
             <motion.div
@@ -321,7 +306,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                     <Sparkles className="w-4 h-4 inline mr-2" />
                     Try these suggestions:
                   </p>
-                  <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto no-scrollbar">
+                  <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
                     {suggestedPrompts.map((prompt, index) => (
                       <motion.button
                         key={index}
@@ -464,7 +449,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
         {/* Suggested Prompts for Active Agent */}
         {isAgentRunning && messages.length > 0 && suggestedPrompts.length > 0 && (
           <div className="mb-4">
-            <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto no-scrollbar">
+            <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
               {suggestedPrompts.slice(0, 3).map((prompt, index) => (
                 <motion.button
                   key={index}
