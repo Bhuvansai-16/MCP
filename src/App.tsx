@@ -330,7 +330,7 @@ function App() {
   }
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${
+    <div className={`min-h-screen transition-all duration-500 overflow-y-auto ${
       isDark 
         ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900' 
         : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
@@ -363,8 +363,8 @@ function App() {
         />
       </div>
 
-      {/* Main App Container - 80% width */}
-      <div className="w-full max-w-[80vw] mx-auto min-h-screen">
+      {/* Main App Container - 75% width with scrollbars */}
+      <div className="w-full max-w-[75vw] mx-auto min-h-screen overflow-y-auto">
         <Header 
           isDark={isDark} 
           onToggleTheme={toggleTheme}
@@ -372,7 +372,7 @@ function App() {
           onTabChange={handleTabChange}
         />
         
-        <main className="relative z-10">
+        <main className="relative z-10 overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -380,6 +380,7 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-y-auto"
             >
               {renderActiveView()}
             </motion.div>

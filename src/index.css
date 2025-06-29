@@ -8,6 +8,7 @@
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 /* Custom styles for react-tabs */
@@ -223,4 +224,24 @@ body {
 
 .spin-glow {
   animation: spin-glow 1s linear infinite;
+}
+
+/* Ensure all containers have proper scrolling */
+.overflow-container {
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+/* Ensure the app fits within 75% width */
+.app-container {
+  width: 75%;
+  margin: 0 auto;
+  max-width: 75vw;
+}
+
+/* Fix for monaco editor */
+.monaco-editor-container {
+  min-height: 300px;
+  height: 100%;
+  overflow: hidden;
 }
