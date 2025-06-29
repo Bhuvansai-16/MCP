@@ -6,7 +6,7 @@ import { ExecutionVisualization } from './ExecutionVisualization';
 import { VisualMCPBuilder } from './VisualMCPBuilder';
 import { MCPTemplates } from './MCPTemplates';
 import { MCPSchema } from '../App';
-import { Code, Palette, FileTemplate, Sparkles, Zap } from 'lucide-react';
+import { Code, Palette, BookTemplate as FileTemplate, Sparkles, Zap } from 'lucide-react';
 
 interface PlaygroundViewProps {
   isDark: boolean;

@@ -1,22 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FileTemplate, 
-  Cloud, 
-  ShoppingCart, 
-  Plane, 
-  Calendar, 
-  DollarSign, 
-  MessageSquare,
-  Database,
-  Zap,
-  Search,
-  Info,
-  Play,
-  Download,
-  Star,
-  CheckCircle
-} from 'lucide-react';
+import { BookTemplate as FileTemplate, Cloud, ShoppingCart, Plane, Calendar, DollarSign, MessageSquare, Database, Zap, Search, Info, Play, Download, Star, CheckCircle } from 'lucide-react';
 import { MCPSchema } from '../App';
 
 interface MCPTemplatesProps {
