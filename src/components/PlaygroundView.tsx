@@ -323,8 +323,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   };
 
   return (
-    <div className="min-h-screen overflow-y-auto">
-      <div className="container mx-auto px-6 py-8 overflow-y-auto">
+    <div className="min-h-screen overflow-hidden">
+      <div className="container mx-auto px-6 py-8">
         <motion.div 
           className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[calc(100vh-200px)]"
           variants={containerVariants}
@@ -333,7 +333,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
         >
           {/* MCP Editor Panel (Left) */}
           <motion.div 
-            className="flex flex-col h-full overflow-y-auto"
+            className="flex flex-col h-full"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
@@ -395,8 +395,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
               </div>
             </div>
 
-            {/* Editor Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto">
+            {/* Editor Content - No scrollbar */}
+            <div className="flex-1 overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={editorMode}
@@ -404,7 +404,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className="h-full overflow-y-auto"
+                  className="h-full"
                 >
                   {renderEditor()}
                 </motion.div>
@@ -412,14 +412,14 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
             </div>
           </motion.div>
 
-          {/* Chat Panel (Right) - Scrollable */}
+          {/* Chat Panel (Right) */}
           <motion.div 
-            className="flex flex-col h-full overflow-y-auto"
+            className="flex flex-col h-full"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <div className="h-full overflow-y-auto">
+            <div className="h-full">
               <AgentChat
                 isDark={isDark}
                 messages={messages}
@@ -436,10 +436,10 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
           </motion.div>
         </motion.div>
 
-        {/* Execution Visualization Panel - Scrollable */}
+        {/* Execution Visualization Panel */}
         {showExecutionPanel && (
           <motion.div
-            className="mt-6 h-96 overflow-y-auto"
+            className="mt-6 h-96"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}

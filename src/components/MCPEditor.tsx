@@ -539,9 +539,9 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         </div>
       </div>
 
-      {/* Editor */}
+      {/* Editor - No scrollbar */}
       <div className="flex-1 p-6 overflow-hidden">
-        <div className="h-full rounded-xl overflow-hidden border border-gray-200/20">
+        <div className="h-full rounded-xl overflow-hidden border border-gray-200/20 no-scrollbar">
           <Editor
             height="100%"
             language={isJsonMode ? 'json' : 'yaml'}
@@ -565,9 +565,11 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
                 vertical: 'auto',
                 horizontal: 'auto',
                 verticalScrollbarSize: 8,
-                horizontalScrollbarSize: 8
+                horizontalScrollbarSize: 8,
+                alwaysConsumeMouseWheel: false
               }
             }}
+            className="no-scrollbar"
           />
         </div>
 

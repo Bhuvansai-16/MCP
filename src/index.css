@@ -9,6 +9,27 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   overflow-x: hidden; /* Prevent horizontal scrolling */
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+html {
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Hide scrollbar for the playground section */
+.monaco-editor .overflow-guard {
+  scrollbar-width: none; /* Firefox */
+}
+
+.monaco-editor .overflow-guard::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
 /* Custom styles for react-tabs */
@@ -74,6 +95,16 @@ body {
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(45deg, #4338ca, #6d28d9);
+}
+
+/* Hide scrollbar for specific elements */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
 /* Glassmorphism effects */
@@ -230,13 +261,6 @@ body {
 .overflow-container {
   overflow-y: auto;
   max-height: 100%;
-}
-
-/* Ensure the app fits within 75% width */
-.app-container {
-  width: 75%;
-  margin: 0 auto;
-  max-width: 75vw;
 }
 
 /* Fix for monaco editor */

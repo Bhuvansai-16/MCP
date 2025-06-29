@@ -364,8 +364,8 @@ function App() {
         />
       </div>
 
-      {/* Main App Container - 75% width with scrollbars */}
-      <div className="w-full max-w-[75vw] mx-auto min-h-screen overflow-y-auto">
+      {/* Main App Container - Full width */}
+      <div className="w-full mx-auto min-h-screen overflow-y-auto">
         <Header 
           isDark={isDark} 
           onToggleTheme={toggleTheme}

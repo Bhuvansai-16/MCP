@@ -342,8 +342,8 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
   };
 
   return (
-    <div className="min-h-screen overflow-y-auto">
-      <div className="container mx-auto px-6 py-8 overflow-y-auto">
+    <div className="min-h-screen">
+      <div className="container mx-auto px-6 py-8">
         {/* Header */}
         <motion.div 
           className={`mb-8 p-8 rounded-3xl backdrop-blur-xl border ${
@@ -439,8 +439,8 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
           </div>
         </motion.div>
 
-        {/* Posts Grid - Scrollable */}
-        <div className="space-y-6 overflow-y-auto">
+        {/* Posts Grid */}
+        <div className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
           {filteredPosts.map((post, index) => {
             const typeColor = getTypeColor(post.type);
             return (
@@ -658,7 +658,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
           })}
         </div>
 
-        {/* Post Detail Modal - Scrollable */}
+        {/* Post Detail Modal */}
         <AnimatePresence>
           {selectedPost && (
             <motion.div
@@ -672,7 +672,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                 onClick={() => setSelectedPost(null)}
               />
               <motion.div
-                className={`relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl backdrop-blur-xl border ${
+                className={`relative w-full max-w-4xl max-h-[80vh] overflow-y-auto rounded-3xl backdrop-blur-xl border ${
                   isDark 
                     ? 'bg-gray-800/90 border-gray-700/50' 
                     : 'bg-white/90 border-white/50'
@@ -785,7 +785,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                     </div>
 
                     {/* Comments List */}
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
+                    <div className="space-y-4 max-h-60 overflow-y-auto">
                       {comments.map((comment) => (
                         <div key={comment.id} className="flex space-x-3">
                           <img
@@ -846,7 +846,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
           )}
         </AnimatePresence>
 
-        {/* Create Post Modal - Scrollable */}
+        {/* Create Post Modal */}
         <AnimatePresence>
           {showCreatePost && (
             <motion.div
@@ -860,7 +860,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ isDark, user, onTr
                 onClick={() => setShowCreatePost(false)}
               />
               <motion.div
-                className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl backdrop-blur-xl border ${
+                className={`relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-3xl backdrop-blur-xl border ${
                   isDark 
                     ? 'bg-gray-800/90 border-gray-700/50' 
                     : 'bg-white/90 border-white/50'

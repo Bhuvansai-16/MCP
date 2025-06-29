@@ -63,7 +63,7 @@ export const Header: React.FC<HeaderProps> = ({
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="container mx-auto px-6">
+      <div className="w-full px-6">
         <div className="flex items-center justify-between">
           {/* Logo Section */}
           <motion.div 
