@@ -338,8 +338,8 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
   return (
     <div className="h-full flex flex-col rounded-3xl backdrop-blur-xl border transition-all duration-500 bg-white/30 dark:bg-gray-800/30 border-white/50 dark:border-gray-700/50 shadow-2xl overflow-hidden">
       {/* Header - Fixed */}
-      <div className="flex-shrink-0 p-6 border-b border-gray-200/20">
-        <div className="flex items-center justify-between mb-4">
+      <div className="flex-shrink-0 p-4 border-b border-gray-200/20">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-3">
             <motion.div
               className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500"
@@ -385,7 +385,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           <motion.button
             onClick={toggleFormat}
             className="flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50 dark:bg-gray-700/50 dark:hover:bg-gray-600/50 dark:text-gray-300 dark:border-gray-600/50 backdrop-blur-sm"
@@ -478,7 +478,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         </AnimatePresence>
 
         {/* Example MCPs */}
-        <div className="mt-4">
+        <div className="mt-3">
           <p className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
             <Sparkles className="w-4 h-4 inline mr-1" />
             Load Example MCP:
@@ -511,7 +511,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
 
       {/* Editor Container - Scrollable */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="h-full p-6 overflow-y-auto scrollable-container">
+        <div className="h-full p-4 overflow-y-auto scrollable-container">
           <div className="monaco-editor-container h-[500px] rounded-xl overflow-hidden border border-gray-200/20">
             <Editor
               height="100%"

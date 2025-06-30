@@ -370,10 +370,10 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   };
 
   return (
-    <div className="h-screen overflow-hidden">
-      <div className="container mx-auto px-6 py-6 h-full">
+    <div className="h-[calc(100vh-120px)] overflow-hidden">
+      <div className="container mx-auto px-6 py-4 h-full">
         {/* Header with Editor Mode Selector */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
               <motion.div
@@ -477,43 +477,47 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
         </div>
 
         {/* Main Content - Side by Side Layout */}
-        <div className="flex flex-1 space-x-6 h-[calc(100vh-240px)]">
+        <div className="flex flex-1 space-x-6 h-[calc(100vh-280px)]">
           {/* Left Side - MCP Editor */}
-          <div className="w-1/2 h-full">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={editorMode}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="h-full"
-              >
-                {renderEditor()}
-              </motion.div>
-            </AnimatePresence>
+          <div className="w-1/2 h-full overflow-hidden">
+            <div className="h-full overflow-y-auto scrollable-container">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={editorMode}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="h-full"
+                >
+                  {renderEditor()}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
           
           {/* Right Side - Agent Chat */}
-          <div className="w-1/2 h-full flex flex-col">
-            <AgentChat
-              isDark={isDark}
-              messages={messages}
-              isAgentRunning={isAgentRunning}
-              isValidMCP={isValidMCP}
-              mcpSchema={mcpSchema}
-              onStartAgent={startAgent}
-              onStopAgent={stopAgent}
-              onUserMessage={handleUserMessage}
-              onToggleExecution={() => setShowExecutionPanel(!showExecutionPanel)}
-              showExecutionPanel={showExecutionPanel}
-            />
+          <div className="w-1/2 h-full overflow-hidden">
+            <div className="h-full overflow-y-auto scrollable-container">
+              <AgentChat
+                isDark={isDark}
+                messages={messages}
+                isAgentRunning={isAgentRunning}
+                isValidMCP={isValidMCP}
+                mcpSchema={mcpSchema}
+                onStartAgent={startAgent}
+                onStopAgent={stopAgent}
+                onUserMessage={handleUserMessage}
+                onToggleExecution={() => setShowExecutionPanel(!showExecutionPanel)}
+                showExecutionPanel={showExecutionPanel}
+              />
+            </div>
           </div>
         </div>
 
         {/* Execution Visualization Panel */}
         {showExecutionPanel && (
-          <div className="mt-6" style={{ maxHeight: '300px' }}>
+          <div className="mt-4" style={{ maxHeight: '250px', overflowY: 'auto' }}>
             <ExecutionVisualization
               isDark={isDark}
               executionLogs={executionLogs}

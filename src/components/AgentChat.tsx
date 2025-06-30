@@ -185,8 +185,8 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   return (
     <div className="h-full flex flex-col rounded-3xl backdrop-blur-xl border transition-all duration-500 bg-white/30 dark:bg-gray-800/30 border-white/50 dark:border-gray-700/50 shadow-2xl overflow-hidden">
       {/* Header - Fixed */}
-      <div className="flex-shrink-0 p-6 border-b border-gray-200/20">
-        <div className="flex items-center justify-between mb-4">
+      <div className="flex-shrink-0 p-4 border-b border-gray-200/20">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-3">
             <motion.div
               className={`p-2 rounded-xl ${
@@ -453,10 +453,10 @@ export const AgentChat: React.FC<AgentChatProps> = ({
       </div>
 
       {/* Input Section - Fixed */}
-      <div className="flex-shrink-0 p-6 border-t border-gray-200/20">
+      <div className="flex-shrink-0 p-4 border-t border-gray-200/20">
         {/* Suggested Prompts for Active Agent */}
         {isAgentRunning && messages.length > 0 && suggestedPrompts.length > 0 && (
-          <div className="mb-4">
+          <div className="mb-3">
             <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
               {suggestedPrompts.slice(0, 3).map((prompt, index) => (
                 <motion.button
