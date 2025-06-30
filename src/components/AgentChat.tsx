@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Square, Send, Bot, User, Settings, Eye, EyeOff, Zap, Clock, Target, Sparkles } from 'lucide-react';
+import { Bot, User, Settings, Eye, EyeOff, Zap, Clock, Target, Sparkles } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -20,8 +20,6 @@ interface AgentChatProps {
   isAgentRunning: boolean;
   isValidMCP: boolean;
   mcpSchema: any;
-  onStartAgent: () => void;
-  onStopAgent: () => void;
   onUserMessage: (message: string) => void;
   onToggleExecution: () => void;
   showExecutionPanel: boolean;
@@ -33,8 +31,6 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   isAgentRunning,
   isValidMCP,
   mcpSchema,
-  onStartAgent,
-  onStopAgent,
   onUserMessage,
   onToggleExecution,
   showExecutionPanel
@@ -52,15 +48,15 @@ export const AgentChat: React.FC<AgentChatProps> = ({
     }
   }, [messages]);
 
-  // Focus input when agent starts
+  // Focus input when component mounts
   useEffect(() => {
-    if (isAgentRunning && inputRef.current) {
+    if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, [isAgentRunning]);
+  }, []);
 
   const handleSendMessage = () => {
-    if (!inputMessage.trim() || !isAgentRunning) return;
+    if (!inputMessage.trim()) return;
 
     onUserMessage(inputMessage.trim());
     setInputMessage('');
@@ -184,12 +180,8 @@ export const AgentChat: React.FC<AgentChatProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <motion.div
-              className={`p-2 rounded-xl ${
-                isAgentRunning 
-                  ? 'bg-gradient-to-br from-green-500 to-emerald-500' 
-                  : 'bg-gradient-to-br from-gray-500 to-gray-600'
-              }`}
-              animate={isAgentRunning ? { scale: [1, 1.1, 1] } : {}}
+              className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500"
+              animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
               <Bot className="w-6 h-6 text-white" />
@@ -199,10 +191,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                 Agent Chat
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {isAgentRunning 
-                  ? `Active with ${mcpSchema?.name || 'MCP'}` 
-                  : 'Agent stopped'
-                }
+                Active with {mcpSchema?.name || 'MCP'}
               </p>
             </div>
           </div>
@@ -225,35 +214,6 @@ export const AgentChat: React.FC<AgentChatProps> = ({
             >
               {showExecutionPanel ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </motion.button>
-
-            {/* Start/Stop Agent Button */}
-            <motion.button
-              onClick={isAgentRunning ? onStopAgent : onStartAgent}
-              disabled={!isValidMCP}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                !isValidMCP
-                  ? isDark
-                    ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed border border-gray-600/50'
-                    : 'bg-gray-200/50 text-gray-500 cursor-not-allowed border border-gray-300/50'
-                  : isAgentRunning
-                    ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30'
-                    : 'bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30'
-              } backdrop-blur-sm`}
-              whileHover={isValidMCP ? { scale: 1.05 } : {}}
-              whileTap={isValidMCP ? { scale: 0.95 } : {}}
-            >
-              {isAgentRunning ? (
-                <>
-                  <Square className="w-4 h-4" />
-                  <span>Stop Agent</span>
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4" />
-                  <span>Start Agent</span>
-                </>
-              )}
-            </motion.button>
           </div>
         </div>
 
@@ -271,7 +231,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
       <div className="flex-1 min-h-0 overflow-hidden">
         <div 
           ref={chatContainerRef}
-          className="h-full p-6 overflow-y-auto"
+          className="h-full p-6 overflow-y-auto scrollable-container"
           style={{ maxHeight: '100%' }}
         >
           {messages.length === 0 ? (
@@ -289,18 +249,15 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                 <h3 className={`text-lg font-semibold mb-2 ${
                   isDark ? 'text-gray-300' : 'text-gray-700'
                 }`}>
-                  {isAgentRunning ? 'Agent Ready' : 'Start the Agent'}
+                  Agent Ready
                 </h3>
                 <p className={`text-sm mb-6 ${
                   isDark ? 'text-gray-500' : 'text-gray-600'
                 }`}>
-                  {isAgentRunning 
-                    ? 'Ask me anything using the available MCP tools!'
-                    : 'Load a valid MCP schema and start the agent to begin chatting.'
-                  }
+                  Ask me anything using the available MCP tools!
                 </p>
 
-                {isAgentRunning && suggestedPrompts.length > 0 && (
+                {suggestedPrompts.length > 0 && (
                   <div>
                     <p className={`text-sm font-medium mb-3 ${
                       isDark ? 'text-gray-400' : 'text-gray-600'
@@ -450,7 +407,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
       {/* Input Section - Fixed */}
       <div className="flex-shrink-0 p-6 border-t border-gray-200/20">
         {/* Suggested Prompts for Active Agent */}
-        {isAgentRunning && messages.length > 0 && suggestedPrompts.length > 0 && (
+        {messages.length > 0 && suggestedPrompts.length > 0 && (
           <div className="mb-4">
             <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
               {suggestedPrompts.slice(0, 3).map((prompt, index) => (
@@ -479,32 +436,27 @@ export const AgentChat: React.FC<AgentChatProps> = ({
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={
-              isAgentRunning 
-                ? "Ask me anything using the available MCP tools..." 
-                : "Start the agent to begin chatting..."
-            }
-            disabled={!isAgentRunning}
+            placeholder="Ask me anything using the available MCP tools..."
             className={`flex-1 px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
               isDark 
                 ? 'bg-gray-900/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500' 
                 : 'bg-white/50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500'
-            } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+            } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm`}
           />
           <motion.button
             onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || !isAgentRunning}
+            disabled={!inputMessage.trim()}
             className={`p-3 rounded-xl transition-all duration-300 ${
-              inputMessage.trim() && isAgentRunning
+              inputMessage.trim()
                 ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg'
                 : isDark
                   ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
                   : 'bg-gray-200/50 text-gray-500 cursor-not-allowed'
             }`}
-            whileHover={inputMessage.trim() && isAgentRunning ? { scale: 1.05 } : {}}
-            whileTap={inputMessage.trim() && isAgentRunning ? { scale: 0.95 } : {}}
+            whileHover={inputMessage.trim() ? { scale: 1.05 } : {}}
+            whileTap={inputMessage.trim() ? { scale: 0.95 } : {}}
           >
-            <Send className="w-5 h-5" />
+            <Zap className="w-5 h-5" />
           </motion.button>
         </div>
       </div>

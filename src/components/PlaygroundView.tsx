@@ -41,7 +41,6 @@ type ViewMode = 'editor' | 'chat';
 export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialMCP }) => {
   const [mcpSchema, setMcpSchema] = useState<MCPSchema | null>(null);
   const [isValidMCP, setIsValidMCP] = useState(false);
-  const [isAgentRunning, setIsAgentRunning] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [executionLogs, setExecutionLogs] = useState<ExecutionLog[]>([]);
   const [showExecutionPanel, setShowExecutionPanel] = useState(false);
@@ -54,17 +53,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
       console.log('📋 Loading initial MCP:', initialMCP.name);
       setMcpSchema(initialMCP);
       setIsValidMCP(true);
-      
-      // Add system message about loaded MCP
-      const systemMessage: ChatMessage = {
-        id: Date.now().toString(),
-        type: 'system',
-        content: `🎯 MCP "${initialMCP.name}" loaded successfully! Available tools: ${initialMCP.tools.map(t => t.name).join(', ')}`,
-        timestamp: new Date()
-      };
-      
-      setMessages([systemMessage]);
-      console.log('✅ System message added for loaded MCP');
     }
   }, [initialMCP]);
 
@@ -72,11 +60,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     console.log('🔍 MCP validation result:', { isValid, schema: schema?.name });
     setMcpSchema(schema);
     setIsValidMCP(isValid);
-    if (!isValid) {
-      setIsAgentRunning(false);
-      setMessages([]);
-      setExecutionLogs([]);
-    }
   };
 
   const handleTemplateSelect = (template: MCPSchema) => {
@@ -84,16 +67,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     setMcpSchema(template);
     setIsValidMCP(true);
     setEditorMode('code'); // Switch to code editor to show the loaded template
-    
-    // Add system message about loaded template
-    const systemMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'system',
-      content: `📋 Template "${template.name}" loaded! You can now chat with the agent to test it.`,
-      timestamp: new Date()
-    };
-    
-    setMessages([systemMessage]);
   };
 
   const handleVisualMCPUpdate = (schema: MCPSchema) => {
@@ -102,42 +75,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     setIsValidMCP(true);
   };
 
-  const startAgent = () => {
-    if (!isValidMCP || !mcpSchema) {
-      console.warn('⚠️ Cannot start agent: invalid MCP or no schema');
-      return;
-    }
-    
-    console.log('🤖 Starting agent with MCP:', mcpSchema.name);
-    setIsAgentRunning(true);
-    
-    const systemMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'system',
-      content: `🤖 Agent started with MCP "${mcpSchema.name}". Available tools: ${mcpSchema.tools.map(t => t.name).join(', ')}`,
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, systemMessage]);
-  };
-
-  const stopAgent = () => {
-    console.log('🛑 Stopping agent');
-    setIsAgentRunning(false);
-    
-    const systemMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'system',
-      content: '🛑 Agent stopped',
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, systemMessage]);
-  };
-
   const handleUserMessage = async (content: string) => {
-    if (!isAgentRunning || !mcpSchema) {
-      console.warn('⚠️ Cannot process message: agent not running or no schema');
+    if (!mcpSchema) {
+      console.warn('⚠️ Cannot process message: no schema');
       return;
     }
 
@@ -313,10 +253,17 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     if (!isValidMCP || !mcpSchema) {
       return;
     }
+    
+    // Auto-start the agent and add welcome message
+    const systemMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'system',
+      content: `🤖 Agent started with MCP "${mcpSchema.name}". Available tools: ${mcpSchema.tools.map(t => t.name).join(', ')}`,
+      timestamp: new Date()
+    };
+    
+    setMessages([systemMessage]);
     setViewMode('chat');
-    if (!isAgentRunning) {
-      startAgent();
-    }
   };
 
   const handleBackToEditor = () => {
@@ -593,11 +540,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                 <AgentChat
                   isDark={isDark}
                   messages={messages}
-                  isAgentRunning={isAgentRunning}
+                  isAgentRunning={true}
                   isValidMCP={isValidMCP}
                   mcpSchema={mcpSchema}
-                  onStartAgent={startAgent}
-                  onStopAgent={stopAgent}
                   onUserMessage={handleUserMessage}
                   onToggleExecution={() => setShowExecutionPanel(!showExecutionPanel)}
                   showExecutionPanel={showExecutionPanel}
