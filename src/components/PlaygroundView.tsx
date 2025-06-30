@@ -438,72 +438,76 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
               </div>
 
               {/* Editor Mode Selector */}
-              <div className="flex-shrink-0 mb-4 p-2 rounded-2xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
-                <div className="flex space-x-2">
-                  <motion.button
-                    onClick={() => setEditorMode('templates')}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                      editorMode === 'templates'
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
-                        : isDark
-                          ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <FileTemplate className="w-4 h-4" />
-                    <span>Templates</span>
-                  </motion.button>
+              <div className="flex-shrink-0 mb-4 flex justify-center">
+                <div className="p-2 rounded-2xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
+                  <div className="flex space-x-2">
+                    <motion.button
+                      onClick={() => setEditorMode('templates')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                        editorMode === 'templates'
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
+                          : isDark
+                            ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <FileTemplate className="w-4 h-4" />
+                      <span>Templates</span>
+                    </motion.button>
 
-                  <motion.button
-                    onClick={() => setEditorMode('visual')}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                      editorMode === 'visual'
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                        : isDark
-                          ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Palette className="w-4 h-4" />
-                    <span>Visual</span>
-                  </motion.button>
+                    <motion.button
+                      onClick={() => setEditorMode('visual')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                        editorMode === 'visual'
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                          : isDark
+                            ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Palette className="w-4 h-4" />
+                      <span>Visual</span>
+                    </motion.button>
 
-                  <motion.button
-                    onClick={() => setEditorMode('code')}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                      editorMode === 'code'
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                        : isDark
-                          ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Code className="w-4 h-4" />
-                    <span>Code</span>
-                  </motion.button>
+                    <motion.button
+                      onClick={() => setEditorMode('code')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                        editorMode === 'code'
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                          : isDark
+                            ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Code className="w-4 h-4" />
+                      <span>Code</span>
+                    </motion.button>
+                  </div>
                 </div>
               </div>
 
-              {/* Editor Content */}
-              <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 400px)' }}>
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={editorMode}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="h-full"
-                  >
-                    {renderEditor()}
-                  </motion.div>
-                </AnimatePresence>
+              {/* Editor Content - Centered with max width */}
+              <div className="flex-1 min-h-0 flex justify-center">
+                <div className="w-full max-w-5xl" style={{ height: 'calc(100vh - 380px)' }}>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={editorMode}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3 }}
+                      className="h-full"
+                    >
+                      {renderEditor()}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
               </div>
             </motion.div>
           ) : (
@@ -587,7 +591,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
               </div>
 
               {/* Chat Content */}
-              <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 400px)' }}>
+              <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 380px)' }}>
                 <AgentChat
                   isDark={isDark}
                   messages={messages}
