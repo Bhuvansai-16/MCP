@@ -396,7 +396,7 @@ html {
   border-color: rgba(99, 102, 241, 0.5);
 }
 
-/* PLAYGROUND SPECIFIC STYLES - ENHANCED */
+/* PLAYGROUND SPECIFIC STYLES - ENHANCED WITH FIXED SCROLLBARS */
 .playground-container {
   height: calc(100vh - 120px);
   overflow: hidden;
@@ -418,8 +418,7 @@ html {
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
-  /* Increased height for better view */
-  min-height: 700px;
+  height: 100%;
 }
 
 .editor-mode-selector {
@@ -430,8 +429,7 @@ html {
   flex: 1;
   overflow: hidden;
   min-height: 0;
-  /* Ensure minimum height for editor visibility */
-  min-height: 650px;
+  height: 100%;
 }
 
 .chat-panel {
@@ -439,24 +437,23 @@ html {
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
-  /* Increased height for better view */
-  min-height: 700px;
-}
-
-/* Monaco Editor Container - Enhanced */
-.monaco-editor-container {
   height: 100%;
-  overflow: hidden;
-  min-height: 650px;
-  border-radius: 12px;
 }
 
-/* Chat Messages Container - Enhanced */
+/* Monaco Editor Container - Fixed Height with Scrollbar */
+.monaco-editor-container {
+  height: 600px !important; /* Fixed height to prevent growing */
+  overflow: hidden;
+  border-radius: 12px;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Chat Messages Container - Fixed Height with Scrollbar */
 .chat-messages-container {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  /* Better scrolling performance */
+  max-height: 500px; /* Fixed max height to prevent growing */
   scroll-behavior: smooth;
   scrollbar-width: thin;
 }
@@ -489,6 +486,30 @@ html {
   contain: layout style paint;
 }
 
+/* Scrollable containers with fixed heights */
+.scrollable-container {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.5) transparent;
+}
+
+.scrollable-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollable-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+  border-radius: 4px;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #2563eb, #7c3aed);
+}
+
 @media (max-width: 1024px) {
   .playground-grid {
     grid-template-columns: 1fr;
@@ -498,6 +519,7 @@ html {
   .editor-panel,
   .chat-panel {
     min-height: 400px;
+    max-height: 50vh;
   }
   
   .editor-content {
@@ -505,7 +527,11 @@ html {
   }
   
   .monaco-editor-container {
-    min-height: 350px;
+    height: 400px !important;
+  }
+  
+  .chat-messages-container {
+    max-height: 300px;
   }
 }
 

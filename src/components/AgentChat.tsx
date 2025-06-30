@@ -175,7 +175,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   const suggestedPrompts = getSuggestedPrompts();
 
   return (
-    <div className="h-full rounded-3xl backdrop-blur-xl border transition-all duration-500 bg-white/30 dark:bg-gray-800/30 border-white/50 dark:border-gray-700/50 shadow-2xl flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col rounded-3xl backdrop-blur-xl border transition-all duration-500 bg-white/30 dark:bg-gray-800/30 border-white/50 dark:border-gray-700/50 shadow-2xl overflow-hidden">
       {/* Header - Fixed */}
       <div className="flex-shrink-0 p-6 border-b border-gray-200/20">
         <div className="flex items-center justify-between mb-4">
@@ -264,181 +264,183 @@ export const AgentChat: React.FC<AgentChatProps> = ({
         )}
       </div>
 
-      {/* Messages - Scrollable */}
-      <div className="chat-messages-container flex-1 p-6 overflow-y-auto">
-        {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center">
-            <motion.div
-              className={`p-8 rounded-2xl ${
-                isDark ? 'bg-gray-700/30' : 'bg-gray-100/30'
-              } backdrop-blur-sm`}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <Bot className={`w-16 h-16 mx-auto mb-4 ${
-                isDark ? 'text-gray-500' : 'text-gray-400'
-              }`} />
-              <h3 className={`text-lg font-semibold mb-2 ${
-                isDark ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                {isAgentRunning ? 'Agent Ready' : 'Start the Agent'}
-              </h3>
-              <p className={`text-sm mb-6 ${
-                isDark ? 'text-gray-500' : 'text-gray-600'
-              }`}>
-                {isAgentRunning 
-                  ? 'Ask me anything using the available MCP tools!'
-                  : 'Load a valid MCP schema and start the agent to begin chatting.'
-                }
-              </p>
+      {/* Messages Container - Scrollable */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="h-full p-6 overflow-y-auto">
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center">
+              <motion.div
+                className={`p-8 rounded-2xl ${
+                  isDark ? 'bg-gray-700/30' : 'bg-gray-100/30'
+                } backdrop-blur-sm`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <Bot className={`w-16 h-16 mx-auto mb-4 ${
+                  isDark ? 'text-gray-500' : 'text-gray-400'
+                }`} />
+                <h3 className={`text-lg font-semibold mb-2 ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  {isAgentRunning ? 'Agent Ready' : 'Start the Agent'}
+                </h3>
+                <p className={`text-sm mb-6 ${
+                  isDark ? 'text-gray-500' : 'text-gray-600'
+                }`}>
+                  {isAgentRunning 
+                    ? 'Ask me anything using the available MCP tools!'
+                    : 'Load a valid MCP schema and start the agent to begin chatting.'
+                  }
+                </p>
 
-              {isAgentRunning && suggestedPrompts.length > 0 && (
-                <div>
-                  <p className={`text-sm font-medium mb-3 ${
-                    isDark ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    <Sparkles className="w-4 h-4 inline mr-2" />
-                    Try these suggestions:
-                  </p>
-                  <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
-                    {suggestedPrompts.map((prompt, index) => (
-                      <motion.button
-                        key={index}
-                        onClick={() => handleSuggestedPrompt(prompt)}
-                        className={`text-left px-4 py-3 rounded-xl text-sm transition-all duration-300 ${
-                          isDark 
-                            ? 'bg-gray-600/30 hover:bg-gray-600/50 text-gray-300 border border-gray-600/30 hover:border-gray-500/50' 
-                            : 'bg-white/50 hover:bg-white/70 text-gray-700 border border-gray-200/50 hover:border-gray-300/50'
-                        } backdrop-blur-sm`}
-                        whileHover={{ scale: 1.02, x: 4 }}
-                        whileTap={{ scale: 0.98 }}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <Zap className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                          <span>"{prompt}"</span>
-                        </div>
-                      </motion.button>
-                    ))}
+                {isAgentRunning && suggestedPrompts.length > 0 && (
+                  <div>
+                    <p className={`text-sm font-medium mb-3 ${
+                      isDark ? 'text-gray-400' : 'text-gray-600'
+                    }`}>
+                      <Sparkles className="w-4 h-4 inline mr-2" />
+                      Try these suggestions:
+                    </p>
+                    <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
+                      {suggestedPrompts.map((prompt, index) => (
+                        <motion.button
+                          key={index}
+                          onClick={() => handleSuggestedPrompt(prompt)}
+                          className={`text-left px-4 py-3 rounded-xl text-sm transition-all duration-300 ${
+                            isDark 
+                              ? 'bg-gray-600/30 hover:bg-gray-600/50 text-gray-300 border border-gray-600/30 hover:border-gray-500/50' 
+                              : 'bg-white/50 hover:bg-white/70 text-gray-700 border border-gray-200/50 hover:border-gray-300/50'
+                          } backdrop-blur-sm`}
+                          whileHover={{ scale: 1.02, x: 4 }}
+                          whileTap={{ scale: 0.98 }}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <Zap className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                            <span>"{prompt}"</span>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </motion.div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <AnimatePresence>
-              {messages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  className={`flex items-start space-x-3 ${
-                    message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-                  }`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className={`p-2 rounded-xl ${
-                    message.type === 'user' 
-                      ? 'bg-blue-500/20' 
-                      : message.type === 'agent'
-                        ? 'bg-purple-500/20'
-                        : 'bg-gray-500/20'
-                  }`}>
-                    {getMessageIcon(message.type)}
-                  </div>
-                  
-                  <div className={`flex-1 max-w-[80%] ${
-                    message.type === 'user' ? 'text-right' : ''
-                  }`}>
-                    <div className={`p-4 rounded-2xl border backdrop-blur-sm ${getMessageColors(message.type)}`}>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                        {message.content}
-                      </p>
-                      
-                      {/* Tool Calls */}
-                      {message.toolCalls && message.toolCalls.length > 0 && (
-                        <div className="mt-3 space-y-2">
-                          {message.toolCalls.map((call, index) => (
-                            <div
-                              key={index}
-                              className={`p-3 rounded-xl ${
-                                isDark ? 'bg-gray-800/50' : 'bg-white/50'
-                              } border border-gray-200/20`}
-                            >
-                              <div className="flex items-center space-x-2 mb-2">
-                                <Zap className="w-4 h-4 text-yellow-500" />
-                                <span className="text-xs font-medium">Tool: {call.tool}</span>
-                              </div>
-                              <div className="text-xs space-y-1">
-                                <div>
-                                  <span className="font-medium">Input:</span> {JSON.stringify(call.input)}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Output:</span> {JSON.stringify(call.output)}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                )}
+              </motion.div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <AnimatePresence>
+                {messages.map((message) => (
+                  <motion.div
+                    key={message.id}
+                    className={`flex items-start space-x-3 ${
+                      message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                    }`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className={`p-2 rounded-xl ${
+                      message.type === 'user' 
+                        ? 'bg-blue-500/20' 
+                        : message.type === 'agent'
+                          ? 'bg-purple-500/20'
+                          : 'bg-gray-500/20'
+                    }`}>
+                      {getMessageIcon(message.type)}
                     </div>
                     
-                    <p className={`text-xs mt-1 ${
-                      isDark ? 'text-gray-500' : 'text-gray-400'
-                    } ${message.type === 'user' ? 'text-right' : ''}`}>
-                      {formatTimestamp(message.timestamp)}
-                    </p>
+                    <div className={`flex-1 max-w-[80%] ${
+                      message.type === 'user' ? 'text-right' : ''
+                    }`}>
+                      <div className={`p-4 rounded-2xl border backdrop-blur-sm ${getMessageColors(message.type)}`}>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {message.content}
+                        </p>
+                        
+                        {/* Tool Calls */}
+                        {message.toolCalls && message.toolCalls.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {message.toolCalls.map((call, index) => (
+                              <div
+                                key={index}
+                                className={`p-3 rounded-xl ${
+                                  isDark ? 'bg-gray-800/50' : 'bg-white/50'
+                                } border border-gray-200/20`}
+                              >
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <Zap className="w-4 h-4 text-yellow-500" />
+                                  <span className="text-xs font-medium">Tool: {call.tool}</span>
+                                </div>
+                                <div className="text-xs space-y-1">
+                                  <div>
+                                    <span className="font-medium">Input:</span> {JSON.stringify(call.input)}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Output:</span> {JSON.stringify(call.output)}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <p className={`text-xs mt-1 ${
+                        isDark ? 'text-gray-500' : 'text-gray-400'
+                      } ${message.type === 'user' ? 'text-right' : ''}`}>
+                        {formatTimestamp(message.timestamp)}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {/* Typing Indicator */}
+              {isTyping && (
+                <motion.div
+                  className="flex items-start space-x-3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="p-2 rounded-xl bg-purple-500/20">
+                    <Bot className="w-5 h-5" />
+                  </div>
+                  <div className={`p-4 rounded-2xl border backdrop-blur-sm ${
+                    isDark 
+                      ? 'bg-purple-500/20 border-purple-500/30 text-purple-100' 
+                      : 'bg-purple-50 border-purple-200 text-purple-900'
+                  }`}>
+                    <div className="flex space-x-1">
+                      <motion.div
+                        className="w-2 h-2 bg-current rounded-full"
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+                      />
+                      <motion.div
+                        className="w-2 h-2 bg-current rounded-full"
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+                      />
+                      <motion.div
+                        className="w-2 h-2 bg-current rounded-full"
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
+                      />
+                    </div>
                   </div>
                 </motion.div>
-              ))}
-            </AnimatePresence>
+              )}
 
-            {/* Typing Indicator */}
-            {isTyping && (
-              <motion.div
-                className="flex items-start space-x-3"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <div className="p-2 rounded-xl bg-purple-500/20">
-                  <Bot className="w-5 h-5" />
-                </div>
-                <div className={`p-4 rounded-2xl border backdrop-blur-sm ${
-                  isDark 
-                    ? 'bg-purple-500/20 border-purple-500/30 text-purple-100' 
-                    : 'bg-purple-50 border-purple-200 text-purple-900'
-                }`}>
-                  <div className="flex space-x-1">
-                    <motion.div
-                      className="w-2 h-2 bg-current rounded-full"
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
-                    />
-                    <motion.div
-                      className="w-2 h-2 bg-current rounded-full"
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
-                    />
-                    <motion.div
-                      className="w-2 h-2 bg-current rounded-full"
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-        )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Input - Fixed */}
+      {/* Input Section - Fixed */}
       <div className="flex-shrink-0 p-6 border-t border-gray-200/20">
         {/* Suggested Prompts for Active Agent */}
         {isAgentRunning && messages.length > 0 && suggestedPrompts.length > 0 && (

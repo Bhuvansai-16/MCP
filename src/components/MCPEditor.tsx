@@ -336,8 +336,8 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
   };
 
   return (
-    <div className="h-full rounded-3xl backdrop-blur-xl border transition-all duration-500 bg-white/30 dark:bg-gray-800/30 border-white/50 dark:border-gray-700/50 shadow-2xl flex flex-col overflow-hidden">
-      {/* Header */}
+    <div className="h-full flex flex-col rounded-3xl backdrop-blur-xl border transition-all duration-500 bg-white/30 dark:bg-gray-800/30 border-white/50 dark:border-gray-700/50 shadow-2xl overflow-hidden">
+      {/* Header - Fixed */}
       <div className="flex-shrink-0 p-6 border-b border-gray-200/20">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
@@ -509,85 +509,87 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         </div>
       </div>
 
-      {/* Editor */}
-      <div className="flex-1 p-6 overflow-hidden">
-        <div className="monaco-editor-container h-full rounded-xl overflow-hidden border border-gray-200/20">
-          <Editor
-            height="100%"
-            language={isJsonMode ? 'json' : 'yaml'}
-            value={editorValue}
-            onChange={(value) => setEditorValue(value || '')}
-            theme={isDark ? 'vs-dark' : 'light'}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              lineNumbers: 'on',
-              roundedSelection: false,
-              scrollBeyondLastLine: false,
-              automaticLayout: true,
-              tabSize: 2,
-              wordWrap: 'on',
-              folding: true,
-              lineDecorationsWidth: 10,
-              lineNumbersMinChars: 3,
-              glyphMargin: false,
-              scrollbar: {
-                vertical: 'visible',
-                horizontal: 'visible',
-                verticalScrollbarSize: 14,
-                horizontalScrollbarSize: 14,
-                alwaysConsumeMouseWheel: false,
-                useShadows: true,
-                verticalHasArrows: false,
-                horizontalHasArrows: false,
-                verticalSliderSize: 14,
-                horizontalSliderSize: 14,
-                arrowSize: 11
-              },
-              overviewRulerLanes: 0,
-              hideCursorInOverviewRuler: true,
-              overviewRulerBorder: false
-            }}
-          />
+      {/* Editor Container - Scrollable */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="h-full p-6 overflow-y-auto">
+          <div className="monaco-editor-container h-[600px] rounded-xl overflow-hidden border border-gray-200/20">
+            <Editor
+              height="100%"
+              language={isJsonMode ? 'json' : 'yaml'}
+              value={editorValue}
+              onChange={(value) => setEditorValue(value || '')}
+              theme={isDark ? 'vs-dark' : 'light'}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                lineNumbers: 'on',
+                roundedSelection: false,
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                tabSize: 2,
+                wordWrap: 'on',
+                folding: true,
+                lineDecorationsWidth: 10,
+                lineNumbersMinChars: 3,
+                glyphMargin: false,
+                scrollbar: {
+                  vertical: 'visible',
+                  horizontal: 'visible',
+                  verticalScrollbarSize: 14,
+                  horizontalScrollbarSize: 14,
+                  alwaysConsumeMouseWheel: false,
+                  useShadows: true,
+                  verticalHasArrows: false,
+                  horizontalHasArrows: false,
+                  verticalSliderSize: 14,
+                  horizontalSliderSize: 14,
+                  arrowSize: 11
+                },
+                overviewRulerLanes: 0,
+                hideCursorInOverviewRuler: true,
+                overviewRulerBorder: false
+              }}
+            />
+          </div>
+
+          {/* Validation Error */}
+          {validationError && (
+            <motion.div
+              className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-red-400 font-medium text-sm">Validation Error</p>
+                  <p className="text-red-300 text-sm mt-1">{validationError}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* MCP Info */}
+          {isValid && mcpSchema && (
+            <motion.div
+              className="mt-4 p-4 rounded-xl bg-green-50/50 border border-green-200/50 dark:bg-green-500/10 dark:border-green-500/20"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="flex items-start space-x-2">
+                <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-green-400 font-medium text-sm">
+                    {mcpSchema.name} v{mcpSchema.version}
+                  </p>
+                  <p className="text-green-300 text-sm mt-1">
+                    {mcpSchema.tools.length} tool{mcpSchema.tools.length !== 1 ? 's' : ''} available: {mcpSchema.tools.map((t: any) => t.name).join(', ')}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
-
-        {/* Validation Error */}
-        {validationError && (
-          <motion.div
-            className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex items-start space-x-2">
-              <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-red-400 font-medium text-sm">Validation Error</p>
-                <p className="text-red-300 text-sm mt-1">{validationError}</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* MCP Info */}
-        {isValid && mcpSchema && (
-          <motion.div
-            className="mt-4 p-4 rounded-xl bg-green-50/50 border border-green-200/50 dark:bg-green-500/10 dark:border-green-500/20"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex items-start space-x-2">
-              <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-green-400 font-medium text-sm">
-                  {mcpSchema.name} v{mcpSchema.version}
-                </p>
-                <p className="text-green-300 text-sm mt-1">
-                  {mcpSchema.tools.length} tool{mcpSchema.tools.length !== 1 ? 's' : ''} available: {mcpSchema.tools.map((t: any) => t.name).join(', ')}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );
