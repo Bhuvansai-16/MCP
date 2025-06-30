@@ -48,8 +48,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
 
   // Load initial MCP if provided
   useEffect(() => {
-    console.log('🎮 PlaygroundView: initialMCP changed:', initialMCP);
-    
     if (initialMCP) {
       console.log('📋 Loading initial MCP:', initialMCP.name);
       setMcpSchema(initialMCP);
@@ -342,8 +340,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   return (
     <div className="h-full overflow-hidden">
       <div className="container mx-auto px-6 py-8 h-full flex flex-col">
-        {/* Playground Grid - Reduced height by additional 30px (total 50px reduction) */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6 min-h-0" style={{ height: 'calc(100vh - 230px)' }}>
+        {/* Playground Grid - Optimized for 75% screen size */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6 min-h-0" style={{ height: 'calc(100vh - 300px)' }}>
           {/* Editor Panel - 60% width (3/5) */}
           <div className="lg:col-span-3 flex flex-col min-h-0">
             {/* Editor Mode Selector */}
@@ -399,8 +397,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
               </div>
             </div>
 
-            {/* Editor Content - Scrollable with additional height reduction */}
-            <div className="flex-1 min-h-0" style={{ height: 'calc(100% - 110px)' }}>
+            {/* Editor Content - Optimized height for 75% screen */}
+            <div className="flex-1 min-h-0" style={{ height: 'calc(100% - 140px)' }}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={editorMode}
@@ -416,8 +414,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
             </div>
           </div>
 
-          {/* Chat Panel - 40% width (2/5) with additional height reduction */}
-          <div className="lg:col-span-2 flex flex-col min-h-0" style={{ height: 'calc(100% - 50px)' }}>
+          {/* Chat Panel - 40% width (2/5) - Optimized height for 75% screen */}
+          <div className="lg:col-span-2 flex flex-col min-h-0" style={{ height: 'calc(100% - 80px)' }}>
             <AgentChat
               isDark={isDark}
               messages={messages}
