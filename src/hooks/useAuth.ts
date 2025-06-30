@@ -141,58 +141,19 @@ export const useAuth = () => {
 
   // Legacy methods for backward compatibility
   const login = (token: string, userData: AuthUser) => {
-    // This is now handled by Supabase auth state changes
-    console.warn('login() method is deprecated. Use signIn() instead.');
+    // Mock implementation for demo purposes
+    setUser({
+      id: userData.id || 'mock-id',
+      email: userData.email || 'user@example.com',
+      name: userData.name || 'Demo User',
+      avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=demo`,
+      verified: true,
+      provider: 'email'
+    });
   };
 
   const logout = async () => {
     return await signOut();
-  };
-
-  const loginWithGoogle = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      return { success: true, data };
-    } catch (error: any) {
-      console.error('Google login error:', error);
-      return { success: false, error: error.message };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loginWithGithub = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      return { success: true, data };
-    } catch (error: any) {
-      console.error('GitHub login error:', error);
-      return { success: false, error: error.message };
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return {
@@ -206,8 +167,6 @@ export const useAuth = () => {
     resetPassword,
     // Legacy methods
     login,
-    logout,
-    loginWithGoogle,
-    loginWithGithub
+    logout
   };
 };

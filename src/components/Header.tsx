@@ -58,36 +58,36 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <motion.header 
-      className="sticky top-0 z-50 py-4 transition-all duration-500 w-full"
+      className="sticky top-0 z-50 py-3 transition-all duration-500 w-full"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="w-full px-6">
+      <div className="w-full px-4">
         <div className="flex items-center justify-between">
           {/* Logo Section */}
           <motion.div 
-            className="flex items-center space-x-4"
+            className="flex items-center space-x-3"
             whileHover={{ scale: 1.02 }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <div className="relative p-3 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg">
-              <Activity className="w-8 h-8 text-white" />
+            <div className="relative p-2 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg">
+              <Activity className="w-6 h-6 text-white" />
               <motion.div
-                className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 opacity-0"
+                className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-400 to-purple-400 opacity-0"
                 whileHover={{ opacity: 0.3 }}
                 transition={{ duration: 0.2 }}
               />
             </div>
             <div>
-              <h1 className={`text-2xl font-bold ${
+              <h1 className={`text-xl font-bold ${
                 isDark 
                   ? 'text-white' 
                   : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'
               }`}>
                 MCP.playground
               </h1>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 Explore, benchmark & run LLM prompt strategies
               </p>
             </div>
@@ -102,20 +102,20 @@ export const Header: React.FC<HeaderProps> = ({
               whileTap={{ scale: 0.95 }}
             >
               {showMobileMenu ? (
-                <X className={`w-6 h-6 ${isDark ? 'text-white' : 'text-gray-900'}`} />
+                <X className={`w-5 h-5 ${isDark ? 'text-white' : 'text-gray-900'}`} />
               ) : (
-                <Menu className={`w-6 h-6 ${isDark ? 'text-white' : 'text-gray-900'}`} />
+                <Menu className={`w-5 h-5 ${isDark ? 'text-white' : 'text-gray-900'}`} />
               )}
             </motion.button>
           </div>
           
           {/* Navigation Tabs - Center - IMPROVED WITH CURVES (Desktop) */}
-          <div className="hidden md:flex nav-container rounded-full backdrop-blur-md border border-gray-200/20 p-1.5 bg-white/5">
+          <div className="hidden md:flex nav-container rounded-full backdrop-blur-md border border-gray-200/20 p-1 bg-white/5">
             {tabs.map(({ id, label, icon: Icon, description }) => (
               <motion.button
                 key={id}
                 onClick={() => onTabChange(id)}
-                className={`nav-item ${activeTab === id ? 'nav-item-active' : ''} relative flex items-center space-x-2 px-4 py-3 font-medium transition-all duration-300 group ${
+                className={`nav-item ${activeTab === id ? 'nav-item-active' : ''} relative flex items-center space-x-1 px-3 py-2 font-medium transition-all duration-300 group ${
                   activeTab === id
                     ? 'text-white shadow-lg'
                     : isDark
@@ -135,45 +135,35 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
                 
                 {/* Tab content */}
-                <div className="relative z-10 flex items-center space-x-2">
+                <div className="relative z-10 flex items-center space-x-1">
                   <Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{label}</span>
-                  <span className="sm:hidden">{label.split(' ')[0]}</span>
-                </div>
-
-                {/* Tooltip */}
-                <div className={`absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20 whitespace-nowrap ${
-                  isDark ? 'bg-gray-800 text-white border border-gray-600' : 'bg-white text-gray-900 border border-gray-200'
-                } shadow-lg backdrop-blur-sm`}>
-                  {description}
-                  <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 w-2 h-2 ${
-                    isDark ? 'bg-gray-800 border-l border-t border-gray-600' : 'bg-white border-l border-t border-gray-200'
-                  } rotate-45`} />
+                  <span className="hidden sm:inline text-sm">{label}</span>
+                  <span className="sm:hidden text-sm">{label.split(' ')[0]}</span>
                 </div>
               </motion.button>
             ))}
           </div>
           
           {/* Right Actions (Desktop) */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-2">
             <motion.button
               onClick={onToggleTheme}
-              className="btn-rounded"
+              className="btn-rounded p-2 rounded-lg bg-gray-100/30 dark:bg-gray-700/30"
               whileHover={{ scale: 1.1, rotate: 180 }}
               whileTap={{ scale: 0.9 }}
             >
-              {isDark ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-600" />}
+              {isDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4 text-gray-600" />}
             </motion.button>
             
             <motion.a
-              href="https://github.com/Bhuvansai-16/MCP.git"
+              href="https://github.com/modelcontextprotocol/servers"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-rounded flex items-center space-x-2 px-4 py-3"
+              className="btn-rounded flex items-center space-x-1 px-3 py-2 rounded-lg bg-gray-100/30 dark:bg-gray-700/30 text-sm"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Github className="w-5 h-5" />
+              <Github className="w-4 h-4" />
               <span className="hidden sm:inline font-medium">GitHub</span>
             </motion.a>
 
@@ -182,16 +172,16 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="relative">
                 <motion.button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="btn-rounded flex items-center space-x-3 px-4 py-3"
+                  className="btn-rounded flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100/30 dark:bg-gray-700/30"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <img
                     src={user.avatar}
                     alt={user.name}
-                    className="w-8 h-8 rounded-full border-2 border-white/20"
+                    className="w-6 h-6 rounded-full border-2 border-white/20"
                   />
-                  <span className="hidden sm:inline font-medium">{user.name}</span>
+                  <span className="hidden sm:inline text-sm font-medium">{user.name}</span>
                 </motion.button>
 
                 <AnimatePresence>
@@ -209,16 +199,16 @@ export const Header: React.FC<HeaderProps> = ({
                     >
                       <div className="p-2">
                         <div className="px-3 py-2 border-b border-gray-200/20">
-                          <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {user.name}
                           </p>
-                          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                             {user.email}
                           </p>
                         </div>
                         
                         <button
-                          className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                          className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors text-sm ${
                             isDark 
                               ? 'text-gray-300 hover:bg-gray-700/50' 
                               : 'text-gray-700 hover:bg-gray-100/50'
@@ -233,7 +223,7 @@ export const Header: React.FC<HeaderProps> = ({
                             logout();
                             setShowUserMenu(false);
                           }}
-                          className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                          className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors text-sm ${
                             isDark 
                               ? 'text-red-400 hover:bg-red-500/10' 
                               : 'text-red-600 hover:bg-red-50'
@@ -250,11 +240,11 @@ export const Header: React.FC<HeaderProps> = ({
             ) : (
               <motion.button
                 onClick={() => setShowAuthModal(true)}
-                className="btn-gradient"
+                className="btn-gradient px-3 py-2 rounded-lg text-sm"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <User className="w-5 h-5 mr-2" />
+                <User className="w-4 h-4 mr-1" />
                 <span>Sign In</span>
               </motion.button>
             )}
@@ -265,15 +255,15 @@ export const Header: React.FC<HeaderProps> = ({
         <AnimatePresence>
           {showMobileMenu && (
             <motion.div
-              className="md:hidden mt-4 rounded-2xl backdrop-blur-xl border overflow-hidden shadow-xl"
+              className="md:hidden mt-3 rounded-xl backdrop-blur-xl border overflow-hidden shadow-xl"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <div className={`p-4 ${isDark ? 'bg-gray-800/90 border-gray-700/50' : 'bg-white/90 border-white/50'}`}>
+              <div className={`p-3 ${isDark ? 'bg-gray-800/90 border-gray-700/50' : 'bg-white/90 border-white/50'}`}>
                 {/* Mobile Navigation */}
-                <div className="space-y-2 mb-4">
+                <div className="space-y-1 mb-3">
                   {tabs.map(({ id, label, icon: Icon }) => (
                     <motion.button
                       key={id}
@@ -281,7 +271,7 @@ export const Header: React.FC<HeaderProps> = ({
                         onTabChange(id);
                         setShowMobileMenu(false);
                       }}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                      className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
                         activeTab === id
                           ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
                           : isDark
@@ -291,33 +281,33 @@ export const Header: React.FC<HeaderProps> = ({
                       whileHover={{ x: 4 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{label}</span>
+                      <Icon className="w-4 h-4" />
+                      <span className="font-medium text-sm">{label}</span>
                     </motion.button>
                   ))}
                 </div>
                 
                 {/* Mobile Actions */}
-                <div className="grid grid-cols-3 gap-2 pt-4 border-t border-gray-200/20">
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-200/20">
                   <motion.button
                     onClick={onToggleTheme}
-                    className="flex flex-col items-center justify-center p-3 rounded-xl transition-colors"
+                    className="flex flex-col items-center justify-center p-2 rounded-lg transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {isDark ? <Sun className="w-5 h-5 text-yellow-400 mb-1" /> : <Moon className="w-5 h-5 text-gray-600 mb-1" />}
+                    {isDark ? <Sun className="w-4 h-4 text-yellow-400 mb-1" /> : <Moon className="w-4 h-4 text-gray-600 mb-1" />}
                     <span className="text-xs">{isDark ? 'Light' : 'Dark'}</span>
                   </motion.button>
                   
                   <motion.a
-                    href="https://github.com/Bhuvansai-16/MCP.git"
+                    href="https://github.com/modelcontextprotocol/servers"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex flex-col items-center justify-center p-3 rounded-xl transition-colors"
+                    className="flex flex-col items-center justify-center p-2 rounded-lg transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Github className="w-5 h-5 mb-1" />
+                    <Github className="w-4 h-4 mb-1" />
                     <span className="text-xs">GitHub</span>
                   </motion.a>
                   
@@ -327,11 +317,11 @@ export const Header: React.FC<HeaderProps> = ({
                         logout();
                         setShowMobileMenu(false);
                       }}
-                      className="flex flex-col items-center justify-center p-3 rounded-xl transition-colors"
+                      className="flex flex-col items-center justify-center p-2 rounded-lg transition-colors"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <LogOut className="w-5 h-5 mb-1" />
+                      <LogOut className="w-4 h-4 mb-1" />
                       <span className="text-xs">Logout</span>
                     </motion.button>
                   ) : (
@@ -340,11 +330,11 @@ export const Header: React.FC<HeaderProps> = ({
                         setShowAuthModal(true);
                         setShowMobileMenu(false);
                       }}
-                      className="flex flex-col items-center justify-center p-3 rounded-xl transition-colors"
+                      className="flex flex-col items-center justify-center p-2 rounded-lg transition-colors"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <User className="w-5 h-5 mb-1" />
+                      <User className="w-4 h-4 mb-1" />
                       <span className="text-xs">Sign In</span>
                     </motion.button>
                   )}
