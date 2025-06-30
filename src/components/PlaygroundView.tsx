@@ -302,7 +302,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
 
   return (
     <div className="h-screen overflow-hidden flex flex-col">
-      <div className="container mx-auto px-6 py-8 h-full flex flex-col">
+      <div className="container mx-auto px-6 py-6 h-full flex flex-col max-w-7xl">
         <AnimatePresence mode="wait">
           {viewMode === 'editor' ? (
             <motion.div
@@ -313,7 +313,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
               transition={{ duration: 0.3 }}
               className="h-full flex flex-col"
             >
-              {/* Editor Header */}
+              {/* Editor Header - Compact */}
               <div className="flex-shrink-0 mb-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -323,10 +323,10 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                         whileHover={{ rotate: 360 }}
                         transition={{ duration: 0.5 }}
                       >
-                        <Code className="w-8 h-8 text-white" />
+                        <Code className="w-7 h-7 text-white" />
                       </motion.div>
                       <div>
-                        <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                           MCP Editor
                         </h1>
                         <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -360,22 +360,22 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                   </motion.button>
                 </div>
 
-                {/* MCP Status */}
+                {/* MCP Status - Compact */}
                 {mcpSchema && (
                   <motion.div
-                    className={`mt-4 p-4 rounded-xl ${
+                    className={`mt-4 p-3 rounded-xl ${
                       isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50/50 border border-green-200/50'
                     }`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
                     <div className="flex items-center space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <CheckCircle className="w-4 h-4 text-green-500" />
                       <div>
-                        <p className={`font-medium ${isDark ? 'text-green-400' : 'text-green-700'}`}>
+                        <p className={`font-medium text-sm ${isDark ? 'text-green-400' : 'text-green-700'}`}>
                           {mcpSchema.name} v{mcpSchema.version}
                         </p>
-                        <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-600'}`}>
+                        <p className={`text-xs ${isDark ? 'text-green-300' : 'text-green-600'}`}>
                           {mcpSchema.tools.length} tool{mcpSchema.tools.length !== 1 ? 's' : ''} available: {mcpSchema.tools.map(t => t.name).join(', ')}
                         </p>
                       </div>
@@ -384,10 +384,10 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                 )}
               </div>
 
-              {/* Editor Mode Selector */}
+              {/* Editor Mode Selector - Centered and Compact */}
               <div className="flex-shrink-0 mb-4 flex justify-center">
-                <div className="p-2 rounded-2xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
-                  <div className="flex space-x-2">
+                <div className="p-1.5 rounded-2xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
+                  <div className="flex space-x-1">
                     <motion.button
                       onClick={() => setEditorMode('templates')}
                       className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
@@ -439,8 +439,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                 </div>
               </div>
 
-              {/* Editor Content - Full width for better editing experience */}
-              <div className="flex-1 min-h-0">
+              {/* Editor Content - Optimized height */}
+              <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 280px)' }}>
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={editorMode}
@@ -464,8 +464,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
               transition={{ duration: 0.3 }}
               className="h-full flex flex-col"
             >
-              {/* Chat Header */}
-              <div className="flex-shrink-0 mb-6">
+              {/* Chat Header - Compact */}
+              <div className="flex-shrink-0 mb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <motion.button
@@ -484,14 +484,14 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
 
                     <div className="flex items-center space-x-3">
                       <motion.div
-                        className="p-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500"
+                        className="p-2 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500"
                         whileHover={{ rotate: 360 }}
                         transition={{ duration: 0.5 }}
                       >
-                        <MessageSquare className="w-8 h-8 text-white" />
+                        <MessageSquare className="w-6 h-6 text-white" />
                       </motion.div>
                       <div>
-                        <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                           Agent Chat
                         </h1>
                         <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -502,26 +502,26 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                   </div>
                 </div>
 
-                {/* Available Tools Display */}
+                {/* Available Tools Display - Compact */}
                 {mcpSchema && (
                   <motion.div
-                    className={`mt-4 p-4 rounded-xl ${
+                    className={`mt-3 p-3 rounded-xl ${
                       isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50/50 border border-blue-200/50'
                     }`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
                     <div className="flex items-center space-x-3 mb-2">
-                      <Zap className="w-5 h-5 text-blue-500" />
-                      <h3 className={`font-medium ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
+                      <Zap className="w-4 h-4 text-blue-500" />
+                      <h3 className={`font-medium text-sm ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
                         Available Tools from {mcpSchema.name}
                       </h3>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1">
                       {mcpSchema.tools.map((tool, index) => (
                         <span
                           key={index}
-                          className={`px-3 py-1 text-sm rounded-full ${
+                          className={`px-2 py-1 text-xs rounded-full ${
                             isDark 
                               ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
                               : 'bg-blue-100 text-blue-700 border border-blue-200'
@@ -535,8 +535,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                 )}
               </div>
 
-              {/* Chat Content - Fixed height container */}
-              <div className="flex-1 min-h-0">
+              {/* Chat Content - Optimized height */}
+              <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 240px)' }}>
                 <AgentChat
                   isDark={isDark}
                   messages={messages}
@@ -552,9 +552,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
           )}
         </AnimatePresence>
 
-        {/* Execution Visualization Panel */}
+        {/* Execution Visualization Panel - Compact when shown */}
         {showExecutionPanel && viewMode === 'chat' && (
-          <div className="flex-shrink-0 mt-6">
+          <div className="flex-shrink-0 mt-4" style={{ maxHeight: '300px' }}>
             <ExecutionVisualization
               isDark={isDark}
               executionLogs={executionLogs}
