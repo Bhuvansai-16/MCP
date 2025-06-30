@@ -396,75 +396,6 @@ html {
   border-color: rgba(99, 102, 241, 0.5);
 }
 
-/* PLAYGROUND SPECIFIC STYLES - ENHANCED WITH FIXED SCROLLBARS */
-.playground-container {
-  height: calc(100vh - 120px);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.playground-grid {
-  flex: 1;
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  min-height: 0;
-}
-
-.editor-panel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-  height: 100%;
-}
-
-.editor-mode-selector {
-  flex-shrink: 0;
-}
-
-.editor-content {
-  flex: 1;
-  overflow: hidden;
-  min-height: 0;
-  height: 100%;
-}
-
-.chat-panel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-  height: 100%;
-}
-
-/* Monaco Editor Container - Fixed Height with Scrollbar */
-.monaco-editor-container {
-  height: 600px !important; /* Fixed height to prevent growing */
-  overflow: hidden;
-  border-radius: 12px;
-  flex-shrink: 0; /* Prevent shrinking */
-}
-
-/* Chat Messages Container - Fixed Height with Scrollbar */
-.chat-messages-container {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-  max-height: 500px; /* Fixed max height to prevent growing */
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-}
-
-/* Execution Panel */
-.execution-panel {
-  flex-shrink: 0;
-  max-height: 400px;
-  overflow: hidden;
-}
-
 /* Performance optimizations for Community tab */
 .community-post-card {
   will-change: transform;
@@ -508,30 +439,6 @@ html {
 
 .scrollable-container::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(45deg, #2563eb, #7c3aed);
-}
-
-@media (max-width: 1024px) {
-  .playground-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr;
-  }
-  
-  .editor-panel {
-    min-height: 400px;
-    max-height: 50vh;
-  }
-  
-  .editor-content {
-    min-height: 350px;
-  }
-  
-  .monaco-editor-container {
-    height: 400px !important;
-  }
-  
-  .chat-messages-container {
-    max-height: 300px;
-  }
 }
 
 /* Loading states for better UX */

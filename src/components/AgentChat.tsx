@@ -47,7 +47,9 @@ export const AgentChat: React.FC<AgentChatProps> = ({
 
   // Auto-scroll to bottom when new messages are added
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current && chatContainerRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   // Focus input when agent starts
@@ -265,11 +267,12 @@ export const AgentChat: React.FC<AgentChatProps> = ({
         )}
       </div>
 
-      {/* Messages Container - Scrollable */}
+      {/* Messages Container - Scrollable with fixed height */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <div 
           ref={chatContainerRef}
-          className="h-full p-6 overflow-y-auto scrollable-container"
+          className="h-full p-6 overflow-y-auto"
+          style={{ maxHeight: '100%' }}
         >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">

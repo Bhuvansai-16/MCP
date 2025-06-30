@@ -340,14 +340,14 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   };
 
   return (
-    <div className="playground-container">
+    <div className="h-full overflow-hidden">
       <div className="container mx-auto px-6 py-8 h-full flex flex-col">
-        {/* Playground Grid */}
-        <div className="playground-grid">
+        {/* Playground Grid - Fixed height container */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
           {/* Editor Panel */}
-          <div className="editor-panel">
+          <div className="flex flex-col min-h-0">
             {/* Editor Mode Selector */}
-            <div className="editor-mode-selector mb-4 p-2 rounded-2xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
+            <div className="flex-shrink-0 mb-4 p-2 rounded-2xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
               <div className="flex space-x-2">
                 <motion.button
                   onClick={() => setEditorMode('templates')}
@@ -399,8 +399,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
               </div>
             </div>
 
-            {/* Editor Content */}
-            <div className="editor-content">
+            {/* Editor Content - Scrollable */}
+            <div className="flex-1 min-h-0">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={editorMode}
@@ -416,8 +416,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
             </div>
           </div>
 
-          {/* Chat Panel */}
-          <div className="chat-panel">
+          {/* Chat Panel - Fixed height with internal scrolling */}
+          <div className="flex flex-col min-h-0">
             <AgentChat
               isDark={isDark}
               messages={messages}
@@ -435,7 +435,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
 
         {/* Execution Visualization Panel */}
         {showExecutionPanel && (
-          <div className="execution-panel mt-6">
+          <div className="flex-shrink-0 mt-6">
             <ExecutionVisualization
               isDark={isDark}
               executionLogs={executionLogs}

@@ -341,8 +341,8 @@ function App() {
   }
 
   return (
-    <div className="app-main-container">
-      <div className={`app-content ${
+    <div className="flex flex-col min-h-screen">
+      <div className={`flex-1 flex flex-col ${
         isDark 
           ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900' 
           : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
@@ -383,8 +383,8 @@ function App() {
           onTabChange={handleTabChange}
         />
         
-        {/* Main Content */}
-        <main className="relative z-10">
+        {/* Main Content - Fixed height with internal scrolling */}
+        <main className="flex-1 overflow-hidden relative z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -392,6 +392,7 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="h-full"
             >
               {renderActiveView()}
             </motion.div>
