@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, User, Settings, Eye, EyeOff, Zap, Clock, Target, Sparkles } from 'lucide-react';
+import { Bot, User, Settings, Eye, EyeOff, Zap, Clock, Target, Sparkles, Send } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -41,10 +41,15 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages are added
+  // Auto-scroll to bottom when new messages are added - ONLY scroll the chat container
   useEffect(() => {
     if (messagesEndRef.current && chatContainerRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Use scrollIntoView with the chat container as the scrolling context
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest'
+      });
     }
   }, [messages]);
 
@@ -227,12 +232,15 @@ export const AgentChat: React.FC<AgentChatProps> = ({
         )}
       </div>
 
-      {/* Messages Container - Scrollable with fixed height */}
+      {/* Messages Container - Scrollable with fixed height and proper scroll containment */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <div 
           ref={chatContainerRef}
           className="h-full p-6 overflow-y-auto scrollable-container"
-          style={{ maxHeight: '100%' }}
+          style={{ 
+            maxHeight: '100%',
+            scrollBehavior: 'smooth'
+          }}
         >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
@@ -398,6 +406,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                 </motion.div>
               )}
 
+              {/* Scroll anchor - this ensures smooth scrolling to bottom */}
               <div ref={messagesEndRef} />
             </div>
           )}
@@ -456,7 +465,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
             whileHover={inputMessage.trim() ? { scale: 1.05 } : {}}
             whileTap={inputMessage.trim() ? { scale: 0.95 } : {}}
           >
-            <Zap className="w-5 h-5" />
+            <Send className="w-5 h-5" />
           </motion.button>
         </div>
       </div>

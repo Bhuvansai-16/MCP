@@ -301,7 +301,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   };
 
   return (
-    <div className="h-full overflow-hidden">
+    <div className="h-screen overflow-hidden flex flex-col">
       <div className="container mx-auto px-6 py-8 h-full flex flex-col">
         <AnimatePresence mode="wait">
           {viewMode === 'editor' ? (
@@ -440,7 +440,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
               </div>
 
               {/* Editor Content - Full width for better editing experience */}
-              <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 380px)' }}>
+              <div className="flex-1 min-h-0">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={editorMode}
@@ -535,8 +535,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                 )}
               </div>
 
-              {/* Chat Content */}
-              <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 380px)' }}>
+              {/* Chat Content - Fixed height container */}
+              <div className="flex-1 min-h-0">
                 <AgentChat
                   isDark={isDark}
                   messages={messages}
