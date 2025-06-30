@@ -6,7 +6,7 @@ import { ExecutionVisualization } from './ExecutionVisualization';
 import { VisualMCPBuilder } from './VisualMCPBuilder';
 import { MCPTemplates } from './MCPTemplates';
 import { MCPSchema } from '../App';
-import { Code, Palette, BookTemplate as FileTemplate, MessageSquare, ArrowLeft, Zap, CheckCircle, AlertCircle } from 'lucide-react';
+import { Code, Palette, BookTemplate as FileTemplate, MessageSquare, Zap, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 interface PlaygroundViewProps {
   isDark: boolean;
@@ -36,16 +36,15 @@ interface ExecutionLog {
 }
 
 type EditorMode = 'code' | 'visual' | 'templates';
-type ViewMode = 'editor' | 'chat';
 
 export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialMCP }) => {
   const [mcpSchema, setMcpSchema] = useState<MCPSchema | null>(null);
   const [isValidMCP, setIsValidMCP] = useState(false);
+  const [isAgentRunning, setIsAgentRunning] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [executionLogs, setExecutionLogs] = useState<ExecutionLog[]>([]);
   const [showExecutionPanel, setShowExecutionPanel] = useState(false);
   const [editorMode, setEditorMode] = useState<EditorMode>('code');
-  const [viewMode, setViewMode] = useState<ViewMode>('editor');
 
   // Load initial MCP if provided
   useEffect(() => {
@@ -53,6 +52,17 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
       console.log('📋 Loading initial MCP:', initialMCP.name);
       setMcpSchema(initialMCP);
       setIsValidMCP(true);
+      
+      // Add system message about loaded MCP
+      const systemMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: 'system',
+        content: `🎯 MCP "${initialMCP.name}" loaded successfully! Available tools: ${initialMCP.tools.map(t => t.name).join(', ')}`,
+        timestamp: new Date()
+      };
+      
+      setMessages([systemMessage]);
+      console.log('✅ System message added for loaded MCP');
     }
   }, [initialMCP]);
 
@@ -60,6 +70,11 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     console.log('🔍 MCP validation result:', { isValid, schema: schema?.name });
     setMcpSchema(schema);
     setIsValidMCP(isValid);
+    if (!isValid) {
+      setIsAgentRunning(false);
+      setMessages([]);
+      setExecutionLogs([]);
+    }
   };
 
   const handleTemplateSelect = (template: MCPSchema) => {
@@ -67,6 +82,16 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     setMcpSchema(template);
     setIsValidMCP(true);
     setEditorMode('code'); // Switch to code editor to show the loaded template
+    
+    // Add system message about loaded template
+    const systemMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'system',
+      content: `📋 Template "${template.name}" loaded! You can now chat with the agent to test it.`,
+      timestamp: new Date()
+    };
+    
+    setMessages([systemMessage]);
   };
 
   const handleVisualMCPUpdate = (schema: MCPSchema) => {
@@ -75,9 +100,42 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     setIsValidMCP(true);
   };
 
+  const startAgent = () => {
+    if (!isValidMCP || !mcpSchema) {
+      console.warn('⚠️ Cannot start agent: invalid MCP or no schema');
+      return;
+    }
+    
+    console.log('🤖 Starting agent with MCP:', mcpSchema.name);
+    setIsAgentRunning(true);
+    
+    const systemMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'system',
+      content: `🤖 Agent started with MCP "${mcpSchema.name}". Available tools: ${mcpSchema.tools.map(t => t.name).join(', ')}`,
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, systemMessage]);
+  };
+
+  const stopAgent = () => {
+    console.log('🛑 Stopping agent');
+    setIsAgentRunning(false);
+    
+    const systemMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'system',
+      content: '🛑 Agent stopped',
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, systemMessage]);
+  };
+
   const handleUserMessage = async (content: string) => {
-    if (!mcpSchema) {
-      console.warn('⚠️ Cannot process message: no schema');
+    if (!isAgentRunning || !mcpSchema) {
+      console.warn('⚠️ Cannot process message: agent not running or no schema');
       return;
     }
 
@@ -249,27 +307,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     return response;
   };
 
-  const handleChatWithAgent = () => {
-    if (!isValidMCP || !mcpSchema) {
-      return;
-    }
-    
-    // Auto-start the agent and add welcome message
-    const systemMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'system',
-      content: `🤖 Agent started with MCP "${mcpSchema.name}". Available tools: ${mcpSchema.tools.map(t => t.name).join(', ')}`,
-      timestamp: new Date()
-    };
-    
-    setMessages([systemMessage]);
-    setViewMode('chat');
-  };
-
-  const handleBackToEditor = () => {
-    setViewMode('editor');
-  };
-
   const renderEditor = () => {
     switch (editorMode) {
       case 'templates':
@@ -300,261 +337,183 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     }
   };
 
+  // Available tools display for the header
+  const AvailableToolsDisplay = () => {
+    if (!mcpSchema) return null;
+    
+    return (
+      <div className={`p-4 rounded-xl ${
+        isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50/50 border border-blue-200/50'
+      }`}>
+        <div className="flex items-center space-x-3 mb-2">
+          <Zap className="w-5 h-5 text-blue-500" />
+          <h3 className={`font-medium ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
+            Available Tools from {mcpSchema.name}
+          </h3>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {mcpSchema.tools.map((tool, index) => (
+            <span
+              key={index}
+              className={`px-3 py-1 text-sm rounded-full ${
+                isDark 
+                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
+                  : 'bg-blue-100 text-blue-700 border border-blue-200'
+              }`}
+            >
+              {tool.name}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="h-screen overflow-hidden flex flex-col">
-      <div className="container mx-auto px-8 py-8 h-full flex flex-col max-w-6xl">
-        <AnimatePresence mode="wait">
-          {viewMode === 'editor' ? (
-            <motion.div
-              key="editor-view"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="h-full flex flex-col"
-            >
-              {/* Editor Header - Well-sized */}
-              <div className="flex-shrink-0 mb-8">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-4">
-                      <motion.div
-                        className="p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500"
-                        whileHover={{ rotate: 360 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <Code className="w-8 h-8 text-white" />
-                      </motion.div>
-                      <div>
-                        <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                          MCP Editor
-                        </h1>
-                        <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Create and edit Model Context Protocol schemas
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Chat with Agent Button */}
-                  <motion.button
-                    onClick={handleChatWithAgent}
-                    disabled={!isValidMCP}
-                    className={`flex items-center space-x-3 px-8 py-4 rounded-2xl font-bold text-xl transition-all duration-300 ${
-                      isValidMCP
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl'
-                        : isDark
-                          ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed border border-gray-600/50'
-                          : 'bg-gray-200/50 text-gray-500 cursor-not-allowed border border-gray-300/50'
-                    } backdrop-blur-sm`}
-                    whileHover={isValidMCP ? { scale: 1.05 } : {}}
-                    whileTap={isValidMCP ? { scale: 0.95 } : {}}
-                  >
-                    <MessageSquare className="w-7 h-7" />
-                    <span>Chat with Agent</span>
-                    {isValidMCP ? (
-                      <CheckCircle className="w-6 h-6" />
-                    ) : (
-                      <AlertCircle className="w-6 h-6" />
-                    )}
-                  </motion.button>
-                </div>
-
-                {/* MCP Status - Well-sized */}
-                {mcpSchema && (
-                  <motion.div
-                    className={`mt-6 p-5 rounded-xl ${
-                      isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50/50 border border-green-200/50'
-                    }`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <CheckCircle className="w-6 h-6 text-green-500" />
-                      <div>
-                        <p className={`font-medium text-lg ${isDark ? 'text-green-400' : 'text-green-700'}`}>
-                          {mcpSchema.name} v{mcpSchema.version}
-                        </p>
-                        <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-600'}`}>
-                          {mcpSchema.tools.length} tool{mcpSchema.tools.length !== 1 ? 's' : ''} available: {mcpSchema.tools.map(t => t.name).join(', ')}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
+    <div className="h-screen overflow-hidden">
+      <div className="container mx-auto px-6 py-6 h-full">
+        {/* Header with Editor Mode Selector */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <motion.div
+                className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500"
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Code className="w-7 h-7 text-white" />
+              </motion.div>
+              <div>
+                <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  MCP Playground
+                </h1>
+                <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {mcpSchema ? `Working with ${mcpSchema.name} v${mcpSchema.version}` : 'Create and test Model Context Protocols'}
+                </p>
               </div>
+            </div>
+            
+            {/* Execution Panel Toggle */}
+            {isValidMCP && (
+              <motion.button
+                onClick={() => setShowExecutionPanel(!showExecutionPanel)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 ${
+                  showExecutionPanel
+                    ? isDark 
+                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                      : 'bg-blue-50 text-blue-600 border border-blue-200'
+                    : isDark 
+                      ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50' 
+                      : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
+                } backdrop-blur-sm`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {showExecutionPanel ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                <span>{showExecutionPanel ? 'Hide Execution' : 'Show Execution'}</span>
+              </motion.button>
+            )}
+          </div>
+          
+          {/* Editor Mode Selector */}
+          <div className="flex justify-center mb-4">
+            <div className="p-2 rounded-2xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
+              <div className="flex space-x-2">
+                <motion.button
+                  onClick={() => setEditorMode('templates')}
+                  className={`flex items-center space-x-2 px-5 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    editorMode === 'templates'
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
+                      : isDark
+                        ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <FileTemplate className="w-4 h-4" />
+                  <span>Templates</span>
+                </motion.button>
 
-              {/* Editor Mode Selector - Well-sized */}
-              <div className="flex-shrink-0 mb-6 flex justify-center">
-                <div className="p-2 rounded-2xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
-                  <div className="flex space-x-2">
-                    <motion.button
-                      onClick={() => setEditorMode('templates')}
-                      className={`flex items-center space-x-3 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
-                        editorMode === 'templates'
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
-                          : isDark
-                            ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <FileTemplate className="w-5 h-5" />
-                      <span>Templates</span>
-                    </motion.button>
+                <motion.button
+                  onClick={() => setEditorMode('visual')}
+                  className={`flex items-center space-x-2 px-5 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    editorMode === 'visual'
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                      : isDark
+                        ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Palette className="w-4 h-4" />
+                  <span>Visual</span>
+                </motion.button>
 
-                    <motion.button
-                      onClick={() => setEditorMode('visual')}
-                      className={`flex items-center space-x-3 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
-                        editorMode === 'visual'
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                          : isDark
-                            ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Palette className="w-5 h-5" />
-                      <span>Visual</span>
-                    </motion.button>
-
-                    <motion.button
-                      onClick={() => setEditorMode('code')}
-                      className={`flex items-center space-x-3 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
-                        editorMode === 'code'
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                          : isDark
-                            ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Code className="w-5 h-5" />
-                      <span>Code</span>
-                    </motion.button>
-                  </div>
-                </div>
+                <motion.button
+                  onClick={() => setEditorMode('code')}
+                  className={`flex items-center space-x-2 px-5 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    editorMode === 'code'
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                      : isDark
+                        ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Code className="w-4 h-4" />
+                  <span>Code</span>
+                </motion.button>
               </div>
-
-              {/* Editor Content - Properly sized for comfortable editing */}
-              <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 320px)' }}>
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={editorMode}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="h-full"
-                  >
-                    {renderEditor()}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="chat-view"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-              className="h-full flex flex-col"
-            >
-              {/* Chat Header - Well-sized */}
-              <div className="flex-shrink-0 mb-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-6">
-                    <motion.button
-                      onClick={handleBackToEditor}
-                      className={`flex items-center space-x-3 px-6 py-3 rounded-xl transition-all duration-300 ${
-                        isDark 
-                          ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50' 
-                          : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
-                      } backdrop-blur-sm`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <ArrowLeft className="w-5 h-5" />
-                      <span>Back to Editor</span>
-                    </motion.button>
-
-                    <div className="flex items-center space-x-4">
-                      <motion.div
-                        className="p-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500"
-                        whileHover={{ rotate: 360 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <MessageSquare className="w-8 h-8 text-white" />
-                      </motion.div>
-                      <div>
-                        <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                          Agent Chat
-                        </h1>
-                        <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Chat with your MCP-powered agent
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Available Tools Display - Well-sized */}
-                {mcpSchema && (
-                  <motion.div
-                    className={`mt-6 p-5 rounded-xl ${
-                      isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50/50 border border-blue-200/50'
-                    }`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    <div className="flex items-center space-x-4 mb-3">
-                      <Zap className="w-6 h-6 text-blue-500" />
-                      <h3 className={`font-medium text-lg ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
-                        Available Tools from {mcpSchema.name}
-                      </h3>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {mcpSchema.tools.map((tool, index) => (
-                        <span
-                          key={index}
-                          className={`px-3 py-2 text-sm rounded-full ${
-                            isDark 
-                              ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
-                              : 'bg-blue-100 text-blue-700 border border-blue-200'
-                          }`}
-                        >
-                          {tool.name}
-                        </span>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-
-              {/* Chat Content - Properly sized for comfortable chatting */}
-              <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 280px)' }}>
-                <AgentChat
-                  isDark={isDark}
-                  messages={messages}
-                  isAgentRunning={true}
-                  isValidMCP={isValidMCP}
-                  mcpSchema={mcpSchema}
-                  onUserMessage={handleUserMessage}
-                  onToggleExecution={() => setShowExecutionPanel(!showExecutionPanel)}
-                  showExecutionPanel={showExecutionPanel}
-                />
-              </div>
-            </motion.div>
+            </div>
+          </div>
+          
+          {/* MCP Status */}
+          {mcpSchema && (
+            <AvailableToolsDisplay />
           )}
-        </AnimatePresence>
+        </div>
 
-        {/* Execution Visualization Panel - Properly sized when shown */}
-        {showExecutionPanel && viewMode === 'chat' && (
-          <div className="flex-shrink-0 mt-6" style={{ maxHeight: '350px' }}>
+        {/* Main Content - Side by Side Layout */}
+        <div className="flex flex-1 space-x-6 h-[calc(100vh-240px)]">
+          {/* Left Side - MCP Editor */}
+          <div className="w-1/2 h-full">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={editorMode}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="h-full"
+              >
+                {renderEditor()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+          
+          {/* Right Side - Agent Chat */}
+          <div className="w-1/2 h-full flex flex-col">
+            <AgentChat
+              isDark={isDark}
+              messages={messages}
+              isAgentRunning={isAgentRunning}
+              isValidMCP={isValidMCP}
+              mcpSchema={mcpSchema}
+              onStartAgent={startAgent}
+              onStopAgent={stopAgent}
+              onUserMessage={handleUserMessage}
+              onToggleExecution={() => setShowExecutionPanel(!showExecutionPanel)}
+              showExecutionPanel={showExecutionPanel}
+            />
+          </div>
+        </div>
+
+        {/* Execution Visualization Panel */}
+        {showExecutionPanel && (
+          <div className="mt-6" style={{ maxHeight: '300px' }}>
             <ExecutionVisualization
               isDark={isDark}
               executionLogs={executionLogs}
