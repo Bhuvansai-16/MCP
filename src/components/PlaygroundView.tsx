@@ -492,22 +492,20 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                 </div>
               </div>
 
-              {/* Editor Content - Centered with max width */}
-              <div className="flex-1 min-h-0 flex justify-center">
-                <div className="w-full max-w-5xl" style={{ height: 'calc(100vh - 380px)' }}>
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={editorMode}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                      className="h-full"
-                    >
-                      {renderEditor()}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
+              {/* Editor Content - Full width for better editing experience */}
+              <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 380px)' }}>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={editorMode}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="h-full"
+                  >
+                    {renderEditor()}
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </motion.div>
           ) : (
