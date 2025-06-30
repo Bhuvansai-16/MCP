@@ -83,8 +83,8 @@ html {
 
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -92,20 +92,32 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #3b82f6, #8b5cf6);
-  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #2563eb, #7c3aed);
+  background: rgba(59, 130, 246, 0.7);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #4f46e5, #7c3aed);
+  background: rgba(79, 70, 229, 0.5);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #4338ca, #6d28d9);
+  background: rgba(79, 70, 229, 0.7);
+}
+
+/* Scrollable container with custom scrollbar */
+.scrollable-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.5) transparent;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.dark .scrollable-container {
+  scrollbar-color: rgba(79, 70, 229, 0.5) transparent;
 }
 
 /* Glassmorphism effects */
@@ -417,30 +429,6 @@ html {
   contain: layout style paint;
 }
 
-/* Scrollable containers with fixed heights */
-.scrollable-container {
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(59, 130, 246, 0.5) transparent;
-}
-
-.scrollable-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.scrollable-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollable-container::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #3b82f6, #8b5cf6);
-  border-radius: 4px;
-}
-
-.scrollable-container::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #2563eb, #7c3aed);
-}
-
 /* Loading states for better UX */
 .loading-skeleton {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
@@ -460,4 +448,26 @@ html {
   100% {
     background-position: -200% 0;
   }
+}
+
+/* Fix for chat scrolling issues */
+.chat-container {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem;
+  scroll-behavior: smooth;
+}
+
+.chat-input {
+  flex-shrink: 0;
+  padding: 0.75rem;
+  border-top: 1px solid rgba(229, 231, 235, 0.2);
 }

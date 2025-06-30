@@ -183,13 +183,13 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   const suggestedPrompts = getSuggestedPrompts();
 
   return (
-    <div className="h-full flex flex-col rounded-3xl backdrop-blur-xl border transition-all duration-500 bg-white/30 dark:bg-gray-800/30 border-white/50 dark:border-gray-700/50 shadow-2xl overflow-hidden">
+    <div className="h-full flex flex-col rounded-xl backdrop-blur-xl border transition-all duration-500 bg-white/30 dark:bg-gray-800/30 border-white/50 dark:border-gray-700/50 shadow-2xl overflow-hidden">
       {/* Header - Fixed */}
-      <div className="flex-shrink-0 p-4 border-b border-gray-200/20">
+      <div className="flex-shrink-0 p-3 border-b border-gray-200/20">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <motion.div
-              className={`p-2 rounded-xl ${
+              className={`p-2 rounded-lg ${
                 isAgentRunning 
                   ? 'bg-gradient-to-br from-green-500 to-emerald-500' 
                   : 'bg-gradient-to-br from-gray-500 to-gray-600'
@@ -197,13 +197,13 @@ export const AgentChat: React.FC<AgentChatProps> = ({
               animate={isAgentRunning ? { scale: [1, 1.1, 1] } : {}}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Bot className="w-6 h-6 text-white" />
+              <Bot className="w-5 h-5 text-white" />
             </motion.div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 Agent Chat
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 {isAgentRunning 
                   ? `Active with ${mcpSchema?.name || 'MCP'}` 
                   : 'Agent stopped'
@@ -212,11 +212,11 @@ export const AgentChat: React.FC<AgentChatProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             {/* Execution Panel Toggle */}
             <motion.button
               onClick={onToggleExecution}
-              className={`p-2 rounded-xl transition-all duration-300 ${
+              className={`p-2 rounded-lg transition-all duration-300 ${
                 showExecutionPanel
                   ? isDark 
                     ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
@@ -228,14 +228,14 @@ export const AgentChat: React.FC<AgentChatProps> = ({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              {showExecutionPanel ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              {showExecutionPanel ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </motion.button>
 
             {/* Start/Stop Agent Button */}
             <motion.button
               onClick={isAgentRunning ? onStopAgent : onStartAgent}
               disabled={!isValidMCP}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+              className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-all duration-300 ${
                 !isValidMCP
                   ? isDark
                     ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed border border-gray-600/50'
@@ -250,45 +250,36 @@ export const AgentChat: React.FC<AgentChatProps> = ({
               {isAgentRunning ? (
                 <>
                   <Square className="w-4 h-4" />
-                  <span>Stop Agent</span>
+                  <span>Stop</span>
                 </>
               ) : (
                 <>
                   <Play className="w-4 h-4" />
-                  <span>Start Agent</span>
+                  <span>Start</span>
                 </>
               )}
             </motion.button>
           </div>
         </div>
-
-        {/* MCP Status */}
-        {mcpSchema && (
-          <div className="p-3 rounded-xl bg-blue-50/50 border border-blue-200/50 dark:bg-blue-500/10 dark:border-blue-500/20">
-            <p className="text-sm text-blue-700 dark:text-blue-400">
-              <strong>Available Tools:</strong> {mcpSchema.tools.map((t: any) => t.name).join(', ')}
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Messages Container - Scrollable with fixed height */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <div 
           ref={chatContainerRef}
-          className="h-full p-6 overflow-y-auto scrollable-container"
+          className="h-full p-4 overflow-y-auto scrollable-container"
           style={{ maxHeight: '100%' }}
         >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
               <motion.div
-                className={`p-8 rounded-2xl ${
+                className={`p-6 rounded-xl ${
                   isDark ? 'bg-gray-700/30' : 'bg-gray-100/30'
                 } backdrop-blur-sm`}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
-                <Bot className={`w-16 h-16 mx-auto mb-4 ${
+                <Bot className={`w-12 h-12 mx-auto mb-3 ${
                   isDark ? 'text-gray-500' : 'text-gray-400'
                 }`} />
                 <h3 className={`text-lg font-semibold mb-2 ${
@@ -296,7 +287,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                 }`}>
                   {isAgentRunning ? 'Agent Ready' : 'Start the Agent'}
                 </h3>
-                <p className={`text-sm mb-6 ${
+                <p className={`text-sm mb-4 ${
                   isDark ? 'text-gray-500' : 'text-gray-600'
                 }`}>
                   {isAgentRunning 
@@ -307,10 +298,10 @@ export const AgentChat: React.FC<AgentChatProps> = ({
 
                 {isAgentRunning && suggestedPrompts.length > 0 && (
                   <div>
-                    <p className={`text-sm font-medium mb-3 ${
+                    <p className={`text-sm font-medium mb-2 ${
                       isDark ? 'text-gray-400' : 'text-gray-600'
                     }`}>
-                      <Sparkles className="w-4 h-4 inline mr-2" />
+                      <Sparkles className="w-4 h-4 inline mr-1" />
                       Try these suggestions:
                     </p>
                     <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
@@ -318,7 +309,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                         <motion.button
                           key={index}
                           onClick={() => handleSuggestedPrompt(prompt)}
-                          className={`text-left px-4 py-3 rounded-xl text-sm transition-all duration-300 ${
+                          className={`text-left px-3 py-2 rounded-lg text-xs transition-all duration-300 ${
                             isDark 
                               ? 'bg-gray-600/30 hover:bg-gray-600/50 text-gray-300 border border-gray-600/30 hover:border-gray-500/50' 
                               : 'bg-white/50 hover:bg-white/70 text-gray-700 border border-gray-200/50 hover:border-gray-300/50'
@@ -341,12 +332,12 @@ export const AgentChat: React.FC<AgentChatProps> = ({
               </motion.div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <AnimatePresence>
                 {messages.map((message) => (
                   <motion.div
                     key={message.id}
-                    className={`flex items-start space-x-3 ${
+                    className={`flex items-start space-x-2 ${
                       message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
                     }`}
                     initial={{ opacity: 0, y: 20 }}
@@ -354,7 +345,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <div className={`p-2 rounded-xl ${
+                    <div className={`p-1.5 rounded-lg ${
                       message.type === 'user' 
                         ? 'bg-blue-500/20' 
                         : message.type === 'agent'
@@ -364,26 +355,26 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                       {getMessageIcon(message.type)}
                     </div>
                     
-                    <div className={`flex-1 max-w-[80%] ${
+                    <div className={`flex-1 max-w-[85%] ${
                       message.type === 'user' ? 'text-right' : ''
                     }`}>
-                      <div className={`p-4 rounded-2xl border backdrop-blur-sm ${getMessageColors(message.type)}`}>
+                      <div className={`p-3 rounded-xl border backdrop-blur-sm ${getMessageColors(message.type)}`}>
                         <p className="text-sm leading-relaxed whitespace-pre-wrap">
                           {message.content}
                         </p>
                         
                         {/* Tool Calls */}
                         {message.toolCalls && message.toolCalls.length > 0 && (
-                          <div className="mt-3 space-y-2">
+                          <div className="mt-2 space-y-2">
                             {message.toolCalls.map((call, index) => (
                               <div
                                 key={index}
-                                className={`p-3 rounded-xl ${
+                                className={`p-2 rounded-lg ${
                                   isDark ? 'bg-gray-800/50' : 'bg-white/50'
                                 } border border-gray-200/20`}
                               >
-                                <div className="flex items-center space-x-2 mb-2">
-                                  <Zap className="w-4 h-4 text-yellow-500" />
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <Zap className="w-3 h-3 text-yellow-500" />
                                   <span className="text-xs font-medium">Tool: {call.tool}</span>
                                 </div>
                                 <div className="text-xs space-y-1">
@@ -413,14 +404,14 @@ export const AgentChat: React.FC<AgentChatProps> = ({
               {/* Typing Indicator */}
               {isTyping && (
                 <motion.div
-                  className="flex items-start space-x-3"
+                  className="flex items-start space-x-2"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <div className="p-2 rounded-xl bg-purple-500/20">
+                  <div className="p-1.5 rounded-lg bg-purple-500/20">
                     <Bot className="w-5 h-5" />
                   </div>
-                  <div className={`p-4 rounded-2xl border backdrop-blur-sm ${
+                  <div className={`p-3 rounded-xl border backdrop-blur-sm ${
                     isDark 
                       ? 'bg-purple-500/20 border-purple-500/30 text-purple-100' 
                       : 'bg-purple-50 border-purple-200 text-purple-900'
@@ -453,16 +444,16 @@ export const AgentChat: React.FC<AgentChatProps> = ({
       </div>
 
       {/* Input Section - Fixed */}
-      <div className="flex-shrink-0 p-4 border-t border-gray-200/20">
+      <div className="flex-shrink-0 p-3 border-t border-gray-200/20">
         {/* Suggested Prompts for Active Agent */}
         {isAgentRunning && messages.length > 0 && suggestedPrompts.length > 0 && (
-          <div className="mb-3">
-            <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
+          <div className="mb-2">
+            <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
               {suggestedPrompts.slice(0, 3).map((prompt, index) => (
                 <motion.button
                   key={index}
                   onClick={() => handleSuggestedPrompt(prompt)}
-                  className={`px-3 py-1 rounded-lg text-xs transition-all duration-300 ${
+                  className={`px-2 py-1 rounded-lg text-xs transition-all duration-300 ${
                     isDark 
                       ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50' 
                       : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
@@ -470,14 +461,14 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {prompt.length > 30 ? prompt.substring(0, 30) + '...' : prompt}
+                  {prompt.length > 25 ? prompt.substring(0, 25) + '...' : prompt}
                 </motion.button>
               ))}
             </div>
           </div>
         )}
 
-        <div className="flex space-x-3">
+        <div className="flex space-x-2">
           <input
             ref={inputRef}
             type="text"
@@ -490,16 +481,16 @@ export const AgentChat: React.FC<AgentChatProps> = ({
                 : "Start the agent to begin chatting..."
             }
             disabled={!isAgentRunning}
-            className={`flex-1 px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
+            className={`flex-1 px-3 py-2 rounded-lg border-2 transition-all duration-300 ${
               isDark 
                 ? 'bg-gray-900/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500' 
                 : 'bg-white/50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500'
-            } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+            } focus:ring-2 focus:ring-blue-500/20 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm`}
           />
           <motion.button
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || !isAgentRunning}
-            className={`p-3 rounded-xl transition-all duration-300 ${
+            className={`p-2 rounded-lg transition-all duration-300 ${
               inputMessage.trim() && isAgentRunning
                 ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg'
                 : isDark

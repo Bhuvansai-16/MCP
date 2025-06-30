@@ -342,12 +342,12 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     if (!mcpSchema) return null;
     
     return (
-      <div className={`p-4 rounded-xl ${
+      <div className={`p-3 rounded-xl ${
         isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50/50 border border-blue-200/50'
       }`}>
-        <div className="flex items-center space-x-3 mb-2">
-          <Zap className="w-5 h-5 text-blue-500" />
-          <h3 className={`font-medium ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
+        <div className="flex items-center space-x-2 mb-2">
+          <Zap className="w-4 h-4 text-blue-500" />
+          <h3 className={`font-medium text-sm ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
             Available Tools from {mcpSchema.name}
           </h3>
         </div>
@@ -355,7 +355,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
           {mcpSchema.tools.map((tool, index) => (
             <span
               key={index}
-              className={`px-3 py-1 text-sm rounded-full ${
+              className={`px-2 py-1 text-xs rounded-full ${
                 isDark 
                   ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
                   : 'bg-blue-100 text-blue-700 border border-blue-200'
@@ -370,24 +370,24 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   };
 
   return (
-    <div className="h-[calc(100vh-120px)] overflow-hidden">
-      <div className="container mx-auto px-6 py-4 h-full">
+    <div className="h-[calc(100vh-160px)] overflow-hidden">
+      <div className="container mx-auto px-4 py-3 h-full flex flex-col">
         {/* Header with Editor Mode Selector */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-4">
+        <div className="mb-3 flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-3">
               <motion.div
-                className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500"
+                className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               >
-                <Code className="w-7 h-7 text-white" />
+                <Code className="w-6 h-6 text-white" />
               </motion.div>
               <div>
-                <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   MCP Playground
                 </h1>
-                <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   {mcpSchema ? `Working with ${mcpSchema.name} v${mcpSchema.version}` : 'Create and test Model Context Protocols'}
                 </p>
               </div>
@@ -397,7 +397,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
             {isValidMCP && (
               <motion.button
                 onClick={() => setShowExecutionPanel(!showExecutionPanel)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 ${
+                className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
                   showExecutionPanel
                     ? isDark 
                       ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
@@ -409,19 +409,19 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {showExecutionPanel ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showExecutionPanel ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 <span>{showExecutionPanel ? 'Hide Execution' : 'Show Execution'}</span>
               </motion.button>
             )}
           </div>
           
           {/* Editor Mode Selector */}
-          <div className="flex justify-center mb-4">
-            <div className="p-2 rounded-2xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
+          <div className="flex justify-center mb-3">
+            <div className="p-1 rounded-xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
               <div className="flex space-x-2">
                 <motion.button
                   onClick={() => setEditorMode('templates')}
-                  className={`flex items-center space-x-2 px-5 py-2 rounded-xl font-medium transition-all duration-300 ${
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
                     editorMode === 'templates'
                       ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
                       : isDark
@@ -437,7 +437,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
 
                 <motion.button
                   onClick={() => setEditorMode('visual')}
-                  className={`flex items-center space-x-2 px-5 py-2 rounded-xl font-medium transition-all duration-300 ${
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
                     editorMode === 'visual'
                       ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
                       : isDark
@@ -453,7 +453,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
 
                 <motion.button
                   onClick={() => setEditorMode('code')}
-                  className={`flex items-center space-x-2 px-5 py-2 rounded-xl font-medium transition-all duration-300 ${
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
                     editorMode === 'code'
                       ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                       : isDark
@@ -477,10 +477,10 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
         </div>
 
         {/* Main Content - Side by Side Layout */}
-        <div className="flex flex-1 space-x-6 h-[calc(100vh-280px)]">
+        <div className="flex flex-1 space-x-4 h-[calc(100vh-260px)] overflow-hidden">
           {/* Left Side - MCP Editor */}
-          <div className="w-1/2 h-full overflow-hidden">
-            <div className="h-full overflow-y-auto scrollable-container">
+          <div className="w-1/2 h-full">
+            <div className="h-full rounded-xl border border-gray-200/20 dark:border-gray-700/50 overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={editorMode}
@@ -497,27 +497,25 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
           </div>
           
           {/* Right Side - Agent Chat */}
-          <div className="w-1/2 h-full overflow-hidden">
-            <div className="h-full overflow-y-auto scrollable-container">
-              <AgentChat
-                isDark={isDark}
-                messages={messages}
-                isAgentRunning={isAgentRunning}
-                isValidMCP={isValidMCP}
-                mcpSchema={mcpSchema}
-                onStartAgent={startAgent}
-                onStopAgent={stopAgent}
-                onUserMessage={handleUserMessage}
-                onToggleExecution={() => setShowExecutionPanel(!showExecutionPanel)}
-                showExecutionPanel={showExecutionPanel}
-              />
-            </div>
+          <div className="w-1/2 h-full">
+            <AgentChat
+              isDark={isDark}
+              messages={messages}
+              isAgentRunning={isAgentRunning}
+              isValidMCP={isValidMCP}
+              mcpSchema={mcpSchema}
+              onStartAgent={startAgent}
+              onStopAgent={stopAgent}
+              onUserMessage={handleUserMessage}
+              onToggleExecution={() => setShowExecutionPanel(!showExecutionPanel)}
+              showExecutionPanel={showExecutionPanel}
+            />
           </div>
         </div>
 
         {/* Execution Visualization Panel */}
         {showExecutionPanel && (
-          <div className="mt-4" style={{ maxHeight: '250px', overflowY: 'auto' }}>
+          <div className="mt-3 flex-shrink-0" style={{ maxHeight: '200px', overflowY: 'auto' }}>
             <ExecutionVisualization
               isDark={isDark}
               executionLogs={executionLogs}
