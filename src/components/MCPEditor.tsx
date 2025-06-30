@@ -338,47 +338,47 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
   return (
     <div className="h-full flex flex-col rounded-3xl backdrop-blur-xl border transition-all duration-500 bg-white/30 dark:bg-gray-800/30 border-white/50 dark:border-gray-700/50 shadow-2xl overflow-hidden">
       {/* Header - Fixed */}
-      <div className="flex-shrink-0 p-6 border-b border-gray-200/20">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
+      <div className="flex-shrink-0 p-8 border-b border-gray-200/20">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
             <motion.div
-              className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500"
+              className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500"
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.5 }}
             >
-              <Code className="w-6 h-6 text-white" />
+              <Code className="w-7 h-7 text-white" />
             </motion.div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
                 MCP Editor
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-lg text-gray-600 dark:text-gray-400">
                 Write or import Model Context Protocol schemas
               </p>
             </div>
           </div>
 
           {/* Validation Status */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             {isValid ? (
               <motion.div
-                className="flex items-center space-x-2 px-3 py-1 rounded-xl bg-green-500/20 text-green-400 border border-green-500/30"
+                className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-green-500/20 text-green-400 border border-green-500/30"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 500 }}
               >
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">Valid MCP</span>
+                <CheckCircle className="w-5 h-5" />
+                <span className="text-base font-medium">Valid MCP</span>
               </motion.div>
             ) : (
               <motion.div
-                className="flex items-center space-x-2 px-3 py-1 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30"
+                className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 500 }}
               >
-                <AlertCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">Invalid</span>
+                <AlertCircle className="w-5 h-5" />
+                <span className="text-base font-medium">Invalid</span>
               </motion.div>
             )}
           </div>
@@ -388,17 +388,17 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         <div className="flex flex-wrap gap-3">
           <motion.button
             onClick={toggleFormat}
-            className="flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50 dark:bg-gray-700/50 dark:hover:bg-gray-600/50 dark:text-gray-300 dark:border-gray-600/50 backdrop-blur-sm"
+            className="flex items-center space-x-2 px-4 py-3 rounded-xl text-base transition-all duration-300 bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50 dark:bg-gray-700/50 dark:hover:bg-gray-600/50 dark:text-gray-300 dark:border-gray-600/50 backdrop-blur-sm"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <FileText className="w-4 h-4" />
+            <FileText className="w-5 h-5" />
             <span>{isJsonMode ? 'JSON' : 'YAML'}</span>
           </motion.button>
 
           <motion.button
             onClick={copyToClipboard}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+            className={`flex items-center space-x-2 px-4 py-3 rounded-xl text-base transition-all duration-300 ${
               copied
                 ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                 : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50 dark:bg-gray-700/50 dark:hover:bg-gray-600/50 dark:text-gray-300 dark:border-gray-600/50'
@@ -406,24 +406,24 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
             <span>{copied ? 'Copied!' : 'Copy'}</span>
           </motion.button>
 
           <motion.button
             onClick={generateExampleValues}
-            className="flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 dark:text-blue-400 dark:border-blue-500/30 backdrop-blur-sm"
+            className="flex items-center space-x-2 px-4 py-3 rounded-xl text-base transition-all duration-300 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 dark:text-blue-400 dark:border-blue-500/30 backdrop-blur-sm"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-5 h-5" />
             <span>Generate Example</span>
           </motion.button>
 
           <motion.button
             onClick={testMCP}
             disabled={!isValid}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+            className={`flex items-center space-x-2 px-4 py-3 rounded-xl text-base transition-all duration-300 ${
               isValid
                 ? 'bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 dark:bg-green-500/20 dark:hover:bg-green-500/30 dark:text-green-400 dark:border-green-500/30'
                 : 'bg-gray-100/30 text-gray-400 cursor-not-allowed border border-gray-200/30 dark:bg-gray-700/30 dark:text-gray-500 dark:border-gray-600/30'
@@ -431,13 +431,13 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
             whileHover={isValid ? { scale: 1.05 } : {}}
             whileTap={isValid ? { scale: 0.95 } : {}}
           >
-            <Play className="w-4 h-4" />
+            <Play className="w-5 h-5" />
             <span>Test MCP</span>
           </motion.button>
 
           <motion.button
             onClick={() => setShowHelp(!showHelp)}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+            className={`flex items-center space-x-2 px-4 py-3 rounded-xl text-base transition-all duration-300 ${
               showHelp
                 ? 'bg-purple-50 text-purple-600 border border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30'
                 : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50 dark:bg-gray-700/50 dark:hover:bg-gray-600/50 dark:text-gray-300 dark:border-gray-600/50'
@@ -445,7 +445,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <HelpCircle className="w-4 h-4" />
+            <HelpCircle className="w-5 h-5" />
             <span>Help</span>
           </motion.button>
         </div>
@@ -454,15 +454,15 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         <AnimatePresence>
           {showHelp && (
             <motion.div
-              className="mt-4 p-4 rounded-xl bg-purple-50/50 border border-purple-200/50 dark:bg-purple-500/10 dark:border-purple-500/20"
+              className="mt-6 p-5 rounded-xl bg-purple-50/50 border border-purple-200/50 dark:bg-purple-500/10 dark:border-purple-500/20"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
             >
-              <h4 className="font-semibold mb-2 text-purple-700 dark:text-purple-400">
+              <h4 className="font-semibold mb-3 text-lg text-purple-700 dark:text-purple-400">
                 MCP Schema Structure
               </h4>
-              <div className="text-sm space-y-2 text-purple-600 dark:text-purple-300">
+              <div className="text-base space-y-2 text-purple-600 dark:text-purple-300">
                 <p><strong>name:</strong> Unique identifier for your MCP (required)</p>
                 <p><strong>version:</strong> Semantic version number (required)</p>
                 <p><strong>description:</strong> Brief description of functionality (optional)</p>
@@ -478,22 +478,22 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         </AnimatePresence>
 
         {/* Example MCPs */}
-        <div className="mt-4">
-          <p className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-            <Sparkles className="w-4 h-4 inline mr-1" />
+        <div className="mt-6">
+          <p className="text-base font-medium mb-3 text-gray-700 dark:text-gray-300">
+            <Sparkles className="w-5 h-5 inline mr-2" />
             Load Example MCP:
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {exampleMCPs.map((example, index) => (
               <motion.button
                 key={index}
                 onClick={() => loadExample(example)}
-                className="group relative px-3 py-2 rounded-lg text-xs transition-all duration-300 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 dark:text-blue-400 dark:border-blue-500/30"
+                className="group relative px-4 py-3 rounded-lg text-sm transition-all duration-300 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 dark:text-blue-400 dark:border-blue-500/30"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <div className="flex items-center space-x-2">
-                  <Zap className="w-3 h-3" />
+                  <Zap className="w-4 h-4" />
                   <span>{example.name}</span>
                 </div>
                 
@@ -509,10 +509,10 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
         </div>
       </div>
 
-      {/* Editor Container - Scrollable */}
+      {/* Editor Container - Scrollable with increased height */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="h-full p-6 overflow-y-auto scrollable-container">
-          <div className="monaco-editor-container h-[600px] rounded-xl overflow-hidden border border-gray-200/20">
+        <div className="h-full p-8 overflow-y-auto scrollable-container">
+          <div className="monaco-editor-container h-[700px] rounded-xl overflow-hidden border border-gray-200/20">
             <Editor
               height="100%"
               language={isJsonMode ? 'json' : 'yaml'}
@@ -521,7 +521,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
               theme={isDark ? 'vs-dark' : 'light'}
               options={{
                 minimap: { enabled: false },
-                fontSize: 14,
+                fontSize: 16,
                 lineNumbers: 'on',
                 roundedSelection: false,
                 scrollBeyondLastLine: false,
@@ -555,15 +555,15 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
           {/* Validation Error */}
           {validationError && (
             <motion.div
-              className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20"
+              className="mt-6 p-5 rounded-xl bg-red-500/10 border border-red-500/20"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="flex items-start space-x-2">
-                <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="w-6 h-6 text-red-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-red-400 font-medium text-sm">Validation Error</p>
-                  <p className="text-red-300 text-sm mt-1">{validationError}</p>
+                  <p className="text-red-400 font-medium text-base">Validation Error</p>
+                  <p className="text-red-300 text-base mt-2">{validationError}</p>
                 </div>
               </div>
             </motion.div>
@@ -572,17 +572,17 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
           {/* MCP Info */}
           {isValid && mcpSchema && (
             <motion.div
-              className="mt-4 p-4 rounded-xl bg-green-50/50 border border-green-200/50 dark:bg-green-500/10 dark:border-green-500/20"
+              className="mt-6 p-5 rounded-xl bg-green-50/50 border border-green-200/50 dark:bg-green-500/10 dark:border-green-500/20"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="flex items-start space-x-2">
-                <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+              <div className="flex items-start space-x-3">
+                <CheckCircle className="w-6 h-6 text-green-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-green-400 font-medium text-sm">
+                  <p className="text-green-400 font-medium text-base">
                     {mcpSchema.name} v{mcpSchema.version}
                   </p>
-                  <p className="text-green-300 text-sm mt-1">
+                  <p className="text-green-300 text-base mt-2">
                     {mcpSchema.tools.length} tool{mcpSchema.tools.length !== 1 ? 's' : ''} available: {mcpSchema.tools.map((t: any) => t.name).join(', ')}
                   </p>
                 </div>

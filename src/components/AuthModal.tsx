@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Lock, Mail, Github, Chrome, Eye, EyeOff, Sparkles, Loader, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, User, Lock, Mail, Eye, EyeOff, Sparkles, Loader, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface AuthModalProps {
@@ -10,7 +10,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, isDark }) => {
-  const { signIn, signUp, loginWithGoogle, loginWithGithub, resetPassword, isLoading } = useAuth();
+  const { signIn, signUp, resetPassword, isLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,26 +66,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
       }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
-    }
-  };
-
-  const handleSocialLogin = async (provider: 'github' | 'google') => {
-    setError('');
-    setSuccess('');
-
-    try {
-      const result = provider === 'github' 
-        ? await loginWithGithub() 
-        : await loginWithGoogle();
-
-      if (result.success) {
-        setSuccess(`Redirecting to ${provider}...`);
-        // OAuth will handle the redirect
-      } else {
-        setError(result.error || `Failed to login with ${provider}`);
-      }
-    } catch (err: any) {
-      setError(err.message || `${provider} authentication failed`);
     }
   };
 
@@ -303,47 +283,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
             </button>
           </div>
 
-          {/* Social Login */}
-          <div className="space-y-3 mb-6">
-            <motion.button
-              onClick={() => handleSocialLogin('github')}
-              disabled={isLoading}
-              className={`w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-full border-2 transition-all duration-300 ${
-                isDark 
-                  ? 'border-gray-600 hover:border-gray-500 bg-gray-700/50 hover:bg-gray-700/70 text-white' 
-                  : 'border-gray-200 hover:border-gray-300 bg-white/50 hover:bg-white/70 text-gray-900'
-              } backdrop-blur-sm disabled:opacity-50 shadow-md hover:shadow-lg`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {isLoading ? (
-                <Loader className="w-5 h-5 animate-spin" />
-              ) : (
-                <Github className="w-5 h-5" />
-              )}
-              <span className="font-medium">Continue with GitHub</span>
-            </motion.button>
-
-            <motion.button
-              onClick={() => handleSocialLogin('google')}
-              disabled={isLoading}
-              className={`w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-full border-2 transition-all duration-300 ${
-                isDark 
-                  ? 'border-gray-600 hover:border-gray-500 bg-gray-700/50 hover:bg-gray-700/70 text-white' 
-                  : 'border-gray-200 hover:border-gray-300 bg-white/50 hover:bg-white/70 text-gray-900'
-              } backdrop-blur-sm disabled:opacity-50 shadow-md hover:shadow-lg`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {isLoading ? (
-                <Loader className="w-5 h-5 animate-spin" />
-              ) : (
-                <Chrome className="w-5 h-5" />
-              )}
-              <span className="font-medium">Continue with Google</span>
-            </motion.button>
-          </div>
-
           {/* Divider */}
           <div className="relative mb-6">
             <div className={`absolute inset-0 flex items-center ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
@@ -351,7 +290,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
             </div>
             <div className="relative flex justify-center text-sm">
               <span className={`px-3 ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-600'}`}>
-                or continue with email
+                Sign in with email
               </span>
             </div>
           </div>
