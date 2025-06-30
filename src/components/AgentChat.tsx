@@ -45,10 +45,16 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages are added
+  // Auto-scroll to bottom when new messages are added - DISABLED to prevent auto-scroll
   useEffect(() => {
+    // Only scroll if user is near the bottom already
     if (messagesEndRef.current && chatContainerRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      const container = chatContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      
+      if (isNearBottom) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   }, [messages]);
 
@@ -267,12 +273,12 @@ export const AgentChat: React.FC<AgentChatProps> = ({
         )}
       </div>
 
-      {/* Messages Container - Scrollable with fixed height */}
+      {/* Messages Container - Scrollable with fixed height and NO auto-scroll */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <div 
           ref={chatContainerRef}
-          className="h-full p-6 overflow-y-auto"
-          style={{ maxHeight: '100%' }}
+          className="h-full p-6 overflow-y-auto prevent-scroll"
+          style={{ maxHeight: '100%', scrollBehavior: 'auto' }}
         >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
