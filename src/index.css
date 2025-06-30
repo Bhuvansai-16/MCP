@@ -516,8 +516,7 @@ html {
     grid-template-rows: 1fr 1fr;
   }
   
-  .editor-panel,
-  .chat-panel {
+  .editor-panel {
     min-height: 400px;
     max-height: 50vh;
   }

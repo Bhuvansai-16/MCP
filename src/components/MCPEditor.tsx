@@ -511,7 +511,7 @@ export const MCPEditor: React.FC<MCPEditorProps> = ({
 
       {/* Editor Container - Scrollable */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="h-full p-6 overflow-y-auto">
+        <div className="h-full p-6 overflow-y-auto scrollable-container">
           <div className="monaco-editor-container h-[600px] rounded-xl overflow-hidden border border-gray-200/20">
             <Editor
               height="100%"

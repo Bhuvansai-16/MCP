@@ -43,6 +43,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages are added
   useEffect(() => {
@@ -266,7 +267,10 @@ export const AgentChat: React.FC<AgentChatProps> = ({
 
       {/* Messages Container - Scrollable */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="h-full p-6 overflow-y-auto">
+        <div 
+          ref={chatContainerRef}
+          className="h-full p-6 overflow-y-auto scrollable-container"
+        >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
               <motion.div
