@@ -542,6 +542,18 @@ html {
     font-size: 0.875rem;
     line-height: 1.25rem;
   }
+  
+  /* Footer responsive styles */
+  .footer-responsive {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .footer-links {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
 }
 
 /* Improved focus indicators for accessibility */
@@ -557,4 +569,55 @@ html {
 
 .dark .bg-contrast {
   background-color: #1f2937;
+}
+
+/* Footer specific styles */
+.footer-gradient {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(239, 246, 255, 0.95) 50%, 
+    rgba(238, 242, 255, 0.95) 100%);
+}
+
+.dark .footer-gradient {
+  background: linear-gradient(135deg, 
+    rgba(17, 24, 39, 0.95) 0%, 
+    rgba(30, 41, 59, 0.95) 50%, 
+    rgba(55, 48, 163, 0.95) 100%);
+}
+
+/* Footer link hover effects */
+.footer-link {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.footer-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: width 0.3s ease;
+}
+
+.footer-link:hover::after {
+  width: 100%;
+}
+
+/* Sticky footer implementation */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+}
+
+.footer-container {
+  margin-top: auto;
 }

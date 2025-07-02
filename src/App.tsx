@@ -63,6 +63,11 @@ function App() {
     setActiveTab(tab);
   };
 
+  // Handle community navigation from footer
+  const handleCommunityClick = () => {
+    handleTabChange('community');
+  };
+
   // Function to handle "Try in Playground" from any tab
   const handleTryInPlayground = (mcp: MCPListItem | WebMCPResult) => {
     console.log('🎮 App.tsx: handleTryInPlayground called with:', mcp.name);
@@ -400,7 +405,7 @@ function App() {
         </main>
         
         {/* Footer */}
-        <Footer isDark={isDark} />
+        <Footer isDark={isDark} onCommunityClick={handleCommunityClick} />
       </div>
 
       {/* Authentication Modal */}
