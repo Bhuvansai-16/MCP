@@ -83,8 +83,8 @@ html {
 
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -93,7 +93,7 @@ html {
 
 ::-webkit-scrollbar-thumb {
   background: rgba(59, 130, 246, 0.5);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -470,4 +470,97 @@ html {
   flex-shrink: 0;
   padding: 0.75rem;
   border-top: 1px solid rgba(229, 231, 235, 0.2);
+}
+
+/* Resizable panel styles */
+.resizable-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 10;
+  transition: background-color 0.2s ease;
+}
+
+.resize-handle:hover {
+  background: rgba(59, 130, 246, 0.5);
+}
+
+.resize-handle.resizing {
+  background: rgba(59, 130, 246, 0.8);
+}
+
+/* Responsive design for mobile */
+@media (max-width: 1024px) {
+  .playground-layout {
+    flex-direction: column;
+  }
+  
+  .playground-panel {
+    width: 100% !important;
+    height: 50vh;
+  }
+  
+  .resize-handle {
+    display: none;
+  }
+}
+
+/* Monaco editor container */
+.monaco-editor-container {
+  height: 100%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Ensure proper height for all containers */
+.full-height-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Improved scrollbar for better visibility */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.6);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.8);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(79, 70, 229, 0.6);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 70, 229, 0.8);
 }

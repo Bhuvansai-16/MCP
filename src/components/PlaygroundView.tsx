@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MCPEditor } from './MCPEditor';
 import { AgentChat } from './AgentChat';
@@ -6,7 +6,7 @@ import { ExecutionVisualization } from './ExecutionVisualization';
 import { VisualMCPBuilder } from './VisualMCPBuilder';
 import { MCPTemplates } from './MCPTemplates';
 import { MCPSchema } from '../App';
-import { Code, Palette, BookTemplate as FileTemplate, MessageSquare, Zap, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Code, Palette, BookTemplate as FileTemplate, MessageSquare, Zap, CheckCircle, AlertCircle, Eye, EyeOff, GripVertical } from 'lucide-react';
 
 interface PlaygroundViewProps {
   isDark: boolean;
@@ -45,6 +45,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   const [executionLogs, setExecutionLogs] = useState<ExecutionLog[]>([]);
   const [showExecutionPanel, setShowExecutionPanel] = useState(false);
   const [editorMode, setEditorMode] = useState<EditorMode>('code');
+  const [leftPanelWidth, setLeftPanelWidth] = useState(45); // Percentage
+  const [isResizing, setIsResizing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Load initial MCP if provided
   useEffect(() => {
@@ -337,6 +340,43 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     }
   };
 
+  // Handle mouse events for resizing
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isResizing || !containerRef.current) return;
+    
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+    
+    // Constrain between 25% and 75%
+    const constrainedWidth = Math.max(25, Math.min(75, newLeftWidth));
+    setLeftPanelWidth(constrainedWidth);
+  };
+
+  const handleMouseUp = () => {
+    setIsResizing(false);
+  };
+
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
+
   // Available tools display for the header
   const AvailableToolsDisplay = () => {
     if (!mcpSchema) return null;
@@ -370,7 +410,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   };
 
   return (
-    <div className="h-[calc(100vh-160px)] overflow-hidden">
+    <div className="h-[calc(100vh-120px)] overflow-hidden">
       <div className="container mx-auto px-4 py-3 h-full flex flex-col">
         {/* Header with Editor Mode Selector */}
         <div className="mb-3 flex-shrink-0">
@@ -476,10 +516,16 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
           )}
         </div>
 
-        {/* Main Content - Side by Side Layout */}
-        <div className="flex flex-1 space-x-4 h-[calc(100vh-260px)] overflow-hidden">
+        {/* Main Content - Resizable Side by Side Layout */}
+        <div 
+          ref={containerRef}
+          className="flex flex-1 h-[calc(100vh-300px)] overflow-hidden"
+        >
           {/* Left Side - MCP Editor */}
-          <div className="w-1/2 h-full">
+          <div 
+            className="h-full overflow-hidden"
+            style={{ width: `${leftPanelWidth}%` }}
+          >
             <div className="h-full rounded-xl border border-gray-200/20 dark:border-gray-700/50 overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -496,8 +542,23 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
             </div>
           </div>
           
+          {/* Resizable Divider */}
+          <div 
+            className={`w-1 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 dark:hover:bg-blue-400 cursor-col-resize transition-colors duration-200 flex items-center justify-center group ${
+              isResizing ? 'bg-blue-500 dark:bg-blue-400' : ''
+            }`}
+            onMouseDown={handleMouseDown}
+          >
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <GripVertical className="w-4 h-4 text-white" />
+            </div>
+          </div>
+          
           {/* Right Side - Agent Chat */}
-          <div className="w-1/2 h-full">
+          <div 
+            className="h-full overflow-hidden"
+            style={{ width: `${100 - leftPanelWidth}%` }}
+          >
             <AgentChat
               isDark={isDark}
               messages={messages}
