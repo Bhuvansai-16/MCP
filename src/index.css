@@ -81,31 +81,36 @@ html {
   color: #ffffff !important;
 }
 
-/* Custom scrollbar styling */
+/* Enhanced scrollbar styling for better visibility */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.6);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.7);
+  background: rgba(59, 130, 246, 0.8);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(79, 70, 229, 0.5);
+  background: rgba(79, 70, 229, 0.6);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 70, 229, 0.7);
+  background: rgba(79, 70, 229, 0.8);
 }
 
 /* Scrollable container with custom scrollbar */
@@ -118,6 +123,69 @@ html {
 
 .dark .scrollable-container {
   scrollbar-color: rgba(79, 70, 229, 0.5) transparent;
+}
+
+/* Playground layout styles */
+.playground-layout {
+  display: flex;
+  height: 100%;
+  gap: 0;
+}
+
+.playground-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 500px;
+}
+
+/* Responsive design for mobile/tablet */
+@media (max-width: 1024px) {
+  .playground-layout {
+    flex-direction: column !important;
+    gap: 1rem;
+  }
+  
+  .playground-panel {
+    width: 100% !important;
+    height: 50vh !important;
+    min-height: 400px;
+  }
+}
+
+/* Monaco editor container improvements */
+.monaco-editor-container {
+  height: 100%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Ensure proper text wrapping in Monaco editor */
+.monaco-editor .view-lines {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* Chat container improvements */
+.chat-container {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem;
+  scroll-behavior: smooth;
+}
+
+.chat-input {
+  flex-shrink: 0;
+  padding: 0.75rem;
+  border-top: 1px solid rgba(229, 231, 235, 0.2);
 }
 
 /* Glassmorphism effects */
@@ -450,117 +518,43 @@ html {
   }
 }
 
-/* Fix for chat scrolling issues */
-.chat-container {
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+/* Improved text wrapping for code editors */
+.monaco-editor .view-line {
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
 }
 
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
+/* Better line height for readability */
+.monaco-editor .view-lines .view-line {
+  line-height: 1.5 !important;
+}
+
+/* Prevent horizontal overflow in containers */
+.prevent-overflow {
   overflow-x: hidden;
-  padding: 1rem;
-  scroll-behavior: smooth;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
-.chat-input {
-  flex-shrink: 0;
-  padding: 0.75rem;
-  border-top: 1px solid rgba(229, 231, 235, 0.2);
-}
-
-/* Resizable panel styles */
-.resizable-panel {
-  position: relative;
-  overflow: hidden;
-}
-
-.resize-handle {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 4px;
-  height: 100%;
-  background: transparent;
-  cursor: col-resize;
-  z-index: 10;
-  transition: background-color 0.2s ease;
-}
-
-.resize-handle:hover {
-  background: rgba(59, 130, 246, 0.5);
-}
-
-.resize-handle.resizing {
-  background: rgba(59, 130, 246, 0.8);
-}
-
-/* Responsive design for mobile */
-@media (max-width: 1024px) {
-  .playground-layout {
-    flex-direction: column;
-  }
-  
-  .playground-panel {
-    width: 100% !important;
-    height: 50vh;
-  }
-  
-  .resize-handle {
-    display: none;
+/* Responsive text sizing */
+@media (max-width: 768px) {
+  .responsive-text {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
   }
 }
 
-/* Monaco editor container */
-.monaco-editor-container {
-  height: 100%;
-  border-radius: 0.5rem;
-  overflow: hidden;
+/* Improved focus indicators for accessibility */
+.focus-visible:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.8);
+  outline-offset: 2px;
 }
 
-/* Ensure proper height for all containers */
-.full-height-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+/* Better contrast for dark mode */
+.dark .text-contrast {
+  color: #f3f4f6;
 }
 
-.scrollable-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-/* Improved scrollbar for better visibility */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.6);
-  border-radius: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.8);
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(79, 70, 229, 0.6);
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 70, 229, 0.8);
+.dark .bg-contrast {
+  background-color: #1f2937;
 }

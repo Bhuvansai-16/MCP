@@ -6,7 +6,7 @@ import { ExecutionVisualization } from './ExecutionVisualization';
 import { VisualMCPBuilder } from './VisualMCPBuilder';
 import { MCPTemplates } from './MCPTemplates';
 import { MCPSchema } from '../App';
-import { Code, Palette, BookTemplate as FileTemplate, MessageSquare, Zap, CheckCircle, AlertCircle, Eye, EyeOff, GripVertical } from 'lucide-react';
+import { Code, Palette, BookTemplate as FileTemplate, Eye, EyeOff, GripVertical } from 'lucide-react';
 
 interface PlaygroundViewProps {
   isDark: boolean;
@@ -45,7 +45,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
   const [executionLogs, setExecutionLogs] = useState<ExecutionLog[]>([]);
   const [showExecutionPanel, setShowExecutionPanel] = useState(false);
   const [editorMode, setEditorMode] = useState<EditorMode>('code');
-  const [leftPanelWidth, setLeftPanelWidth] = useState(45); // Percentage
+  const [leftPanelWidth, setLeftPanelWidth] = useState(45);
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -56,7 +56,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
       setMcpSchema(initialMCP);
       setIsValidMCP(true);
       
-      // Add system message about loaded MCP
       const systemMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'system',
@@ -68,6 +67,41 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
       console.log('✅ System message added for loaded MCP');
     }
   }, [initialMCP]);
+
+  // Handle resizing
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isResizing || !containerRef.current) return;
+    
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+    const constrainedWidth = Math.max(25, Math.min(75, newLeftWidth));
+    setLeftPanelWidth(constrainedWidth);
+  };
+
+  const handleMouseUp = () => {
+    setIsResizing(false);
+  };
+
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
 
   const handleMCPValidation = (schema: MCPSchema | null, isValid: boolean) => {
     console.log('🔍 MCP validation result:', { isValid, schema: schema?.name });
@@ -84,9 +118,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     console.log('📋 Template selected:', template.name);
     setMcpSchema(template);
     setIsValidMCP(true);
-    setEditorMode('code'); // Switch to code editor to show the loaded template
+    setEditorMode('code');
     
-    // Add system message about loaded template
     const systemMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'system',
@@ -144,7 +177,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
 
     console.log('💬 Processing user message:', content);
 
-    // Add user message
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'user',
@@ -153,12 +185,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     };
     setMessages(prev => [...prev, userMessage]);
 
-    // Simulate agent processing
     setTimeout(async () => {
-      // Simulate tool usage based on message content
       const toolCalls = simulateToolUsage(content, mcpSchema);
       
-      // Add execution logs
       const newLogs: ExecutionLog[] = toolCalls.map(call => ({
         id: Date.now().toString() + Math.random(),
         timestamp: new Date(),
@@ -170,7 +199,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
       }));
       setExecutionLogs(prev => [...prev, ...newLogs]);
 
-      // Generate agent response
       const agentResponse = generateAgentResponse(content, toolCalls, mcpSchema);
       const agentMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -187,7 +215,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     const toolCalls = [];
     const lowerMessage = userMessage.toLowerCase();
 
-    // Simple keyword matching to determine which tools to use
     for (const tool of schema.tools) {
       const toolName = tool.name.toLowerCase();
       if (lowerMessage.includes(toolName) || 
@@ -196,7 +223,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
           (toolName.includes('search') && lowerMessage.includes('search')) ||
           (toolName.includes('fetch') && lowerMessage.includes('get'))) {
         
-        // Generate mock input/output based on tool
         const mockInput = generateMockInput(tool);
         const mockOutput = generateMockOutput(tool, mockInput);
         
@@ -227,7 +253,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
       }
     }
 
-    // Generate based on parameters
     const input: Record<string, any> = {};
     Object.entries(tool.parameters).forEach(([key, type]) => {
       if (typeof type === 'string') {
@@ -340,193 +365,116 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
     }
   };
 
-  // Handle mouse events for resizing
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isResizing || !containerRef.current) return;
-    
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
-    
-    // Constrain between 25% and 75%
-    const constrainedWidth = Math.max(25, Math.min(75, newLeftWidth));
-    setLeftPanelWidth(constrainedWidth);
-  };
-
-  const handleMouseUp = () => {
-    setIsResizing(false);
-  };
-
-  useEffect(() => {
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, [isResizing]);
-
-  // Available tools display for the header
-  const AvailableToolsDisplay = () => {
-    if (!mcpSchema) return null;
-    
-    return (
-      <div className={`p-3 rounded-xl ${
-        isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50/50 border border-blue-200/50'
-      }`}>
-        <div className="flex items-center space-x-2 mb-2">
-          <Zap className="w-4 h-4 text-blue-500" />
-          <h3 className={`font-medium text-sm ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
-            Available Tools from {mcpSchema.name}
-          </h3>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {mcpSchema.tools.map((tool, index) => (
-            <span
-              key={index}
-              className={`px-2 py-1 text-xs rounded-full ${
-                isDark 
-                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
-                  : 'bg-blue-100 text-blue-700 border border-blue-200'
-              }`}
+  return (
+    <div className="h-screen flex flex-col overflow-hidden">
+      <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200/20 dark:border-gray-700/50">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3">
+            <motion.div
+              className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500"
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
             >
-              {tool.name}
-            </span>
-          ))}
+              <Code className="w-5 h-5 text-white" />
+            </motion.div>
+            <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              MCP Playground
+            </h1>
+          </div>
+          
+          {/* Execution Panel Toggle */}
+          <motion.button
+            onClick={() => setShowExecutionPanel(!showExecutionPanel)}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
+              showExecutionPanel
+                ? isDark 
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                  : 'bg-blue-50 text-blue-600 border border-blue-200'
+                : isDark 
+                  ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50' 
+                  : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
+            } backdrop-blur-sm`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {showExecutionPanel ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            <span className="text-sm">Execution</span>
+          </motion.button>
+        </div>
+        
+        {/* Editor Mode Selector */}
+        <div className="flex justify-center">
+          <div className="p-1 rounded-xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
+            <div className="flex space-x-1">
+              <motion.button
+                onClick={() => setEditorMode('templates')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all duration-300 text-sm ${
+                  editorMode === 'templates'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
+                    : isDark
+                      ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <FileTemplate className="w-4 h-4" />
+                <span>Templates</span>
+              </motion.button>
+
+              <motion.button
+                onClick={() => setEditorMode('visual')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all duration-300 text-sm ${
+                  editorMode === 'visual'
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                    : isDark
+                      ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Palette className="w-4 h-4" />
+                <span>Visual</span>
+              </motion.button>
+
+              <motion.button
+                onClick={() => setEditorMode('code')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all duration-300 text-sm ${
+                  editorMode === 'code'
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                    : isDark
+                      ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Code className="w-4 h-4" />
+                <span>Code</span>
+              </motion.button>
+            </div>
+          </div>
         </div>
       </div>
-    );
-  };
 
-  return (
-    <div className="h-[calc(100vh-120px)] overflow-hidden">
-      <div className="container mx-auto px-4 py-3 h-full flex flex-col">
-        {/* Header with Editor Mode Selector */}
-        <div className="mb-3 flex-shrink-0">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-3">
-              <motion.div
-                className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Code className="w-6 h-6 text-white" />
-              </motion.div>
-              <div>
-                <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  MCP Playground
-                </h1>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {mcpSchema ? `Working with ${mcpSchema.name} v${mcpSchema.version}` : 'Create and test Model Context Protocols'}
-                </p>
-              </div>
-            </div>
-            
-            {/* Execution Panel Toggle */}
-            {isValidMCP && (
-              <motion.button
-                onClick={() => setShowExecutionPanel(!showExecutionPanel)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${
-                  showExecutionPanel
-                    ? isDark 
-                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                      : 'bg-blue-50 text-blue-600 border border-blue-200'
-                    : isDark 
-                      ? 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50' 
-                      : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-600 border border-gray-200/50'
-                } backdrop-blur-sm`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {showExecutionPanel ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                <span>{showExecutionPanel ? 'Hide Execution' : 'Show Execution'}</span>
-              </motion.button>
-            )}
-          </div>
-          
-          {/* Editor Mode Selector */}
-          <div className="flex justify-center mb-3">
-            <div className="p-1 rounded-xl backdrop-blur-sm border border-gray-200/20 bg-gray-100/50 dark:bg-gray-800/50 dark:border-gray-700/50">
-              <div className="flex space-x-2">
-                <motion.button
-                  onClick={() => setEditorMode('templates')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                    editorMode === 'templates'
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
-                      : isDark
-                        ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                  }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <FileTemplate className="w-4 h-4" />
-                  <span>Templates</span>
-                </motion.button>
-
-                <motion.button
-                  onClick={() => setEditorMode('visual')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                    editorMode === 'visual'
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                      : isDark
-                        ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                  }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Palette className="w-4 h-4" />
-                  <span>Visual</span>
-                </motion.button>
-
-                <motion.button
-                  onClick={() => setEditorMode('code')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                    editorMode === 'code'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                      : isDark
-                        ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                  }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Code className="w-4 h-4" />
-                  <span>Code</span>
-                </motion.button>
-              </div>
-            </div>
-          </div>
-          
-          {/* MCP Status */}
-          {mcpSchema && (
-            <AvailableToolsDisplay />
-          )}
-        </div>
-
-        {/* Main Content - Resizable Side by Side Layout */}
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Resizable Panels Container */}
         <div 
           ref={containerRef}
-          className="flex flex-1 h-[calc(100vh-300px)] overflow-hidden"
+          className="flex-1 flex playground-layout overflow-hidden"
         >
-          {/* Left Side - MCP Editor */}
+          {/* Left Panel - MCP Editor */}
           <div 
-            className="h-full overflow-hidden"
-            style={{ width: `${leftPanelWidth}%` }}
+            className="playground-panel h-full overflow-hidden"
+            style={{ 
+              width: window.innerWidth >= 1024 ? `${leftPanelWidth}%` : '100%',
+              minHeight: '500px'
+            }}
           >
-            <div className="h-full rounded-xl border border-gray-200/20 dark:border-gray-700/50 overflow-hidden">
+            <div className="h-full rounded-lg border border-gray-200/20 dark:border-gray-700/50 overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={editorMode}
@@ -542,22 +490,27 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
             </div>
           </div>
           
-          {/* Resizable Divider */}
-          <div 
-            className={`w-1 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 dark:hover:bg-blue-400 cursor-col-resize transition-colors duration-200 flex items-center justify-center group ${
-              isResizing ? 'bg-blue-500 dark:bg-blue-400' : ''
-            }`}
-            onMouseDown={handleMouseDown}
-          >
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <GripVertical className="w-4 h-4 text-white" />
+          {/* Resizable Divider - Hidden on mobile */}
+          {window.innerWidth >= 1024 && (
+            <div 
+              className={`w-1 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 dark:hover:bg-blue-400 cursor-col-resize transition-colors duration-200 flex items-center justify-center group relative ${
+                isResizing ? 'bg-blue-500 dark:bg-blue-400' : ''
+              }`}
+              onMouseDown={handleMouseDown}
+            >
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute">
+                <GripVertical className="w-4 h-4 text-white" />
+              </div>
             </div>
-          </div>
+          )}
           
-          {/* Right Side - Agent Chat */}
+          {/* Right Panel - Agent Chat */}
           <div 
-            className="h-full overflow-hidden"
-            style={{ width: `${100 - leftPanelWidth}%` }}
+            className="playground-panel h-full overflow-hidden"
+            style={{ 
+              width: window.innerWidth >= 1024 ? `${100 - leftPanelWidth}%` : '100%',
+              minHeight: '500px'
+            }}
           >
             <AgentChat
               isDark={isDark}
@@ -574,16 +527,27 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ isDark, initialM
           </div>
         </div>
 
-        {/* Execution Visualization Panel */}
-        {showExecutionPanel && (
-          <div className="mt-3 flex-shrink-0" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-            <ExecutionVisualization
-              isDark={isDark}
-              executionLogs={executionLogs}
-              onClose={() => setShowExecutionPanel(false)}
-            />
-          </div>
-        )}
+        {/* Execution Visualization Panel - Full Width Below */}
+        <AnimatePresence>
+          {showExecutionPanel && (
+            <motion.div
+              className="flex-shrink-0 border-t border-gray-200/20 dark:border-gray-700/50"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ maxHeight: '300px' }}
+            >
+              <div className="h-full overflow-y-auto p-4">
+                <ExecutionVisualization
+                  isDark={isDark}
+                  executionLogs={executionLogs}
+                  onClose={() => setShowExecutionPanel(false)}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
