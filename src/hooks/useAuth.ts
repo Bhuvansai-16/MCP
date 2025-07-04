@@ -20,6 +20,7 @@ export const useAuth = () => {
     // Get initial session
     const getInitialSession = async () => {
       try {
+        setIsLoading(true);
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -54,7 +55,7 @@ export const useAuth = () => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => subscription?.unsubscribe?.();
   }, []);
 
   const transformSupabaseUser = (supabaseUser: User): AuthUser => {
@@ -71,10 +72,31 @@ export const useAuth = () => {
   const signUp = async (email: string, password: string, name?: string) => {
     setIsLoading(true);
     try {
+      // Basic validation
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+      
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+      
+      if (!/\S+@\S+\.\S+/.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
       const { data, error } = await authHelpers.signUp(email, password, { name });
       
       if (error) {
-        throw error;
+        throw new Error(error.message);
+      }
+
+      // For development mode, immediately set the user as signed in
+      if (data?.user) {
+        setUser(transformSupabaseUser(data.user));
+        if (data.session) {
+          setSession(data.session);
+        }
       }
 
       return { success: true, data };
@@ -89,10 +111,27 @@ export const useAuth = () => {
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      // Basic validation
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+      
+      if (!/\S+@\S+\.\S+/.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
       const { data, error } = await authHelpers.signIn(email, password);
       
       if (error) {
-        throw error;
+        throw new Error(error.message);
+      }
+
+      // Set user data immediately
+      if (data?.user) {
+        setUser(transformSupabaseUser(data.user));
+        if (data.session) {
+          setSession(data.session);
+        }
       }
 
       return { success: true, data };
@@ -110,7 +149,7 @@ export const useAuth = () => {
       const { error } = await authHelpers.signOut();
       
       if (error) {
-        throw error;
+        throw new Error(error.message);
       }
 
       setUser(null);
@@ -126,10 +165,18 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string) => {
     try {
+      if (!email) {
+        throw new Error('Email is required');
+      }
+      
+      if (!/\S+@\S+\.\S+/.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
       const { error } = await authHelpers.resetPassword(email);
       
       if (error) {
-        throw error;
+        throw new Error(error.message);
       }
 
       return { success: true };
@@ -141,15 +188,7 @@ export const useAuth = () => {
 
   // Legacy methods for backward compatibility
   const login = (token: string, userData: AuthUser) => {
-    // Mock implementation for demo purposes
-    setUser({
-      id: userData.id || 'mock-id',
-      email: userData.email || 'user@example.com',
-      name: userData.name || 'Demo User',
-      avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=demo`,
-      verified: true,
-      provider: 'email'
-    });
+    setUser(userData);
   };
 
   const logout = async () => {

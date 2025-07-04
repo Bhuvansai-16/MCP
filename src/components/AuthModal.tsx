@@ -21,23 +21,46 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
   const [success, setSuccess] = useState('');
   const [showResetPassword, setShowResetPassword] = useState(false);
 
+  const validateForm = () => {
+    if (!email.trim()) {
+      setError('Email is required');
+      return false;
+    }
+    
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+    
+    if (!password) {
+      setError('Password is required');
+      return false;
+    }
+    
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
+    
+    if (!isLogin && password !== confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+    
+    if (!isLogin && !name.trim()) {
+      setError('Name is required');
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    if (!email || !password) {
-      setError('Please fill in all required fields');
-      return;
-    }
-
-    if (!isLogin && password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (!isLogin && password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    if (!validateForm()) {
       return;
     }
 
@@ -47,7 +70,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
         if (result.success) {
           setSuccess('Successfully signed in!');
           setTimeout(() => {
-            onAuthSuccess('supabase-token', result.data?.user);
+            onAuthSuccess('auth-token', result.data?.user);
             onClose();
           }, 1000);
         } else {
@@ -56,10 +79,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
       } else {
         const result = await signUp(email, password, name);
         if (result.success) {
-          setSuccess('Account created! Please check your email to verify your account.');
+          setSuccess('Account created successfully!');
           setTimeout(() => {
+            onAuthSuccess('auth-token', result.data?.user);
             onClose();
-          }, 2000);
+          }, 1000);
         } else {
           setError(result.error || 'Failed to create account');
         }
@@ -92,6 +116,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
     } catch (err: any) {
       setError(err.message || 'Failed to send reset email');
     }
+  };
+
+  const clearForm = () => {
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setName('');
+    setError('');
+    setSuccess('');
+    setShowPassword(false);
+  };
+
+  const switchMode = () => {
+    setIsLogin(!isLogin);
+    clearForm();
   };
 
   if (showResetPassword) {
@@ -283,18 +322,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
             </button>
           </div>
 
-          {/* Divider */}
-          <div className="relative mb-6">
-            <div className={`absolute inset-0 flex items-center ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-              <div className="w-full border-t border-current opacity-30" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className={`px-3 ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-600'}`}>
-                Sign in with email
-              </span>
-            </div>
-          </div>
-
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -331,6 +358,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  required={!isLogin}
                   className={`w-full px-4 py-3 rounded-full border-2 transition-all duration-300 ${
                     isDark 
                       ? 'bg-gray-900/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500' 
@@ -460,13 +488,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
           <div className="mt-6 text-center">
             <button
               type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setError('');
-                setSuccess('');
-                setPassword('');
-                setConfirmPassword('');
-              }}
+              onClick={switchMode}
               className={`text-sm font-medium transition-colors ${
                 isDark 
                   ? 'text-blue-400 hover:text-blue-300' 
