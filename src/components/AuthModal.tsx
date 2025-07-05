@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Lock, Mail, Eye, EyeOff, Sparkles, Loader, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, User, Lock, Mail, Eye, EyeOff, Sparkles, Loader, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface AuthModalProps {
@@ -10,7 +10,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, isDark }) => {
-  const { signIn, signUp, resetPassword, isLoading } = useAuth();
+  const { signIn, signUp, resetPassword, resendConfirmation, isLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +20,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
@@ -79,18 +80,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
             onClose();
           }, 1000);
         } else {
-          setError(result.error || 'Failed to sign in');
+          if (result.error?.includes('confirm your email')) {
+            setShowEmailConfirmation(true);
+            setError(result.error);
+          } else {
+            setError(result.error || 'Failed to sign in');
+          }
         }
       } else {
         console.log('🔐 Attempting signup for:', email);
         const result = await signUp(email, password, name);
         
         if (result.success) {
-          setSuccess('Account created successfully!');
-          setTimeout(() => {
-            onAuthSuccess('auth-token', result.data?.user);
-            onClose();
-          }, 1000);
+          if (result.message) {
+            // Email confirmation required
+            setSuccess(result.message);
+            setShowEmailConfirmation(true);
+          } else {
+            setSuccess('Account created successfully!');
+            setTimeout(() => {
+              onAuthSuccess('auth-token', result.data?.user);
+              onClose();
+            }, 1000);
+          }
         } else {
           setError(result.error || 'Failed to create account');
         }
@@ -132,6 +144,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
     }
   };
 
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await resendConfirmation(email);
+      if (result.success) {
+        setSuccess('Confirmation email sent! Check your inbox.');
+      } else {
+        setError(result.error || 'Failed to resend confirmation email');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to resend confirmation email');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const clearForm = () => {
     setEmail('');
     setPassword('');
@@ -140,6 +174,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
     setError('');
     setSuccess('');
     setShowPassword(false);
+    setShowEmailConfirmation(false);
   };
 
   const switchMode = () => {
@@ -335,6 +370,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Email Confirmation Notice */}
+          {showEmailConfirmation && (
+            <motion.div
+              className="mb-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="flex items-start space-x-3">
+                <Mail className="w-5 h-5 text-blue-400 mt-0.5" />
+                <div>
+                  <h3 className={`font-medium text-blue-400 mb-1`}>
+                    Check Your Email
+                  </h3>
+                  <p className={`text-sm text-blue-300 mb-3`}>
+                    We've sent a confirmation link to your email address. Please click the link to complete your registration.
+                  </p>
+                  <button
+                    onClick={handleResendConfirmation}
+                    disabled={isSubmitting}
+                    className="flex items-center space-x-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    <span>Resend confirmation email</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">

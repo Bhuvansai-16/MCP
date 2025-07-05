@@ -8,6 +8,7 @@ interface AuthUser {
   name: string;
   avatar: string;
   verified: boolean;
+  emailConfirmed: boolean;
   provider?: string;
 }
 
@@ -74,6 +75,7 @@ export const useAuth = () => {
       name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'User',
       avatar: supabaseUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${supabaseUser.email}`,
       verified: supabaseUser.email_confirmed_at !== null,
+      emailConfirmed: supabaseUser.email_confirmed_at !== null,
       provider: supabaseUser.app_metadata?.provider || 'email'
     };
   };
@@ -105,6 +107,15 @@ export const useAuth = () => {
 
       console.log('✅ Signup successful:', data);
 
+      // Check if email confirmation is required
+      if (data.user && !data.user.email_confirmed_at) {
+        return { 
+          success: true, 
+          data, 
+          message: 'Please check your email and click the confirmation link to complete your registration.' 
+        };
+      }
+
       // The auth state change listener will handle setting the user
       return { success: true, data };
     } catch (error: any) {
@@ -133,10 +144,21 @@ export const useAuth = () => {
       
       if (error) {
         console.error('Signin error:', error);
+        
+        // Handle specific error cases
+        if (error.message.includes('Email not confirmed')) {
+          throw new Error('Please check your email and click the confirmation link before signing in.');
+        }
+        
         throw new Error(error.message);
       }
 
       console.log('✅ Signin successful:', data);
+
+      // Check if email is confirmed
+      if (data.user && !data.user.email_confirmed_at) {
+        throw new Error('Please confirm your email address before signing in. Check your inbox for the confirmation link.');
+      }
 
       // The auth state change listener will handle setting the user
       return { success: true, data };
@@ -197,6 +219,31 @@ export const useAuth = () => {
     }
   };
 
+  const resendConfirmation = async (email: string) => {
+    try {
+      if (!email) {
+        throw new Error('Email is required');
+      }
+
+      console.log('📧 Resending confirmation email for:', email);
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      console.log('✅ Confirmation email resent');
+      return { success: true };
+    } catch (error: any) {
+      console.error('Resend confirmation error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   // Legacy methods for backward compatibility
   const login = (token: string, userData: AuthUser) => {
     setUser(userData);
@@ -210,11 +257,12 @@ export const useAuth = () => {
     user,
     session,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!user.emailConfirmed,
     signUp,
     signIn,
     signOut,
     resetPassword,
+    resendConfirmation,
     // Legacy methods
     login,
     logout
