@@ -20,6 +20,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     if (!email.trim()) {
@@ -64,9 +65,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       if (isLogin) {
+        console.log('🔐 Attempting login for:', email);
         const result = await signIn(email, password);
+        
         if (result.success) {
           setSuccess('Successfully signed in!');
           setTimeout(() => {
@@ -77,7 +82,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
           setError(result.error || 'Failed to sign in');
         }
       } else {
+        console.log('🔐 Attempting signup for:', email);
         const result = await signUp(email, password, name);
+        
         if (result.success) {
           setSuccess('Account created successfully!');
           setTimeout(() => {
@@ -89,7 +96,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
         }
       }
     } catch (err: any) {
+      console.error('Auth error:', err);
       setError(err.message || 'An unexpected error occurred');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -103,6 +113,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       const result = await resetPassword(email);
       if (result.success) {
@@ -115,6 +127,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
       }
     } catch (err: any) {
       setError(err.message || 'Failed to send reset email');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -233,12 +247,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
 
               <motion.button
                 type="submit"
-                disabled={isLoading}
+                disabled={isSubmitting}
                 className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-3 px-4 rounded-full font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {isLoading ? (
+                {isSubmitting ? (
                   <div className="flex items-center justify-center space-x-2">
                     <Loader className="w-5 h-5 animate-spin" />
                     <span>Sending...</span>
@@ -465,12 +479,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
 
             <motion.button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting || isLoading}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-3 px-4 rounded-full font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              {isLoading ? (
+              {isSubmitting || isLoading ? (
                 <div className="flex items-center justify-center space-x-2">
                   <Loader className="w-5 h-5 animate-spin" />
                   <span>Please wait...</span>

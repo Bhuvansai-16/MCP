@@ -17,6 +17,8 @@ export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -25,14 +27,16 @@ export const useAuth = () => {
         
         if (error) {
           console.error('Error getting session:', error);
-        } else if (session) {
+        } else if (session && mounted) {
           setSession(session);
           setUser(transformSupabaseUser(session.user));
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -42,6 +46,8 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
+        
+        if (!mounted) return;
         
         setSession(session);
         
@@ -55,7 +61,10 @@ export const useAuth = () => {
       }
     );
 
-    return () => subscription?.unsubscribe?.();
+    return () => {
+      mounted = false;
+      subscription?.unsubscribe?.();
+    };
   }, []);
 
   const transformSupabaseUser = (supabaseUser: User): AuthUser => {
@@ -72,7 +81,7 @@ export const useAuth = () => {
   const signUp = async (email: string, password: string, name?: string) => {
     setIsLoading(true);
     try {
-      // Basic validation
+      // Input validation
       if (!email || !password) {
         throw new Error('Email and password are required');
       }
@@ -85,20 +94,18 @@ export const useAuth = () => {
         throw new Error('Please enter a valid email address');
       }
 
+      console.log('🔐 Attempting signup for:', email);
+
       const { data, error } = await authHelpers.signUp(email, password, { name });
       
       if (error) {
+        console.error('Signup error:', error);
         throw new Error(error.message);
       }
 
-      // For development mode, immediately set the user as signed in
-      if (data?.user) {
-        setUser(transformSupabaseUser(data.user));
-        if (data.session) {
-          setSession(data.session);
-        }
-      }
+      console.log('✅ Signup successful:', data);
 
+      // The auth state change listener will handle setting the user
       return { success: true, data };
     } catch (error: any) {
       console.error('Sign up error:', error);
@@ -111,7 +118,7 @@ export const useAuth = () => {
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Basic validation
+      // Input validation
       if (!email || !password) {
         throw new Error('Email and password are required');
       }
@@ -120,20 +127,18 @@ export const useAuth = () => {
         throw new Error('Please enter a valid email address');
       }
 
+      console.log('🔐 Attempting signin for:', email);
+
       const { data, error } = await authHelpers.signIn(email, password);
       
       if (error) {
+        console.error('Signin error:', error);
         throw new Error(error.message);
       }
 
-      // Set user data immediately
-      if (data?.user) {
-        setUser(transformSupabaseUser(data.user));
-        if (data.session) {
-          setSession(data.session);
-        }
-      }
+      console.log('✅ Signin successful:', data);
 
+      // The auth state change listener will handle setting the user
       return { success: true, data };
     } catch (error: any) {
       console.error('Sign in error:', error);
@@ -146,14 +151,17 @@ export const useAuth = () => {
   const signOut = async () => {
     setIsLoading(true);
     try {
+      console.log('🔐 Attempting signout');
+      
       const { error } = await authHelpers.signOut();
       
       if (error) {
         throw new Error(error.message);
       }
 
-      setUser(null);
-      setSession(null);
+      console.log('✅ Signout successful');
+      
+      // The auth state change listener will handle clearing the user
       return { success: true };
     } catch (error: any) {
       console.error('Sign out error:', error);
@@ -173,12 +181,15 @@ export const useAuth = () => {
         throw new Error('Please enter a valid email address');
       }
 
+      console.log('📧 Attempting password reset for:', email);
+
       const { error } = await authHelpers.resetPassword(email);
       
       if (error) {
         throw new Error(error.message);
       }
 
+      console.log('✅ Password reset email sent');
       return { success: true };
     } catch (error: any) {
       console.error('Reset password error:', error);
