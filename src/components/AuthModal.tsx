@@ -382,19 +382,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onAuthSuccess, is
                 <Mail className="w-5 h-5 text-blue-400 mt-0.5" />
                 <div>
                   <h3 className={`font-medium text-blue-400 mb-1`}>
-                    Check Your Email
+                    Account Created Successfully
                   </h3>
                   <p className={`text-sm text-blue-300 mb-3`}>
-                    We've sent a confirmation link to your email address. Please click the link to complete your registration.
+                    Your account has been created successfully! You can now start using the application.
                   </p>
-                  <button
-                    onClick={handleResendConfirmation}
-                    disabled={isSubmitting}
-                    className="flex items-center space-x-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    <span>Resend confirmation email</span>
-                  </button>
                 </div>
               </div>
             </motion.div>
