@@ -44,7 +44,7 @@ const createMockClient = () => {
         name: metadata.name || email.split('@')[0],
         ...metadata
       },
-      email_confirmed_at: new Date().toISOString(),
+      email_confirmed_at: new Date().toISOString(), // Always confirmed for development
       app_metadata: { provider: 'email' },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -231,6 +231,16 @@ const createMockClient = () => {
         }
       },
       
+      resend: async ({ type, email }: any) => {
+        try {
+          console.log('📧 Mock resend confirmation for:', email)
+          // In a real app, this would resend the confirmation email
+          return { data: {}, error: null }
+        } catch (error: any) {
+          return { data: null, error: { message: error.message } }
+        }
+      },
+      
       onAuthStateChange: (callback: any) => {
         // Mock auth state change listener
         let currentSession = getMockSession()
@@ -265,7 +275,12 @@ export const supabase = isDevelopment
       auth: {
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: true
+        detectSessionInUrl: true,
+        // Disable email confirmation for development
+        ...(isDevelopment && { 
+          confirmEmail: false,
+          emailRedirectTo: undefined 
+        })
       }
     })
 

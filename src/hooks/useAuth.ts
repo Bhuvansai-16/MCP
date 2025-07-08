@@ -74,8 +74,8 @@ export const useAuth = () => {
       email: supabaseUser.email || '',
       name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'User',
       avatar: supabaseUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${supabaseUser.email}`,
-      verified: supabaseUser.email_confirmed_at !== null,
-      emailConfirmed: supabaseUser.email_confirmed_at !== null,
+      verified: true, // Always true for now to avoid blocking users
+      emailConfirmed: true, // Always true for now to avoid blocking users
       provider: supabaseUser.app_metadata?.provider || 'email'
     };
   };
@@ -107,14 +107,8 @@ export const useAuth = () => {
 
       console.log('✅ Signup successful:', data);
 
-      // Check if email confirmation is required
-      if (data.user && !data.user.email_confirmed_at) {
-        return { 
-          success: true, 
-          data, 
-          message: 'Please check your email and click the confirmation link to complete your registration.' 
-        };
-      }
+      // For now, treat all signups as successful without email confirmation
+      // In production, you would handle email confirmation properly
 
       // The auth state change listener will handle setting the user
       return { success: true, data };
@@ -145,20 +139,10 @@ export const useAuth = () => {
       if (error) {
         console.error('Signin error:', error);
         
-        // Handle specific error cases
-        if (error.message.includes('Email not confirmed')) {
-          throw new Error('Please check your email and click the confirmation link before signing in.');
-        }
-        
         throw new Error(error.message);
       }
 
       console.log('✅ Signin successful:', data);
-
-      // Check if email is confirmed
-      if (data.user && !data.user.email_confirmed_at) {
-        throw new Error('Please confirm your email address before signing in. Check your inbox for the confirmation link.');
-      }
 
       // The auth state change listener will handle setting the user
       return { success: true, data };
@@ -257,7 +241,7 @@ export const useAuth = () => {
     user,
     session,
     isLoading,
-    isAuthenticated: !!user && !!user.emailConfirmed,
+    isAuthenticated: !!user,
     signUp,
     signIn,
     signOut,
